@@ -1,4 +1,4 @@
-import type { Action, AnyAction } from 'redux';
+import type { AnyAction } from 'redux';
 import { OptimisticMetaKey, OptimisticRefIdKey } from './constants';
 import type { BoundStateHandler } from './state';
 
@@ -28,9 +28,9 @@ export type OptimisticAction<A extends AnyAction = AnyAction> = A & { meta: { [O
 export type OptimisticState<T> = { state: T; mutations: OptimisticAction[]; [OptimisticRefIdKey]: string };
 
 export type BoundReducer<
-    A extends Action,
+    Action extends AnyAction,
     State,
     CreateParams extends any[],
     UpdateParams extends any[],
     DeleteParams extends any[],
-> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: A) => State;
+> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: Action) => State;

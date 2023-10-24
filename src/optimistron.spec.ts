@@ -1,12 +1,28 @@
-import { updateAction } from './actions';
-import { OptimistronReducerRefs } from './optimistron';
+import { createOptimisticActions, updateAction } from './actions';
+import { OptimistronReducerRefs, optimistron } from './optimistron';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from './selectors';
-import { createItem, editItem, reducer } from './test/item-record';
+import { recordStateHandler } from './state/record';
 
 describe('optimistron', () => {
     beforeEach(() => OptimistronReducerRefs.clear());
 
     describe('item record state', () => {
+        type Item = { id: string; value: string; revision: number };
+
+        const createItem = createOptimisticActions('items::add', { stage: (item: Item) => ({ payload: { item } }) });
+        const editItem = createOptimisticActions('items::edit', { stage: (item: Item) => ({ payload: { item } }) });
+
+        const reducer = optimistron(
+            'items',
+            {},
+            recordStateHandler<Item>('id', (existing, incoming) => incoming.revision > existing.revision),
+            ({ getState, create, update }, action) => {
+                if (createItem.match(action)) return create(action.payload.item);
+                if (editItem.match(action)) return update(action.payload.item);
+                return getState();
+            },
+        );
+
         const initial = reducer(undefined, { type: 'INIT' });
 
         describe('create', () => {

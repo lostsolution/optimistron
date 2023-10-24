@@ -7,26 +7,22 @@ import { generateId } from './utils';
 
 export const OptimistronReducerRefs = new Map<string, Reducer>();
 
-export const optimistron = <S extends {}, C extends any[], U extends any[], D extends any[]>(
+export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,
     boundReducer: BoundReducer<AnyAction, S, C, U, D>,
 ): Reducer<OptimisticState<S>> => {
-    /* keep a reference to the underlying reducer in order for
-     * optimistic selectors to apply the optimistic mutations when
-     * triggered */
+    /* keep a reference to the underlying reducer in order for optimistic
+     * selectors to apply the optimistic mutations when executed */
     const reducerId = generateId();
     OptimistronReducerRefs.set(reducerId, boundReducer);
 
     const bindHandler = createStateHandler<S, C, U, D>(handler);
     const sanitizer = sanitizeMutations(boundReducer, bindHandler);
 
-    const initial: OptimisticState<S> = buildOptimisticState(
-        boundReducer(bindHandler(initialState), OPTIMISTRON_INIT),
-        [],
-        reducerId,
-    );
+    const initialOptimisticState = boundReducer(bindHandler(initialState), OPTIMISTRON_INIT);
+    const initial: OptimisticState<S> = buildOptimisticState(initialOptimisticState, [], reducerId);
 
     return (optimisticState = initial, action) => {
         const nextOptimisticState: OptimisticState<S> = (() => {
@@ -53,6 +49,8 @@ export const optimistron = <S extends {}, C extends any[], U extends any[], D ex
             return next(boundReducer(bindHandler(state), action), mutations);
         })();
 
+        /* only sanitize the mutations if the states are referentially different to avoid
+         * checking for conflicts unnecessarily on noops for this optimistic reducer */
         const mutated = nextOptimisticState !== optimisticState;
         nextOptimisticState.mutations = mutated ? sanitizer(nextOptimisticState) : nextOptimisticState.mutations;
 

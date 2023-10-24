@@ -35,15 +35,15 @@ export const processMutation = (action: OptimisticAction, mutations: OptimisticA
 };
 
 export const sanitizeMutations =
-    <S extends {}, C extends any[], U extends any[], D extends any[]>(
-        boundReducer: BoundReducer<AnyAction, S, C, U, D>,
-        bindHandler: ReturnType<typeof createStateHandler<S, C, U, D>>,
+    <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
+        boundReducer: BoundReducer<AnyAction, State, CreateParams, UpdateParams, DeleteParams>,
+        bindHandler: ReturnType<typeof createStateHandler<State, CreateParams, UpdateParams, DeleteParams>>,
     ) =>
-    ({ state, mutations }: OptimisticState<S>) => {
+    ({ state, mutations }: OptimisticState<State>) => {
         const sanitized = mutations.reduce<{
             mutations: OptimisticAction[];
             changed: boolean;
-            state: BoundStateHandler<S, C, U, D>;
+            state: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>;
         }>(
             (acc, action) => {
                 try {
@@ -71,11 +71,11 @@ export const sanitizeMutations =
                 } catch (mergeError: unknown) {
                     acc.changed = true;
                     switch (mergeError) {
-                        /* Discard the optimistic mutation */
                         case OptimisticMergeResult.SKIP:
-                            break;
-                        /* flag the optimistic action as conflicting */
+                            break; /* Discard the optimistic mutation */
+
                         case OptimisticMergeResult.CONFLICT:
+                            /* flag the optimistic action as conflicting */
                             acc.mutations.push(updateAction(action, { conflict: true }));
                             break;
                     }

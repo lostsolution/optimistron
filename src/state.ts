@@ -38,15 +38,19 @@ export const createStateHandler =
         getState: () => state,
     });
 
-export const isOptimisticState = <S>(state: any): state is OptimisticState<S> => OptimisticRefIdKey in state;
+export const isOptimisticState = <State>(state: any): state is OptimisticState<State> => OptimisticRefIdKey in state;
 
-export const buildOptimisticState = <S extends {}>(
-    state: S,
+export const buildOptimisticState = <State>(
+    state: State,
     mutations: OptimisticAction[],
     id: string,
-): OptimisticState<S> => {
-    const optimisticState = isOptimisticState<S>(state) ? { ...state } : { state, mutations, [OptimisticRefIdKey]: id };
+): OptimisticState<State> => {
+    const optimisticState = isOptimisticState<State>(state)
+        ? { ...state }
+        : { state, mutations, [OptimisticRefIdKey]: id };
 
+    /* malke internal optimistic properties non-enumerable to avoid
+     * consumers from unintentionally accessing them when iterating */
     Object.defineProperties(optimisticState, {
         mutations: { value: mutations, enumerable: false },
         [OptimisticRefIdKey]: { value: id, enumerable: false },
@@ -56,8 +60,8 @@ export const buildOptimisticState = <S extends {}>(
 };
 
 export const updateOptimisticState =
-    <S extends {}>(prev: OptimisticState<S>) =>
-    (state: S, mutations: OptimisticAction[]): OptimisticState<S> => {
+    <State>(prev: OptimisticState<State>) =>
+    (state: State, mutations: OptimisticAction[]): OptimisticState<State> => {
         if (state === prev.state && mutations === prev.mutations) return prev;
         return buildOptimisticState(state, mutations, prev[OptimisticRefIdKey]);
     };
