@@ -1,9 +1,23 @@
-import { AnyAction, Reducer } from 'redux';
-import { OPTIMISTRON_INIT, getOptimisticMeta, isOptimisticActionForNamespace } from './actions';
+import type { AnyAction, Reducer } from 'redux';
+import { OPTIMISTRON_INIT, OptimisticOperation, getOptimisticMeta, isOptimisticActionForNamespace } from './actions';
 import { processMutation, sanitizeMutations } from './mutations';
-import { StateHandler, buildOptimisticState, createStateHandler, updateOptimisticState } from './state';
-import { BoundReducer, OptimisticOperation, OptimisticState } from './types';
+import {
+    OptimisticState,
+    buildOptimisticState,
+    createStateHandler,
+    updateOptimisticState,
+    type BoundStateHandler,
+    type StateHandler,
+} from './state';
 import { generateId } from './utils';
+
+export type BoundReducer<
+    Action extends AnyAction,
+    State,
+    CreateParams extends any[],
+    UpdateParams extends any[],
+    DeleteParams extends any[],
+> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: Action) => State;
 
 export const OptimistronReducerRefs = new Map<string, Reducer>();
 

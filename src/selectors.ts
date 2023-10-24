@@ -1,8 +1,7 @@
 import { getOptimisticMeta } from './actions';
 import { OptimisticRefIdKey } from './constants';
 import { OptimistronReducerRefs } from './optimistron';
-import { isOptimisticState } from './state';
-import { OptimisticState } from './types';
+import { isOptimisticState, type OptimisticState } from './state';
 
 export const selectOptimistic =
     <State extends {}, Slice>(selector: (state: State) => Slice) =>

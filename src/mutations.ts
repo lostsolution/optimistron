@@ -1,7 +1,12 @@
-import { AnyAction } from 'redux';
-import { getOptimisticMeta, updateAction } from './actions';
-import { BoundStateHandler, createStateHandler } from './state';
-import { BoundReducer, OptimisticAction, OptimisticMergeResult, OptimisticOperation, OptimisticState } from './types';
+import type { AnyAction } from 'redux';
+import { OptimisticOperation, getOptimisticMeta, updateAction, type OptimisticAction } from './actions';
+import { type BoundReducer } from './optimistron';
+import { createStateHandler, type BoundStateHandler, type OptimisticState } from './state';
+
+export enum OptimisticMergeResult {
+    SKIP,
+    CONFLICT,
+}
 
 /* Apply the effect of an optimistic action to an array of mutations.
  * This function handles different operations, such as staging, failing,

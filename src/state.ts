@@ -1,5 +1,7 @@
+import { OptimisticAction } from './actions';
 import { OptimisticRefIdKey } from './constants';
-import { OptimisticAction, OptimisticState } from './types';
+
+export type OptimisticState<T> = { state: T; mutations: OptimisticAction[]; [OptimisticRefIdKey]: string };
 
 export interface StateHandler<
     State,

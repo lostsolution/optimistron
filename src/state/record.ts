@@ -1,4 +1,4 @@
-import { OptimisticMergeResult } from '../types';
+import { OptimisticMergeResult } from '../mutations';
 
 type StateRecordById<T> = Record<string, T>;
 

@@ -1,9 +1,18 @@
 import type { ActionCreatorWithPreparedPayload, AnyAction, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
 import { OptimisticMetaKey } from './constants';
-import { OptimisticAction, OptimisticId, OptimisticMeta, OptimisticOperation } from './types';
-
 export const OPTIMISTRON_INIT = { type: '__OPTIMISTRON_INIT__' };
+
+export enum OptimisticOperation {
+    STAGE,
+    COMMIT,
+    STASH,
+    FAIL,
+}
+
+export type OptimisticId<A> = string | ((action: A) => string);
+export type OptimisticAction<A extends AnyAction = AnyAction> = A & { meta: { [OptimisticMetaKey]: OptimisticMeta } };
+export type OptimisticMeta = { id: string; operation: OptimisticOperation; conflict: boolean; failed: boolean };
 
 export const actionMatchesNamespace = (action: OptimisticAction, namespace?: string) =>
     !namespace || action.type.startsWith(namespace);
