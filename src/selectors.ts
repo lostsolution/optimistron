@@ -19,11 +19,14 @@ export const selectOptimistic =
 
 export const selectFailedAction =
     (optimisticId: string) =>
-    <State>({ mutations }: OptimisticState<State>) =>
-        mutations.find((action) => {
+    <State>({ mutations }: OptimisticState<State>) => {
+        const failedAction = mutations.find((action) => {
             const { id, failed } = getOptimisticMeta(action);
             return id === optimisticId && failed;
         });
+
+        if (failedAction) return updateAction(failedAction, { operation: OptimisticOperation.STAGE, failed: false });
+    };
 
 export const selectConflictingAction =
     (optimisticId: string) =>
