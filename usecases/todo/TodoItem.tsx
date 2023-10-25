@@ -1,15 +1,12 @@
 import { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectFailedAction, selectIsFailed, selectIsOptimistic } from '../../src/selectors';
-import { State, Todo, createTodo, editTodo } from './store';
+import { Todo, createTodo, editTodo, selectOptimisticTodoState } from './store';
 
 type Props = { todo: Todo };
 
 export const TodoItem: FC<Props> = ({ todo }) => {
     const dispatch = useDispatch();
-    const optimistic = useSelector((state: State) => selectIsOptimistic(todo.id)(state.todos));
-    const failed = useSelector((state: State) => selectIsFailed(todo.id)(state.todos));
-    const retryAction = useSelector((state: State) => selectFailedAction(todo.id)(state.todos));
+    const { optimistic, failed, retry } = useSelector(selectOptimisticTodoState(todo.id));
 
     const toggleTodo = async () => {
         const update = { ...todo, done: !todo.done, revision: todo.revision + 1 };
@@ -51,7 +48,7 @@ export const TodoItem: FC<Props> = ({ todo }) => {
                     </>
                 )}
 
-                {retryAction && <button onClick={() => dispatch(retryAction)}>Retry</button>}
+                {retry && <button onClick={() => dispatch(retry)}>Retry</button>}
             </div>
         </li>
     );
