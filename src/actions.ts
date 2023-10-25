@@ -76,19 +76,29 @@ export const createOptimisticActions = <
     PA_Stash extends PrepareAction<any>,
 >(
     type: ActionType,
-    options: {
-        stage: PA_Stage;
-        stash?: PA_Stash;
-        commit?: PA_Commit;
-        fail?: PA_Fail;
-    },
-) => ({
-    stage: createOptimisticAction(`${type}::stage`, OptimisticOperation.STAGE, options.stage),
-    commit: createOptimisticAction(`${type}::commit`, OptimisticOperation.COMMIT, options.commit ?? options.stage),
-    fail: createOptimisticAction(`${type}::fail`, OptimisticOperation.FAIL, options.fail ?? emptyActionPreparator),
-    stash: createOptimisticAction(`${type}::stash`, OptimisticOperation.STASH, options.stash ?? emptyActionPreparator),
-    match: createOptimisticActionMatcher<ActionType, PA_Commit>(type),
-});
+    options:
+        | PA_Stage
+        | {
+              stage: PA_Stage;
+              stash?: PA_Stash;
+              commit?: PA_Commit;
+              fail?: PA_Fail;
+          },
+) => {
+    const noOptions = typeof options === 'function';
+    const stagePA = noOptions ? options : options.stage;
+    const commitPA = noOptions ? options : options.commit ?? options.stage;
+    const failPA = noOptions ? emptyActionPreparator : options.fail ?? emptyActionPreparator;
+    const stashPA = noOptions ? emptyActionPreparator : options.stash ?? emptyActionPreparator;
+
+    return {
+        stage: createOptimisticAction(`${type}::stage`, OptimisticOperation.STAGE, stagePA),
+        commit: createOptimisticAction(`${type}::commit`, OptimisticOperation.COMMIT, commitPA),
+        fail: createOptimisticAction(`${type}::fail`, OptimisticOperation.FAIL, failPA),
+        stash: createOptimisticAction(`${type}::stash`, OptimisticOperation.STASH, stashPA),
+        match: createOptimisticActionMatcher<ActionType, PA_Commit>(type),
+    };
+};
 
 export const updateAction = (action: OptimisticAction, update: Partial<OptimisticMeta>): OptimisticAction => ({
     ...action,
