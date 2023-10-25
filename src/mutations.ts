@@ -1,7 +1,6 @@
-import type { AnyAction } from 'redux';
 import { OptimisticOperation, getOptimisticMeta, updateAction, type OptimisticAction } from './actions';
-import { type BoundReducer } from './optimistron';
-import { createStateHandler, type BoundStateHandler, type OptimisticState } from './state';
+import { type BoundReducer } from './reducer';
+import { cloneOptimisticState, createStateHandler, type OptimisticState } from './state';
 
 export enum OptimisticMergeResult {
     SKIP,
@@ -41,14 +40,14 @@ export const processMutation = (action: OptimisticAction, mutations: OptimisticA
 
 export const sanitizeMutations =
     <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
-        boundReducer: BoundReducer<AnyAction, State, CreateParams, UpdateParams, DeleteParams>,
+        boundReducer: BoundReducer<State>,
         bindHandler: ReturnType<typeof createStateHandler<State, CreateParams, UpdateParams, DeleteParams>>,
     ) =>
-    ({ state, mutations }: OptimisticState<State>) => {
-        const sanitized = mutations.reduce<{
+    (state: OptimisticState<State>) => {
+        const sanitized = state.mutations.reduce<{
             mutations: OptimisticAction[];
             changed: boolean;
-            state: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>;
+            optimistic: OptimisticState<State>;
         }>(
             (acc, action) => {
                 try {
@@ -56,8 +55,8 @@ export const sanitizeMutations =
                      * to detect if this action can still be applied or if - depending on
                      * your use-case - it should be flagged as `conflicting` */
                     const asIfCommitted = updateAction(action, { operation: OptimisticOperation.COMMIT });
-                    const nextState = boundReducer(acc.state, asIfCommitted);
-                    const noop = nextState === acc.state.getState();
+                    const nextState = boundReducer(acc.optimistic, asIfCommitted);
+                    const noop = nextState === acc.optimistic;
 
                     /* if the optimistic action did not have any effect on the state
                      * then discard it - depending on how you define your reducer this
@@ -67,7 +66,7 @@ export const sanitizeMutations =
                     if (noop) acc.changed = true;
                     /* if the action did have an effect on state without throwing any
                      * merge errors then it is considered valid */ else {
-                        acc.state = bindHandler(acc.state.merge(nextState));
+                        acc.optimistic.state = bindHandler(acc.optimistic.state).merge(nextState);
                         acc.mutations.push(action);
                     }
                     /* This will catch any errors thrown from your handler's `merge` function.
@@ -88,8 +87,8 @@ export const sanitizeMutations =
 
                 return acc;
             },
-            { mutations: [], changed: false, state: bindHandler(state) },
+            { mutations: [], changed: false, optimistic: cloneOptimisticState(state) },
         );
 
-        return sanitized.changed ? sanitized.mutations : mutations;
+        return sanitized.changed ? sanitized.mutations : state.mutations;
     };

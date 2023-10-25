@@ -67,3 +67,7 @@ export const updateOptimisticState =
         if (state === prev.state && mutations === prev.mutations) return prev;
         return buildOptimisticState(state, mutations, prev[OptimisticRefIdKey]);
     };
+
+export const cloneOptimisticState = <State>(optimistic: OptimisticState<State>): OptimisticState<State> => ({
+    ...optimistic,
+});

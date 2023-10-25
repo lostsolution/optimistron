@@ -1,5 +1,6 @@
 import { createOptimisticActions, updateAction } from './actions';
-import { OptimistronReducerRefs, optimistron } from './optimistron';
+import { optimistron } from './optimistron';
+import { OptimistronReducerRefs } from './reducer';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from './selectors';
 import { entryStateHandlerFactory } from './state/record';
 

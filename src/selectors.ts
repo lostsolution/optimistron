@@ -1,25 +1,25 @@
-import { getOptimisticMeta } from './actions';
+import { OptimisticOperation, getOptimisticMeta, updateAction } from './actions';
 import { OptimisticRefIdKey } from './constants';
-import { OptimistronReducerRefs } from './optimistron';
-import { isOptimisticState, type OptimisticState } from './state';
+import { OptimistronReducerRefs } from './reducer';
+import { cloneOptimisticState, type OptimisticState } from './state';
 
 export const selectOptimistic =
-    <State extends {}, Slice>(selector: (state: State) => Slice) =>
-    (state: State): Slice => {
-        if (isOptimisticState(state)) {
-            const reducer = OptimistronReducerRefs.get(state[OptimisticRefIdKey]);
-            if (!reducer) return selector(state);
+    <State, Slice>(selector: (state: OptimisticState<State>) => Slice) =>
+    (state: OptimisticState<State>): Slice => {
+        const boundReducer = OptimistronReducerRefs.get(state[OptimisticRefIdKey]);
+        if (!boundReducer) return selector(state);
 
-            const optimisticState = state.mutations.reduce((nextState, action) => reducer(nextState, action), state);
-            return selector(optimisticState);
-        }
+        const optimisticState = state.mutations.reduce((acc, action) => {
+            acc.state = boundReducer(acc, updateAction(action, { operation: OptimisticOperation.COMMIT }));
+            return acc;
+        }, cloneOptimisticState(state));
 
-        return selector(state);
+        return selector(optimisticState);
     };
 
 export const selectFailedAction =
     (optimisticId: string) =>
-    <State extends {}>({ mutations }: OptimisticState<State>) =>
+    <State>({ mutations }: OptimisticState<State>) =>
         mutations.find((action) => {
             const { id, failed } = getOptimisticMeta(action);
             return id === optimisticId && failed;
@@ -27,7 +27,7 @@ export const selectFailedAction =
 
 export const selectConflictingAction =
     (optimisticId: string) =>
-    <State extends {}>({ mutations }: OptimisticState<State>) =>
+    <State>({ mutations }: OptimisticState<State>) =>
         mutations.find((action) => {
             const { id, conflict } = getOptimisticMeta(action);
             return id === optimisticId && conflict;
@@ -35,15 +35,15 @@ export const selectConflictingAction =
 
 export const selectIsOptimistic =
     (optimisticId: string) =>
-    <State extends {}>({ mutations }: OptimisticState<State>) =>
+    <State>({ mutations }: OptimisticState<State>) =>
         mutations.some((action) => getOptimisticMeta(action).id === optimisticId);
 
 export const selectIsFailed =
     (optimisticId: string) =>
-    <State extends {}>(state: OptimisticState<State>) =>
+    <State>(state: OptimisticState<State>) =>
         selectFailedAction(optimisticId)(state) !== undefined;
 
 export const selectIsConflicting =
     (optimisticId: string) =>
-    <State extends {}>(state: OptimisticState<State>) =>
+    <State>(state: OptimisticState<State>) =>
         selectConflictingAction(optimisticId)(state) !== undefined;
