@@ -1,24 +1,24 @@
 import { OptimisticMergeResult } from '../mutations';
 
-type StateRecordById<T> = Record<string, T>;
+export type EntryState<T> = Record<string, T>;
 
-export const recordStateHandler = <T extends { [key: string]: any }>(
+export const entryStateHandlerFactory = <T extends { [key: string]: any }>(
     itemIdKey: keyof T,
     compare: (existing: T, incoming: T) => boolean,
 ) => {
     return {
         /*  Handles creating a new item in the state */
-        create: (state: StateRecordById<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
+        create: (state: EntryState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
 
         /* Handles updating an existing item in the state. Ensures the item exists to
          * correctly treat optimistic edits as no-ops when editing a non-existing item,
          * important for resolving noop edits as skippable mutations */
-        update: (state: StateRecordById<T>, item: T) =>
+        update: (state: EntryState<T>, item: T) =>
             state[item[itemIdKey]] ? { ...state, [item[itemIdKey]]: item } : state,
 
         /* Handles deleting an item from state. Checks if the item exists in the state or
          * else no-ops. Important for resolving noop deletes as skippable mutations */
-        delete: (state: StateRecordById<T>, itemId: string) => {
+        delete: (state: EntryState<T>, itemId: string) => {
             if (state[itemId]) {
                 const nextState = { ...state };
                 delete nextState[itemId];
@@ -30,7 +30,7 @@ export const recordStateHandler = <T extends { [key: string]: any }>(
 
         /* Merges the current state with incoming changes while handling conflicts,
          * deletions, creations, and valid updates.  */
-        merge: (curr: StateRecordById<T>, incoming: StateRecordById<T>) => {
+        merge: (curr: EntryState<T>, incoming: EntryState<T>) => {
             const mergedState = { ...curr };
             let mutated = false;
 

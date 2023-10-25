@@ -1,12 +1,12 @@
 import { createOptimisticActions, updateAction } from './actions';
 import { OptimistronReducerRefs, optimistron } from './optimistron';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from './selectors';
-import { recordStateHandler } from './state/record';
+import { entryStateHandlerFactory } from './state/record';
 
 describe('optimistron', () => {
     beforeEach(() => OptimistronReducerRefs.clear());
 
-    describe('item record state', () => {
+    describe('EntryState', () => {
         type Item = { id: string; value: string; revision: number };
 
         const createItem = createOptimisticActions('items::add', { stage: (item: Item) => ({ payload: { item } }) });
@@ -15,7 +15,7 @@ describe('optimistron', () => {
         const reducer = optimistron(
             'items',
             {},
-            recordStateHandler<Item>('id', (existing, incoming) => incoming.revision > existing.revision),
+            entryStateHandlerFactory<Item>('id', (existing, incoming) => incoming.revision > existing.revision),
             ({ getState, create, update }, action) => {
                 if (createItem.match(action)) return create(action.payload.item);
                 if (editItem.match(action)) return update(action.payload.item);
@@ -36,7 +36,7 @@ describe('optimistron', () => {
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
 
-            test('stage - fail', () => {
+            test('stage -> fail', () => {
                 const stage = createItem.stage('001', { id: '001', value: '1', revision: 0 });
                 const fail = createItem.fail('001', new Error());
                 const nextState = [stage, fail].reduce(reducer, initial);
@@ -47,7 +47,7 @@ describe('optimistron', () => {
                 expect(selectIsFailed('001')(nextState)).toBe(true);
             });
 
-            test('stage - fail - stage', () => {
+            test('stage -> fail -> stage', () => {
                 const stage = createItem.stage('001', { id: '001', value: '1', revision: 0 });
                 const fail = createItem.fail('001', new Error());
                 const nextState = [stage, fail, stage].reduce(reducer, initial);
@@ -58,7 +58,7 @@ describe('optimistron', () => {
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
 
-            test('stage - stash', () => {
+            test('stage -> stash', () => {
                 const stage = createItem.stage('001', { id: '001', value: '1', revision: 0 });
                 const stash = createItem.stash('001');
                 const nextState = [stage, stash].reduce(reducer, initial);
@@ -69,7 +69,7 @@ describe('optimistron', () => {
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
 
-            test('stage - commit', () => {
+            test('stage -> commit', () => {
                 const stage = createItem.stage('001', { id: '001', value: '1', revision: 0 });
                 const commit = createItem.commit('001', stage.payload.item);
                 const nextState = [stage, commit].reduce(reducer, initial);
@@ -82,7 +82,7 @@ describe('optimistron', () => {
         });
 
         describe('update', () => {
-            test('non-existing skip', () => {
+            test('update -> noop', () => {
                 const update = editItem.stage('002', { id: '002', value: '2', revision: 2 });
                 const nextState = [update].reduce(reducer, initial);
 
@@ -90,7 +90,7 @@ describe('optimistron', () => {
                 expect(nextState.mutations).toEqual([]);
             });
 
-            test('revision conflict', () => {
+            test('update -> conflict', () => {
                 const commit = createItem.commit('001', { id: '001', value: '1', revision: 1 });
                 const update = editItem.stage('001', { id: '001', value: '1', revision: 0 });
                 const nextState = [commit, update].reduce(reducer, initial);
