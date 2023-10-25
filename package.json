@@ -1,26 +1,32 @@
 {
-  "name": "optimistron",
-  "packageManager": "yarn@1.22.19",
-  "devDependencies": {
-    "@reduxjs/toolkit": "^1.9.5",
-    "@types/jest": "^29.5.5",
-    "@types/redux": "^3.6.0",
-    "prettier": "^3.0.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-redux": "^8.1.3",
-    "redux": "^4.2.1",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.2.2"
-  },
-  "peerDependencies": {
-    "@reduxjs/toolkit": "^1.9.5"
-  },
-  "version": "1.0.0",
-  "main": "index.js",
-  "author": "Edvin CANDON <edvin.candon@proton.ch>",
-  "license": "MIT",
-  "dependencies": {
-    "jest": "^29.7.0"
-  }
+    "name": "optimistron",
+    "packageManager": "yarn@1.22.19",
+    "devDependencies": {
+        "@reduxjs/toolkit": "^1.9.5",
+        "@types/jest": "^29.5.5",
+        "@types/react-dom": "^18.2.14",
+        "@types/redux": "^3.6.0",
+        "prettier": "^3.0.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-redux": "^8.1.3",
+        "redux": "^4.2.1",
+        "serve": "^14.2.1",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.2.2"
+    },
+    "peerDependencies": {
+        "@reduxjs/toolkit": "^1.9.5"
+    },
+    "scripts": {
+        "build:usecases": "bun build ./usecases/todo/Todo.tsx --outdir ./usecases/dist --splitting --entry-naming [dir]/[name].[ext] --target browser --watch",
+        "serve:usecases": "bun serve ./usecases/"
+    },
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "Edvin CANDON <edvin.candon@proton.ch>",
+    "license": "MIT",
+    "dependencies": {
+        "jest": "^29.7.0"
+    }
 }
