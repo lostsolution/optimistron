@@ -25,7 +25,7 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>(
 
         /* Handles deleting an item from state. Checks if the item exists in the state or
          * else no-ops. Important for resolving noop deletes as skippable mutations */
-        delete: (state: RecordState<T>, itemId: string) => {
+        remove: (state: RecordState<T>, itemId: string) => {
             if (state[itemId]) {
                 const nextState = { ...state };
                 delete nextState[itemId];

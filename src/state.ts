@@ -11,7 +11,7 @@ export interface StateHandler<
 > {
     create: (state: State, ...args: CreateParams) => State;
     update: (state: State, ...args: UpdateParams) => State;
-    delete: (state: State, ...args: DeleteParams) => State;
+    remove: (state: State, ...args: DeleteParams) => State;
     merge: (current: State, incoming: State) => State;
 }
 
@@ -23,7 +23,7 @@ export interface BoundStateHandler<
 > {
     create: (...args: CreateParams) => State;
     update: (...args: UpdateParams) => State;
-    delete: (...args: DeleteParams) => State;
+    remove: (...args: DeleteParams) => State;
     merge: (incoming: State) => State;
     getState: () => State;
 }
@@ -35,7 +35,7 @@ export const stateBinder =
     (state: State): BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams> => ({
         create: (...args: CreateParams) => handler.create(state, ...args),
         update: (...args: UpdateParams) => handler.update(state, ...args),
-        delete: (...args: DeleteParams) => handler.delete(state, ...args),
+        remove: (...args: DeleteParams) => handler.remove(state, ...args),
         merge: (incoming: State) => handler.merge(state, incoming),
         getState: () => state,
     });

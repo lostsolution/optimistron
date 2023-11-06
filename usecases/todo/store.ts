@@ -11,7 +11,10 @@ export type State = ReturnType<typeof store.getState>;
 const initial: TodoState = {};
 
 export const createTodo = createTransitions('todos::add', (todo: Todo) => ({ payload: { todo } }));
-export const editTodo = createTransitions('todos::edit', (todo: Todo) => ({ payload: { todo } }));
+export const editTodo = createTransitions('todos::edit', (id: string, update: Partial<Todo>) => ({
+    payload: { id, update },
+}));
+export const deleteTodo = createTransitions('todos::edit', (id: string) => ({ payload: { id } }));
 
 export const selectOptimisticTodos = createSelector(
     (state: State) => state.todos,
@@ -32,9 +35,10 @@ export const todos = optimistron(
     'todos',
     initial,
     recordHandlerFactory<Todo>('id', (existing, incoming) => incoming.revision > existing.revision),
-    ({ getState, create, update }, action) => {
+    ({ getState, create, update, remove }, action) => {
         if (createTodo.match(action)) return create(action.payload.todo);
-        if (editTodo.match(action)) return update(action.payload.todo.id, action.payload.todo);
+        if (editTodo.match(action)) return update(action.payload.id, action.payload.update);
+        if (deleteTodo.match(action)) return remove(action.payload.id);
         return getState();
     },
 );
