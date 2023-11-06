@@ -1,7 +1,7 @@
 import { AnyAction } from 'redux';
-import { BoundStateHandler, OptimisticState } from './state';
+import { BoundStateHandler, TransitionState } from './state';
 
-export type BoundReducer<State = any> = (state: OptimisticState<State>, action: AnyAction) => State;
+export type BoundReducer<State = any> = (state: TransitionState<State>, action: AnyAction) => State;
 
 export type HandlerReducer<
     State,
@@ -10,12 +10,18 @@ export type HandlerReducer<
     DeleteParams extends any[],
 > = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: AnyAction) => State;
 
-export const OptimistronReducerRefs = new Map<string, BoundReducer>();
+export const ReducerMap = new Map<string, BoundReducer>();
 
 export const bindReducer =
     <S, C extends any[], U extends any[], D extends any[]>(
         reducer: HandlerReducer<S, C, U, D>,
         bindState: (state: S) => BoundStateHandler<S, C, U, D>,
     ): BoundReducer<S> =>
-    (optimisticState, action) =>
-        reducer(bindState(optimisticState.state), action);
+    (transitionState, action) => {
+        try {
+            return reducer(bindState(transitionState.state), action);
+        } catch (error) {
+            console.warn(`Error while processing action ${action.type}`);
+            return transitionState.state;
+        }
+    };

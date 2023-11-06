@@ -1,7 +1,7 @@
-import { OptimisticAction } from './actions';
-import { OptimisticRefIdKey } from './constants';
+import { TransitionAction } from './actions';
+import { ReducerIdKey } from './constants';
 
-export type OptimisticState<T> = { state: T; mutations: OptimisticAction[]; [OptimisticRefIdKey]: string };
+export type TransitionState<T> = { state: T; transitions: TransitionAction[]; [ReducerIdKey]: string };
 
 export interface StateHandler<
     State,
@@ -28,7 +28,7 @@ export interface BoundStateHandler<
     getState: () => State;
 }
 
-export const createStateHandler =
+export const stateBinder =
     <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
         handler: StateHandler<State, CreateParams, UpdateParams, DeleteParams>,
     ) =>
@@ -40,34 +40,34 @@ export const createStateHandler =
         getState: () => state,
     });
 
-export const isOptimisticState = <State>(state: any): state is OptimisticState<State> => OptimisticRefIdKey in state;
+export const isTransitionState = <State>(state: any): state is TransitionState<State> => ReducerIdKey in state;
 
-export const buildOptimisticState = <State>(
+export const buildTransitionState = <State>(
     state: State,
-    mutations: OptimisticAction[],
-    id: string,
-): OptimisticState<State> => {
-    const optimisticState = isOptimisticState<State>(state)
+    transitions: TransitionAction[],
+    namespace: string,
+): TransitionState<State> => {
+    const transitionState = isTransitionState<State>(state)
         ? { ...state }
-        : { state, mutations, [OptimisticRefIdKey]: id };
+        : { state, transitions, [ReducerIdKey]: namespace };
 
-    /* malke internal optimistic properties non-enumerable to avoid
-     * consumers from unintentionally accessing them when iterating */
-    Object.defineProperties(optimisticState, {
-        mutations: { value: mutations, enumerable: false },
-        [OptimisticRefIdKey]: { value: id, enumerable: false },
+    /* make internal properties non-enumerable to avoid consumers
+     * from unintentionally accessing them when iterating */
+    Object.defineProperties(transitionState, {
+        transitions: { value: transitions, enumerable: false },
+        [ReducerIdKey]: { value: namespace, enumerable: false },
     });
 
-    return optimisticState;
+    return transitionState;
 };
 
-export const updateOptimisticState =
-    <State>(prev: OptimisticState<State>) =>
-    (state: State, mutations: OptimisticAction[]): OptimisticState<State> => {
-        if (state === prev.state && mutations === prev.mutations) return prev;
-        return buildOptimisticState(state, mutations, prev[OptimisticRefIdKey]);
+export const updateTransitionState =
+    <State>(prev: TransitionState<State>) =>
+    (state: State, transitions: TransitionAction[]): TransitionState<State> => {
+        if (state === prev.state && transitions === prev.transitions) return prev;
+        return buildTransitionState(state, transitions, prev[ReducerIdKey]);
     };
 
-export const cloneOptimisticState = <State>(optimistic: OptimisticState<State>): OptimisticState<State> => ({
-    ...optimistic,
+export const cloneTransitionState = <State>(transitionState: TransitionState<State>): TransitionState<State> => ({
+    ...transitionState,
 });

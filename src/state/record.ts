@@ -1,24 +1,31 @@
-import { OptimisticMergeResult } from '../mutations';
+import { StateHandler } from '../state';
+import { OptimisticMergeResult } from '../transitions';
 
-export type EntryState<T> = Record<string, T>;
+export type RecordState<T> = Record<string, T>;
 
-export const entryStateHandlerFactory = <T extends { [key: string]: any }>(
+/**
+ * Creates a `StateHandler` for a record based state.
+ * - `itemIdKey` parameter is used for determining which key should be used for indexing the record state.
+ * - `compare` function allows determining if an incoming item is conflicting with its previous value. Your item
+ *   data structure must hence support some kind of versioning or timestamping in order to leverage this.
+ */
+export const recordHandlerFactory = <T extends { [key: string]: any }>(
     itemIdKey: keyof T,
     compare: (existing: T, incoming: T) => boolean,
-) => {
+): StateHandler<RecordState<T>, [item: T], [itemId: string, partialItem: Partial<T>], [itemId: string]> => {
     return {
         /*  Handles creating a new item in the state */
-        create: (state: EntryState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
+        create: (state: RecordState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
 
         /* Handles updating an existing item in the state. Ensures the item exists to
          * correctly treat optimistic edits as no-ops when editing a non-existing item,
          * important for resolving noop edits as skippable mutations */
-        update: (state: EntryState<T>, item: T) =>
-            state[item[itemIdKey]] ? { ...state, [item[itemIdKey]]: item } : state,
+        update: (state: RecordState<T>, itemId: string, partialItem: Partial<T>) =>
+            state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
 
         /* Handles deleting an item from state. Checks if the item exists in the state or
          * else no-ops. Important for resolving noop deletes as skippable mutations */
-        delete: (state: EntryState<T>, itemId: string) => {
+        delete: (state: RecordState<T>, itemId: string) => {
             if (state[itemId]) {
                 const nextState = { ...state };
                 delete nextState[itemId];
@@ -30,7 +37,7 @@ export const entryStateHandlerFactory = <T extends { [key: string]: any }>(
 
         /* Merges the current state with incoming changes while handling conflicts,
          * deletions, creations, and valid updates.  */
-        merge: (curr: EntryState<T>, incoming: EntryState<T>) => {
+        merge: (curr: RecordState<T>, incoming: RecordState<T>) => {
             const mergedState = { ...curr };
             let mutated = false;
 

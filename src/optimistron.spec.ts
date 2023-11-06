@@ -1,25 +1,25 @@
-import { createOptimisticActions, updateAction } from './actions';
+import { createTransitions, updateTransition } from './actions';
 import { optimistron } from './optimistron';
-import { OptimistronReducerRefs } from './reducer';
+import { ReducerMap } from './reducer';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from './selectors';
-import { entryStateHandlerFactory } from './state/record';
+import { recordHandlerFactory } from './state/record';
 
 describe('optimistron', () => {
-    beforeEach(() => OptimistronReducerRefs.clear());
+    beforeEach(() => ReducerMap.clear());
 
     describe('EntryState', () => {
         type Item = { id: string; value: string; revision: number };
 
-        const createItem = createOptimisticActions('items::add', { stage: (item: Item) => ({ payload: { item } }) });
-        const editItem = createOptimisticActions('items::edit', { stage: (item: Item) => ({ payload: { item } }) });
+        const createItem = createTransitions('items::add', { stage: (item: Item) => ({ payload: { item } }) });
+        const editItem = createTransitions('items::edit', { stage: (item: Item) => ({ payload: { item } }) });
 
         const reducer = optimistron(
             'items',
             {},
-            entryStateHandlerFactory<Item>('id', (existing, incoming) => incoming.revision > existing.revision),
+            recordHandlerFactory<Item>('id', (existing, incoming) => incoming.revision > existing.revision),
             ({ getState, create, update }, action) => {
                 if (createItem.match(action)) return create(action.payload.item);
-                if (editItem.match(action)) return update(action.payload.item);
+                if (editItem.match(action)) return update(action.payload.item.id, action.payload.item);
                 return getState();
             },
         );
@@ -32,7 +32,7 @@ describe('optimistron', () => {
                 const nextState = reducer(initial, stage);
 
                 expect(nextState).toStrictEqual(initial);
-                expect(nextState.mutations).toEqual([stage]);
+                expect(nextState.transitions).toEqual([stage]);
                 expect(selectIsOptimistic('001')(nextState)).toBe(true);
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
@@ -43,7 +43,7 @@ describe('optimistron', () => {
                 const nextState = [stage, fail].reduce(reducer, initial);
 
                 expect(nextState).toStrictEqual(initial);
-                expect(nextState.mutations).toEqual([updateAction(stage, { failed: true })]);
+                expect(nextState.transitions).toEqual([updateTransition(stage, { failed: true })]);
                 expect(selectIsOptimistic('001')(nextState)).toBe(true);
                 expect(selectIsFailed('001')(nextState)).toBe(true);
             });
@@ -54,7 +54,7 @@ describe('optimistron', () => {
                 const nextState = [stage, fail, stage].reduce(reducer, initial);
 
                 expect(nextState).toStrictEqual(initial);
-                expect(nextState.mutations).toEqual([stage]);
+                expect(nextState.transitions).toEqual([stage]);
                 expect(selectIsOptimistic('001')(nextState)).toBe(true);
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
@@ -65,7 +65,7 @@ describe('optimistron', () => {
                 const nextState = [stage, stash].reduce(reducer, initial);
 
                 expect(nextState).toStrictEqual(initial);
-                expect(nextState.mutations).toEqual([]);
+                expect(nextState.transitions).toEqual([]);
                 expect(selectIsOptimistic('001')(nextState)).toBe(false);
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
@@ -76,7 +76,7 @@ describe('optimistron', () => {
                 const nextState = [stage, commit].reduce(reducer, initial);
 
                 expect(nextState).toEqual({ state: { ['001']: stage.payload.item } });
-                expect(nextState.mutations).toEqual([]);
+                expect(nextState.transitions).toEqual([]);
                 expect(selectIsOptimistic('001')(nextState)).toBe(false);
                 expect(selectIsFailed('001')(nextState)).toBe(false);
             });
@@ -88,7 +88,7 @@ describe('optimistron', () => {
                 const nextState = [update].reduce(reducer, initial);
 
                 expect(nextState).toStrictEqual(initial);
-                expect(nextState.mutations).toEqual([]);
+                expect(nextState.transitions).toEqual([]);
             });
 
             test('update -> conflict', () => {

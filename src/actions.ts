@@ -1,74 +1,85 @@
 import type { ActionCreatorWithPreparedPayload, AnyAction, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
-import { OptimisticMetaKey } from './constants';
-export const OPTIMISTRON_INIT = { type: '__OPTIMISTRON_INIT__' };
+import { MetaKey } from './constants';
 
-export enum OptimisticOperation {
+export const OPTIMISTRON_INIT = { type: '__OPTIMISTRON_INIT__' };
+export const EMPTY_PA = () => ({ payload: {} });
+
+export enum TransitionOperation {
     STAGE,
     COMMIT,
     STASH,
     FAIL,
 }
 
-export type OptimisticId<A> = string | ((action: A) => string);
-export type OptimisticAction<A extends AnyAction = AnyAction> = A & { meta: { [OptimisticMetaKey]: OptimisticMeta } };
-export type OptimisticMeta = { id: string; operation: OptimisticOperation; conflict: boolean; failed: boolean };
+export type TransitionNamespace = `${string}::${string}`;
+export type TransitionAction<A extends AnyAction = AnyAction> = A & { meta: { [MetaKey]: TransitionMeta } };
+export type TransitionMeta = { id: string; operation: TransitionOperation; conflict: boolean; failed: boolean };
 
-export const actionMatchesNamespace = (action: OptimisticAction, namespace?: string) =>
-    !namespace || action.type.startsWith(namespace);
+/* Extracts the transition meta definitions on an action */
+export const getTransitionMeta = (action: TransitionAction) => action.meta[MetaKey];
 
-export const resolveOptimisticId = <A>(action: A, id: OptimisticId<A>) => (typeof id === 'string' ? id : id(action));
-
-export const getOptimisticMeta = (action: OptimisticAction) => action.meta[OptimisticMetaKey];
-
-export const withOptimisticMeta = <PA extends ReturnType<PrepareAction<any>>>(action: PA, options: OptimisticMeta) => ({
+/* Hydrates an action's transition meta definition */
+export const withTransitionMeta = <PA extends ReturnType<PrepareAction<any>>>(action: PA, options: TransitionMeta) => ({
     ...action,
     meta: {
         ...('meta' in action ? action.meta : {}),
-        [OptimisticMetaKey]: options,
+        [MetaKey]: options,
     },
 });
 
-export const isOptimisticActionForNamespace = (action: AnyAction, namespace: string): action is OptimisticAction =>
-    action?.meta && OptimisticMetaKey in action?.meta && action.type.startsWith(`${namespace}::`);
+/* checks if an action is a transition for the supplied namespace */
+export const isTransitionForNamespace = (action: AnyAction, namespace: string): action is TransitionAction =>
+    action?.meta && MetaKey in action?.meta && action.type.startsWith(`${namespace}::`);
 
-export const createOptimisticAction = <
-    PA extends PrepareAction<any>,
-    A extends ReturnType<PA>,
-    P extends Parameters<PA>,
-    T extends `${string}::${string}`,
-    E = A extends { error: infer E } ? E : never,
-    M = { [OptimisticMetaKey]: OptimisticMeta } & (A extends { meta: infer M } ? M : {}),
->(
-    type: T,
-    operation: OptimisticOperation,
-    prepare: PA,
-) =>
-    createAction(type, (optimisticId, ...params) =>
-        withOptimisticMeta(prepare(...params), {
-            conflict: false,
-            failed: false,
-            id: optimisticId,
-            operation,
-        }),
-    ) as ActionCreatorWithPreparedPayload<[optimisticId: string, ...P], A['payload'], T, E, M>;
+/* updates the transition meta of a transition action */
+export const updateTransition = (action: TransitionAction, update: Partial<TransitionMeta>): TransitionAction => ({
+    ...action,
+    meta: {
+        ...action.meta,
+        [MetaKey]: {
+            ...action.meta[MetaKey],
+            ...update,
+        },
+    },
+});
 
-const createOptimisticActionMatcher =
-    <ActionType extends `${string}::${string}`, PA extends PrepareAction<any>>(type: ActionType) =>
+/* helper action matcher function that will match the supplied
+ * namespace when the transition operation is of type COMMIT */
+const createTransitionMatcher =
+    <NS extends TransitionNamespace, PA extends PrepareAction<any>>(namespace: NS) =>
     <
         Result extends ReturnType<PA>,
         Error = Result extends { error: infer Err } ? Err : never,
-        Meta = { [OptimisticMetaKey]: OptimisticMeta } & (Result extends { meta: infer Meta } ? Meta : {}),
+        Meta = { [MetaKey]: TransitionMeta } & (Result extends { meta: infer Meta } ? Meta : {}),
     >(
         action: AnyAction,
-    ): action is PayloadAction<Result['payload'], ActionType, Meta, Error> =>
-        action.type === `${type}::commit` ||
-        (action.type === `${type}::stage` &&
-            (action as any).meta[OptimisticMetaKey].operation === OptimisticOperation.COMMIT);
+    ): action is PayloadAction<Result['payload'], NS, Meta, Error> =>
+        isTransitionForNamespace(action, namespace) &&
+        getTransitionMeta(action).operation === TransitionOperation.COMMIT;
 
-const emptyActionPreparator = () => ({ payload: {} });
+export const createTransition = <
+    PA extends PrepareAction<any>,
+    A extends ReturnType<PA>,
+    P extends Parameters<PA>,
+    T extends TransitionNamespace,
+    E = A extends { error: infer E } ? E : never,
+    M = { [MetaKey]: TransitionMeta } & (A extends { meta: infer M } ? M : {}),
+>(
+    type: T,
+    operation: TransitionOperation,
+    prepare: PA,
+) =>
+    createAction(type, (transitionId, ...params) =>
+        withTransitionMeta(prepare(...params), {
+            conflict: false,
+            failed: false,
+            id: transitionId,
+            operation,
+        }),
+    ) as ActionCreatorWithPreparedPayload<[transitionId: string, ...P], A['payload'], T, E, M>;
 
-export const createOptimisticActions = <
+export const createTransitions = <
     ActionType extends `${string}::${string}`,
     PA_Stage extends PrepareAction<any>,
     PA_Commit extends PA_Stage,
@@ -88,25 +99,14 @@ export const createOptimisticActions = <
     const noOptions = typeof options === 'function';
     const stagePA = noOptions ? options : options.stage;
     const commitPA = noOptions ? options : options.commit ?? options.stage;
-    const failPA = noOptions ? emptyActionPreparator : options.fail ?? emptyActionPreparator;
-    const stashPA = noOptions ? emptyActionPreparator : options.stash ?? emptyActionPreparator;
+    const failPA = noOptions ? EMPTY_PA : options.fail ?? EMPTY_PA;
+    const stashPA = noOptions ? EMPTY_PA : options.stash ?? EMPTY_PA;
 
     return {
-        stage: createOptimisticAction(`${type}::stage`, OptimisticOperation.STAGE, stagePA),
-        commit: createOptimisticAction(`${type}::commit`, OptimisticOperation.COMMIT, commitPA),
-        fail: createOptimisticAction(`${type}::fail`, OptimisticOperation.FAIL, failPA),
-        stash: createOptimisticAction(`${type}::stash`, OptimisticOperation.STASH, stashPA),
-        match: createOptimisticActionMatcher<ActionType, PA_Commit>(type),
+        stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, stagePA),
+        commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, commitPA),
+        fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, failPA),
+        stash: createTransition(`${type}::stash`, TransitionOperation.STASH, stashPA),
+        match: createTransitionMatcher<ActionType, PA_Commit>(type),
     };
 };
-
-export const updateAction = (action: OptimisticAction, update: Partial<OptimisticMeta>): OptimisticAction => ({
-    ...action,
-    meta: {
-        ...action.meta,
-        [OptimisticMetaKey]: {
-            ...action.meta[OptimisticMetaKey],
-            ...update,
-        },
-    },
-});

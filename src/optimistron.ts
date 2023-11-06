@@ -1,64 +1,56 @@
 import type { Reducer } from 'redux';
-import { OptimisticOperation, getOptimisticMeta, isOptimisticActionForNamespace } from './actions';
-import { processMutation, sanitizeMutations } from './mutations';
-import { OptimistronReducerRefs, bindReducer, type HandlerReducer } from './reducer';
-import {
-    OptimisticState,
-    buildOptimisticState,
-    createStateHandler,
-    updateOptimisticState,
-    type StateHandler,
-} from './state';
-import { generateId } from './utils';
+import { TransitionOperation, getTransitionMeta, isTransitionForNamespace } from './actions';
+import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
+import { TransitionState, buildTransitionState, stateBinder, updateTransitionState, type StateHandler } from './state';
+import { processTransition, sanitizeTransitions } from './transitions';
 
 export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,
     reducer: HandlerReducer<S, C, U, D>,
-): Reducer<OptimisticState<S>> => {
-    /* keep a reference to the underlying reducer in order for optimistic
-     * selectors to apply the optimistic mutations when executed */
-    const reducerId = generateId();
-
-    const bindState = createStateHandler<S, C, U, D>(handler);
+): Reducer<TransitionState<S>> => {
+    const bindState = stateBinder<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
-    OptimistronReducerRefs.set(reducerId, boundReducer);
 
-    const sanitizer = sanitizeMutations(boundReducer, bindState);
-    const initial: OptimisticState<S> = buildOptimisticState(initialState, [], reducerId);
+    /* keep a reference to the underlying reducer in order for optimistic
+     * selectors to apply the optimistic transitions when executed */
+    if (ReducerMap.has(namespace)) throw new Error(`An optimistic reducer for [${namespace}] is already registered`);
+    ReducerMap.set(namespace, boundReducer);
 
-    return (optimisticState = initial, action) => {
-        const nextOptimisticState: OptimisticState<S> = (() => {
-            const { state, mutations } = optimisticState;
-            const next = updateOptimisticState(optimisticState);
+    const sanitizer = sanitizeTransitions(boundReducer, bindState);
+    const initial: TransitionState<S> = buildTransitionState(initialState, [], namespace);
 
-            if (isOptimisticActionForNamespace(action, namespace)) {
-                const nextMutations = processMutation(action, mutations);
-                const { operation } = getOptimisticMeta(action);
+    return (transition = initial, action) => {
+        const nextTransition: TransitionState<S> = (() => {
+            const { state, transitions } = transition;
+            const next = updateTransitionState(transition);
+
+            if (isTransitionForNamespace(action, namespace)) {
+                const nextTransitions = processTransition(action, transitions);
+                const { operation } = getTransitionMeta(action);
 
                 switch (operation) {
-                    case OptimisticOperation.COMMIT:
-                        /* comitting will apply the action to the reducer */
-                        const commit = boundReducer(optimisticState, action);
-                        return next(commit, nextMutations);
+                    case TransitionOperation.COMMIT:
+                        /* Comitting will apply the action to the reducer */
+                        const commit = boundReducer(transition, action);
+                        return next(commit, nextTransitions);
                     default:
-                        /* every other optimistic action are not applied to the
-                         * state, if you need to get the optimistic state use the
-                         * provided selectors which will apply the optimistic mutations */
-                        return next(state, nextMutations);
+                        /* Every other transition actions will not be applied.
+                         * If you need to get the optimistic state use the provided
+                         * selectors which will apply the optimistic transitions */
+                        return next(state, nextTransitions);
                 }
             }
 
-            return next(boundReducer(optimisticState, action), mutations);
+            return next(boundReducer(transition, action), transitions);
         })();
 
         /* only sanitize the mutations if the states are referentially different to avoid
-         * checking for conflicts unnecessarily on noops for this optimistic reducer */
+         * checking for conflicts unnecessarily on noops on the bound reducer */
+        const mutated = nextTransition !== transition;
+        nextTransition.transitions = mutated ? sanitizer(nextTransition) : nextTransition.transitions;
 
-        const mutated = nextOptimisticState !== optimisticState;
-        nextOptimisticState.mutations = mutated ? sanitizer(nextOptimisticState) : nextOptimisticState.mutations;
-
-        return nextOptimisticState;
+        return nextTransition;
     };
 };
