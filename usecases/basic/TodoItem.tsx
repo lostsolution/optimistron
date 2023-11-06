@@ -1,6 +1,8 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Todo, createTodo, editTodo, selectOptimisticTodoState } from './store';
+import { createTodo, editTodo } from '../lib/actions';
+import { selectOptimisticTodoState } from '../lib/selectors';
+import { Todo } from '../lib/types';
 
 type Props = { todo: Todo };
 
@@ -10,8 +12,9 @@ export const TodoItem: FC<Props> = ({ todo }) => {
 
     const toggleTodo = async () => {
         const update = { ...todo, done: !todo.done, revision: todo.revision + 1 };
-        dispatch(editTodo.stage(todo.id, update));
-        setTimeout(() => dispatch(editTodo.commit(todo.id, update)), 500);
+        const transitionId = todo.id;
+        dispatch(editTodo.stage(transitionId, todo.id, update));
+        setTimeout(() => dispatch(editTodo.commit(transitionId, todo.id, update)), 500);
     };
 
     return (

@@ -1,8 +1,9 @@
 import { FC, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { generateId } from '../utils/generateId';
+import { createTodo } from '../lib/actions';
+import { selectOptimisticTodos } from '../lib/selectors';
+import { generateId } from '../lib/utils';
 import { TodoItem } from './TodoItem';
-import { createTodo, selectOptimisticTodos } from './store';
 
 export const TodoList: FC = () => {
     const dispatch = useDispatch();
