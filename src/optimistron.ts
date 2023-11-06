@@ -1,4 +1,4 @@
-import type { Reducer } from 'redux';
+import type { AnyAction, Reducer } from 'redux';
 import { TransitionOperation, getTransitionMeta, isTransitionForNamespace } from './actions';
 import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
 import { TransitionState, buildTransitionState, stateBinder, updateTransitionState, type StateHandler } from './state';
@@ -9,6 +9,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     initialState: S,
     handler: StateHandler<S, C, U, D>,
     reducer: HandlerReducer<S, C, U, D>,
+    options?: { sanitizeAction: <T extends AnyAction>(action: T) => T },
 ): Reducer<TransitionState<S>> => {
     const bindState = stateBinder<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
@@ -27,7 +28,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
             const next = updateTransitionState(transition);
 
             if (isTransitionForNamespace(action, namespace)) {
-                const nextTransitions = processTransition(action, transitions);
+                const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
                 const { operation } = getTransitionMeta(action);
 
                 switch (operation) {
