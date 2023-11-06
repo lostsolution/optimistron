@@ -46,7 +46,7 @@ export const updateTransition = (action: TransitionAction, update: Partial<Trans
 
 /* helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
-const createTransitionMatcher =
+const createCommitMatcher =
     <NS extends TransitionNamespace, PA extends PrepareAction<any>>(namespace: NS) =>
     <
         Result extends ReturnType<PA>,
@@ -107,6 +107,6 @@ export const createTransitions = <
         commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, commitPA),
         fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, failPA),
         stash: createTransition(`${type}::stash`, TransitionOperation.STASH, stashPA),
-        match: createTransitionMatcher<ActionType, PA_Commit>(type),
+        match: createCommitMatcher<ActionType, PA_Commit>(type),
     };
 };
