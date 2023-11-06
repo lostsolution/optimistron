@@ -1,6 +1,6 @@
 # 🧙‍♂️ Optimistron
 
-Optimistron is a _(very)_ opinionated library designed to simplify optimistic state management in _(certain)_ Redux applications. It enables you to seamlessly handle optimistic actions within your reducers without the need for creating separate copies of your state.
+Optimistron is a _(very)_ opinionated library designed to simplify optimistic state management in _(certain)_ Redux applications. It enables you to _(almost seamlessly)_ handle optimistic actions within your reducers without the need for creating separate copies of your state.
 
 ## 🧐 How does it work ?
 
@@ -50,7 +50,7 @@ createTodo.stash('transition-id');
 createTodo.fail('transition-id');
 ```
 
-> ❗️ If you need to customize the underlying transition action preparators, you can pass a configuration object to `createTransitions`. If you go down this path, only the `stage` action preparator is required.
+> ❗️ If you need to customize the underlying transition action preparators, you can pass a configuration object to `createTransitions`.
 
 ### 2️⃣ Create an Optimistic Reducer
 
@@ -122,8 +122,8 @@ export const selectOptimisticTodos = createSelector(
 
 Available selectors :
 
--   `selectOptimistic` : given a selector function, will return its result over the state as if transitions were committed
--   `selectIsOptimistic` : given a `transitionId`, checks wether it is in our state's transition list. By coupling the `transitionId` to your entity's identifiers, you can essentially derive optimistic state at the entity level.
--   `selectIsFailed` : similar to `selectIsOptimistic` but checks if the transition has failed
--   `selectIsConflicting` : similar to `selectIsOptimistic` but checks if the transition is conflicting
--   `selectFailedAction` : given a `transitionId`, spits back the original failed action if any
+-   `selectOptimistic` : given a selector function acting on an _optimistron_ state, will return its result over the state as if transitions were committed
+-   `selectIsOptimistic` : given a _transitionId_, checks wether it is in our state's transition list. By coupling the _transitionId_ to your _entity's identifier_, you can essentially derive optimistic state at the entity level.
+-   `selectIsFailed` : similar to _selectIsOptimistic_ but checks if the transition has failed
+-   `selectIsConflicting` : similar to _selectIsOptimistic_ but checks if the transition is conflicting
+-   `selectFailedAction` : given a _transitionId_, spits back the original failed action if any
