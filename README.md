@@ -111,7 +111,7 @@ try {
 
 ### 4️⃣ Access Optimistic State
 
-Access optimistic state using selectors:
+Access optimistic state using selectors :
 
 ```typescript
 export const selectOptimisticTodos = createSelector(
@@ -119,3 +119,11 @@ export const selectOptimisticTodos = createSelector(
     selectOptimistic((todos) => Object.values(todos.state)),
 );
 ```
+
+Available selectors :
+
+-   `selectOptimistic` : given a selector function, will return its result over the state as if transitions were committed
+-   `selectIsOptimistic` : given a `transitionId`, checks wether it is in our state's transition list. By coupling the `transitionId` to your entity's identifiers, you can essentially derive optimistic state at the entity level.
+-   `selectIsFailed` : similar to `selectIsOptimistic` but checks if the transition has failed
+-   `selectIsConflicting` : similar to `selectIsOptimistic` but checks if the transition is conflicting
+-   `selectFailedAction` : given a `transitionId`, spits back the original failed action if any

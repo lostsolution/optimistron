@@ -18,11 +18,11 @@ export const selectOptimistic =
     };
 
 export const selectFailedAction =
-    (optimisticId: string) =>
+    (transitionId: string) =>
     <State>({ transitions }: TransitionState<State>) => {
         const failedAction = transitions.find((action) => {
             const { id, failed } = getTransitionMeta(action);
-            return id === optimisticId && failed;
+            return id === transitionId && failed;
         });
 
         if (failedAction)
@@ -30,24 +30,24 @@ export const selectFailedAction =
     };
 
 export const selectConflictingAction =
-    (optimisticId: string) =>
+    (transitionId: string) =>
     <State>({ transitions }: TransitionState<State>) =>
         transitions.find((action) => {
             const { id, conflict } = getTransitionMeta(action);
-            return id === optimisticId && conflict;
+            return id === transitionId && conflict;
         });
 
 export const selectIsOptimistic =
-    (optimisticId: string) =>
+    (transitionId: string) =>
     <State>({ transitions }: TransitionState<State>) =>
-        transitions.some((action) => getTransitionMeta(action).id === optimisticId);
+        transitions.some((action) => getTransitionMeta(action).id === transitionId);
 
 export const selectIsFailed =
-    (optimisticId: string) =>
+    (transitionId: string) =>
     <State>(state: TransitionState<State>) =>
-        selectFailedAction(optimisticId)(state) !== undefined;
+        selectFailedAction(transitionId)(state) !== undefined;
 
 export const selectIsConflicting =
-    (optimisticId: string) =>
+    (transitionId: string) =>
     <State>(state: TransitionState<State>) =>
-        selectConflictingAction(optimisticId)(state) !== undefined;
+        selectConflictingAction(transitionId)(state) !== undefined;
