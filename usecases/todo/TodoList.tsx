@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { generateId } from '../../src/utils';
+import { generateId } from '../utils/generateId';
 import { TodoItem } from './TodoItem';
 import { createTodo, selectOptimisticTodos } from './store';
 
