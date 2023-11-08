@@ -20,7 +20,7 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
 
         try {
-            yield simulateAPIRequest(0.5);
+            yield simulateAPIRequest(0.3);
             yield put(editTodo.commit(transitionId, action.payload.id, action.payload.update));
         } catch (e) {
             yield put(editTodo.fail(transitionId));
@@ -31,7 +31,7 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
 
         try {
-            yield simulateAPIRequest(0.5);
+            yield simulateAPIRequest(0.3);
             yield put(deleteTodo.commit(transitionId, action.payload.id));
         } catch (e) {
             alert('deleting todo failed');

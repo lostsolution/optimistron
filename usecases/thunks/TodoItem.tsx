@@ -1,26 +1,27 @@
 import type { FC } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getTransitionMeta } from '../../src/actions';
-import { createTodo, deleteTodo, editTodo } from '../lib/actions';
+import { createTodo, editTodo } from '../lib/actions';
 import { selectOptimisticTodoState } from '../lib/selectors';
 import { Todo } from '../lib/types';
+import { editTodoThunk, removeTodoThunk, retryTransitionThunk, useThunkDispatch } from './thunk';
 
 type Props = { todo: Todo };
 
 export const TodoItem: FC<Props> = ({ todo }) => {
-    const dispatch = useDispatch();
+    const dispatch = useThunkDispatch();
     const { optimistic, failed, retry } = useSelector(selectOptimisticTodoState(todo.id));
 
-    const toggleTodo = () => {
-        const update = { ...todo, done: !todo.done, revision: todo.revision + 1 };
-        const transitionId = todo.id;
-        dispatch(editTodo.stage(transitionId, todo.id, update));
-    };
+    const toggleTodo = () =>
+        dispatch(
+            editTodoThunk(todo.id, {
+                ...todo,
+                done: !todo.done,
+                revision: todo.revision + 1,
+            }),
+        );
 
-    const removeTodo = () => {
-        const transitionId = todo.id;
-        dispatch(deleteTodo.stage(transitionId, todo.id));
-    };
+    const removeTodo = () => dispatch(removeTodoThunk(todo.id));
 
     return (
         <li className="flex justify-between items-center border p-2 mt-2 gap-4">
@@ -35,7 +36,10 @@ export const TodoItem: FC<Props> = ({ todo }) => {
             <div className="flex justify-between gap-2">
                 {retry && (
                     <>
-                        <button onClick={() => dispatch(retry)} className="text-green-600 hover:text-green-800">
+                        <button
+                            onClick={() => dispatch(retryTransitionThunk(retry))}
+                            className="text-green-600 hover:text-green-800"
+                        >
                             Retry{' '}
                             {(() => {
                                 if (createTodo.stage.match(retry)) return 'create';
