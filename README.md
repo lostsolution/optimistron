@@ -1,6 +1,6 @@
 # 🧙‍♂️ Optimistron
 
-Optimistron is a _(very)_ opinionated library designed to simplify optimistic state management in _(certain)_ Redux applications. It enables you to _(almost seamlessly)_ handle optimistic actions within your reducers without the need for creating separate copies of your state.
+Optimistron is a _(very)_ opinionated library designed to simplify optimistic state management in _(certain)_ Redux applications. It enables you to _(almost seamlessly)_ handle optimistic actions within your reducers without the need for creating separate copies of your state. _Spoiler alert: it may not fit your needs.._
 
 ## 🧐 How does it work ?
 
@@ -15,19 +15,25 @@ Transitions are comprised of four operations:
 
 **Optimistic state is inferred through selectors**, where transitions are played on the current state, much like a _git rebase_. This means that actions are constantly _"rebased"_ on top of the latest state, which can lead to conflicts and noops.
 
-Depending on how you structure your state, applying an action on top of a particular state may result in a no-op or an error (ie: editing or deleting a non-existing item). To mitigate this, state changes are controlled by a custom **state handler** that restrains these updates to the most granular operations possible _(more on this later)_. This requires the implementation of a "merging" function on the handler, which is used to detect potential issues. As a result, the library ensures that your optimistic transitions are nearly conflict-free. Transitions that result in errors or no-ops are simply **discarded**.
+Depending on how you structure your state, applying an action on top of a particular state may result in a no-op or an error (ie: editing or deleting a non-existing item). To mitigate this, state changes are controlled by a custom **state handler** that restrains these updates to the most granular operations possible _(more on this later)_. This requires the implementation of a "merging" function on the handler, which is used to detect potential issues. As a result, the library ensures that your optimistic transitions are _nearly_ conflict-free. Transitions that result in errors or no-ops are simply **discarded**. That being said, in certain cases, you may also want to let the user resolve conflicts.
 
 ## ❓ When to use it
 
--   When you are using sagas, thunks, or any kind of async redux middleware in which you compose async operations
+-   When you are using sagas, thunks, or any kind of async redux middleware in which you compose actions around async operations
 -   When you need to optimistically show the result of an asynchronous operation in your UI.
 -   When this async operation may fail and you would like to give your user the ability to retry.
 -   When you want to support some kind of _offline mode_ by leveraging optimistic failures
 -   When your state updates can be modelled around a simple _CRUD interface_.
 
+## 🪖 Rules of transitions
+
+-   Transitions should have unique identifiers that you can use to map back to your entities. (In most cases, just use your entity's identifier as a the transition id).
+-   One entity should never have multiple transitions at the same time. This is already enforced in the internal `processTransition` function but depending on how you model your transition identifiers, we may not be able to enforce this rule. This essentially means that before starting a new transition on one of your entities, stash any ongoing ones.
+-   Keep transition effects on state as granular as possible.
+
 ## 🏗️ Getting Started
 
-> to see full examples, checkout the `usecases/` folder of the repository
+> to see full examples, checkout the `usecases/` folder of the repository. It includes usages with common async redux middlewares.
 
 ### 1️⃣ Define Transitions
 
@@ -44,10 +50,11 @@ const deleteTodo = createTransitions('todos::delete', (id: string) => ({ payload
 This will essentially give you a set of transitions for you to dispatch. _By default staging and comitting will both have the same signature._
 
 ```typescript
-createTodo.stage('transition-id', todo);
-createTodo.commit('transition-id', todo);
-createTodo.stash('transition-id');
-createTodo.fail('transition-id');
+const transitionId = 'some-entity-id';
+createTodo.stage(transitionId, todo);
+createTodo.commit(transitionId, todo);
+createTodo.stash(transitionId);
+createTodo.fail(transitionId);
 ```
 
 > ❗️ If you need to customize the underlying transition action preparators, you can pass a configuration object to `createTransitions`.
@@ -86,14 +93,14 @@ const optimisticId = 'e29b-41d4-a716';
 dispatch(
     createTodo.stage(optimisticId, {
         id: optimisticId,
-        value: 'groceries',
-        revision: 0,
+        value: 'Do groceries',
         done: false,
+        revision: 0,
     }),
 );
 ```
 
-Now, depending on how you orchestrate your async operations (thunks, sagas etc..), you can implement some optimistic resolutions :
+Now, depending on how you orchestrate your async operations (thunks, sagas etc..), you can resolve the staged transition. Essentially, state will only be updated once a transition is committed.
 
 ```typescript
 /* resolve the transitionId or just read
