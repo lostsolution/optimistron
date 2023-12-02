@@ -7,7 +7,7 @@ import { recordHandlerFactory } from './state/record';
 describe('optimistron', () => {
     beforeEach(() => ReducerMap.clear());
 
-    describe('EntryState', () => {
+    describe('Record state functional testing', () => {
         type Item = { id: string; value: string; revision: number };
 
         const createItem = createTransitions('items::add', { stage: (item: Item) => ({ payload: { item } }) });

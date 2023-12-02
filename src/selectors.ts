@@ -25,8 +25,12 @@ export const selectFailedAction =
             return id === transitionId && failed;
         });
 
-        if (failedAction)
-            return updateTransition(failedAction, { operation: TransitionOperation.STAGE, failed: false });
+        if (failedAction) {
+            return updateTransition(failedAction, {
+                operation: TransitionOperation.STAGE,
+                failed: false,
+            });
+        }
     };
 
 export const selectConflictingAction =

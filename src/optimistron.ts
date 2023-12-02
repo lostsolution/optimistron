@@ -1,7 +1,13 @@
 import type { AnyAction, Reducer } from 'redux';
 import { TransitionOperation, getTransitionMeta, isTransitionForNamespace } from './actions';
 import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
-import { TransitionState, buildTransitionState, stateBinder, updateTransitionState, type StateHandler } from './state';
+import {
+    TransitionState,
+    buildTransitionState,
+    bindStateFactory,
+    updateTransitionState,
+    type StateHandler,
+} from './state';
 import { processTransition, sanitizeTransitions } from './transitions';
 
 export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
@@ -11,7 +17,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     reducer: HandlerReducer<S, C, U, D>,
     options?: { sanitizeAction: <T extends AnyAction>(action: T) => T },
 ): Reducer<TransitionState<S>> => {
-    const bindState = stateBinder<S, C, U, D>(handler);
+    const bindState = bindStateFactory<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
 
     /* keep a reference to the underlying reducer in order for optimistic

@@ -28,7 +28,7 @@ export interface BoundStateHandler<
     getState: () => State;
 }
 
-export const stateBinder =
+export const bindStateFactory =
     <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
         handler: StateHandler<State, CreateParams, UpdateParams, DeleteParams>,
     ) =>

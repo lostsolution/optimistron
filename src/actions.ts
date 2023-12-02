@@ -2,9 +2,6 @@ import type { ActionCreatorWithPreparedPayload, AnyAction, PayloadAction, Prepar
 import { createAction } from '@reduxjs/toolkit';
 import { MetaKey } from './constants';
 
-export const OPTIMISTRON_INIT = { type: '__OPTIMISTRON_INIT__' };
-export const EMPTY_PA = () => ({ payload: {} });
-
 export enum TransitionOperation {
     STAGE,
     COMMIT,
@@ -13,14 +10,18 @@ export enum TransitionOperation {
 }
 
 export type TransitionNamespace = `${string}::${string}`;
-export type TransitionAction<A extends AnyAction = AnyAction> = A & { meta: { [MetaKey]: TransitionMeta } };
+export type TransitionAction<A = AnyAction> = A & { meta: { [MetaKey]: TransitionMeta } };
 export type TransitionMeta = { id: string; operation: TransitionOperation; conflict: boolean; failed: boolean };
 
-/* Extracts the transition meta definitions on an action */
+/** Extracts the transition meta definitions on an action */
 export const getTransitionMeta = (action: TransitionAction) => action.meta[MetaKey];
+export const getTransitionID = (action: TransitionAction) => action.meta[MetaKey].id;
 
-/* Hydrates an action's transition meta definition */
-export const withTransitionMeta = <PA extends ReturnType<PrepareAction<any>>>(action: PA, options: TransitionMeta) => ({
+/**  Hydrates an action's transition meta definition */
+export const withTransitionMeta = (
+    action: ReturnType<PrepareAction<any>>,
+    options: TransitionMeta,
+): TransitionAction<typeof action> => ({
     ...action,
     meta: {
         ...('meta' in action ? action.meta : {}),
@@ -28,12 +29,18 @@ export const withTransitionMeta = <PA extends ReturnType<PrepareAction<any>>>(ac
     },
 });
 
-/* checks if an action is a transition for the supplied namespace */
-export const isTransitionForNamespace = (action: AnyAction, namespace: string): action is TransitionAction =>
+/** Checks wether an action is a transition for the supplied namespace */
+export const isTransitionForNamespace = (
+    action: AnyAction,
+    namespace: string,
+): action is TransitionAction<typeof action> =>
     action?.meta && MetaKey in action?.meta && action.type.startsWith(`${namespace}::`);
 
-/* updates the transition meta of a transition action */
-export const updateTransition = (action: TransitionAction, update: Partial<TransitionMeta>): TransitionAction => ({
+/** Updates the transition meta of a transition action */
+export const updateTransition = <T>(
+    action: TransitionAction<T>,
+    update: Partial<TransitionMeta>,
+): TransitionAction<T> => ({
     ...action,
     meta: {
         ...action.meta,
@@ -44,7 +51,7 @@ export const updateTransition = (action: TransitionAction, update: Partial<Trans
     },
 });
 
-/* helper action matcher function that will match the supplied
+/** Helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
 const createCommitMatcher =
     <NS extends TransitionNamespace, PA extends PrepareAction<any>>(namespace: NS) =>
@@ -69,7 +76,7 @@ export const createTransition = <
     type: T,
     operation: TransitionOperation,
     prepare: PA,
-) =>
+): ActionCreatorWithPreparedPayload<[transitionId: string, ...P], A['payload'], T, E, M> =>
     createAction(type, (transitionId, ...params) =>
         withTransitionMeta(prepare(...params), {
             conflict: false,
@@ -77,7 +84,7 @@ export const createTransition = <
             id: transitionId,
             operation,
         }),
-    ) as ActionCreatorWithPreparedPayload<[transitionId: string, ...P], A['payload'], T, E, M>;
+    );
 
 export const createTransitions = <
     ActionType extends `${string}::${string}`,
@@ -97,10 +104,12 @@ export const createTransitions = <
           },
 ) => {
     const noOptions = typeof options === 'function';
+    const empty = () => ({ payload: {} });
+
     const stagePA = noOptions ? options : options.stage;
     const commitPA = noOptions ? options : options.commit ?? options.stage;
-    const failPA = noOptions ? EMPTY_PA : options.fail ?? EMPTY_PA;
-    const stashPA = noOptions ? EMPTY_PA : options.stash ?? EMPTY_PA;
+    const failPA = noOptions ? empty : options.fail ?? empty;
+    const stashPA = noOptions ? empty : options.stash ?? empty;
 
     return {
         stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, stagePA),
