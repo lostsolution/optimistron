@@ -9,6 +9,7 @@ Optimistron introduces the concept of _"transitions"_ to manage optimistic actio
 Transitions are comprised of four operations:
 
 -   `STAGE`: The action is added to the transition list.
+-   `AMEND`: The action is amended from the transition list.
 -   `STASH`: The action is removed from the transition list.
 -   `FAIL`: The action is marked as having encountered some failure or error.
 -   `COMMIT`: The action is removed from the transition list and applied to the wrapped reducer.
@@ -43,8 +44,12 @@ To get started with Optimistron, you need to define transitions for your actions
 
 ```typescript
 const createTodo = createTransitions('todos::add')((todo: Todo) => ({ payload: { todo } }));
-const editTodo = createTransitions('todos::edit')((id: string, update: Partial<Todo>) => ({ payload: { id, update } }));
-const deleteTodo = createTransitions('todos::delete')((id: string) => ({ payload: { id } }));
+const editTodo = createTransitions('todos::edit')((id: string, update: Todo) => ({ payload: { id, update } }));
+
+const deleteTodo = createTransitions(
+    'todos::delete',
+    TransitionDedupeMode.TRAILING,
+)((id: string) => ({ payload: { id } }));
 ```
 
 This will essentially give you a set of transitions for you to dispatch. _By default staging and comitting will both have the same signature._
@@ -71,7 +76,7 @@ Next, create an optimistic reducer :
 export const todosReducer = optimistron(
     'todos',
     initial,
-    recordHandlerFactory<Todo>('id', (existing, incoming) => incoming.revision > existing.revision),
+    recordHandlerFactory<Todo>({ itemIdKey: 'id', compare, eq }) // see section about state handlers
     ({ getState, create, update, remove }, action) => {
         if (createTodo.match(action)) return create(action.payload.todo);
         if (editTodo.match(action)) return update(action.payload.id, action.payload.update);
