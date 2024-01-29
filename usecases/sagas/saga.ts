@@ -1,29 +1,31 @@
 import { put, takeEvery } from 'redux-saga/effects';
-import { getTransitionMeta } from '../../src/actions';
-import { createTodo, deleteTodo, editTodo } from '../lib/actions';
-import { generateId, simulateAPIRequest } from '../lib/utils';
+
+import { getTransitionMeta } from '~transitions';
+import { createTodo, deleteTodo, editTodo } from '~usecases/lib/store/actions';
+import { generateId, simulateAPIRequest } from '~usecases/lib/utils/mock-api';
 
 export function* rootSaga() {
     yield takeEvery(createTodo.stage.match, function* (action) {
         const transitionId = getTransitionMeta(action).id;
 
         try {
-            const createdTodo = { ...action.payload.todo, id: generateId() };
-            yield simulateAPIRequest(0.5);
-            yield put(createTodo.commit(transitionId, createdTodo));
-        } catch (e) {
-            yield put(createTodo.fail(transitionId));
+            yield simulateAPIRequest();
+            yield put(createTodo.amend(transitionId, { ...action.payload.todo, id: generateId() }));
+            yield put(createTodo.commit(transitionId));
+        } catch (error) {
+            yield put(createTodo.fail(transitionId, error));
         }
     });
 
     yield takeEvery(editTodo.stage.match, function* (action) {
         const transitionId = getTransitionMeta(action).id;
+        console.log('** starting saga');
 
         try {
-            yield simulateAPIRequest(0.3);
-            yield put(editTodo.commit(transitionId, action.payload.id, action.payload.update));
-        } catch (e) {
-            yield put(editTodo.fail(transitionId));
+            yield simulateAPIRequest();
+            yield put(editTodo.commit(transitionId));
+        } catch (error) {
+            yield put(editTodo.fail(transitionId, error));
         }
     });
 
@@ -31,10 +33,9 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
 
         try {
-            yield simulateAPIRequest(0.3);
-            yield put(deleteTodo.commit(transitionId, action.payload.id));
-        } catch (e) {
-            alert('deleting todo failed');
+            yield simulateAPIRequest();
+            yield put(deleteTodo.commit(transitionId));
+        } catch {
             yield put(deleteTodo.stash(transitionId));
         }
     });
