@@ -1,7 +1,7 @@
-import { TransitionOperation, getTransitionMeta, updateTransition } from './actions';
-import { ReducerIdKey } from './constants';
-import { ReducerMap } from './reducer';
-import { cloneTransitionState, type TransitionState } from './state';
+import { ReducerIdKey } from '~constants';
+import { ReducerMap } from '~reducer';
+import { cloneTransitionState, type TransitionState } from '~state';
+import { getTransitionMeta, TransitionOperation, updateTransition } from '~transitions';
 
 export const selectOptimistic =
     <State, Slice>(selector: (state: TransitionState<State>) => Slice) =>
@@ -9,31 +9,26 @@ export const selectOptimistic =
         const boundReducer = ReducerMap.get(state[ReducerIdKey]);
         if (!boundReducer) return selector(state);
 
-        const optimisticState = state.transitions.reduce((acc, action) => {
-            acc.state = boundReducer(acc, updateTransition(action, { operation: TransitionOperation.COMMIT }));
+        const optimisticState = state.transitions.reduce((acc, transition) => {
+            acc.state = boundReducer(acc, updateTransition(transition, { operation: TransitionOperation.COMMIT }));
             return acc;
         }, cloneTransitionState(state));
 
         return selector(optimisticState);
     };
 
-export const selectFailedAction =
+export const selectFailedTransitions = <State>({ transitions }: TransitionState<State>) =>
+    transitions.filter((action) => getTransitionMeta(action).failed);
+
+export const selectFailedTransition =
     (transitionId: string) =>
-    <State>({ transitions }: TransitionState<State>) => {
-        const failedAction = transitions.find((action) => {
+    <State>({ transitions }: TransitionState<State>) =>
+        transitions.find((action) => {
             const { id, failed } = getTransitionMeta(action);
             return id === transitionId && failed;
         });
 
-        if (failedAction) {
-            return updateTransition(failedAction, {
-                operation: TransitionOperation.STAGE,
-                failed: false,
-            });
-        }
-    };
-
-export const selectConflictingAction =
+export const selectConflictingTransition =
     (transitionId: string) =>
     <State>({ transitions }: TransitionState<State>) =>
         transitions.find((action) => {
@@ -49,9 +44,9 @@ export const selectIsOptimistic =
 export const selectIsFailed =
     (transitionId: string) =>
     <State>(state: TransitionState<State>) =>
-        selectFailedAction(transitionId)(state) !== undefined;
+        selectFailedTransition(transitionId)(state) !== undefined;
 
 export const selectIsConflicting =
     (transitionId: string) =>
     <State>(state: TransitionState<State>) =>
-        selectConflictingAction(transitionId)(state) !== undefined;
+        selectConflictingTransition(transitionId)(state) !== undefined;

@@ -1,5 +1,5 @@
-import { AnyAction } from 'redux';
-import { BoundStateHandler, TransitionState } from './state';
+import type { AnyAction } from 'redux';
+import type { BoundStateHandler, TransitionState } from '~state';
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: AnyAction) => State;
 
@@ -21,7 +21,7 @@ export const bindReducer =
         try {
             return reducer(bindState(transitionState.state), action);
         } catch (error) {
-            console.warn(`Error while processing action ${action.type}`);
+            console.warn(`Error while processing action ${action.type}`, error);
             return transitionState.state;
         }
     };
