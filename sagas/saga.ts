@@ -19,7 +19,6 @@ export function* rootSaga() {
 
     yield takeEvery(editTodo.stage.match, function* (action) {
         const transitionId = getTransitionMeta(action).id;
-        console.log('** starting saga');
 
         try {
             yield simulateAPIRequest();

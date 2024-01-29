@@ -30967,7 +30967,6 @@ function* rootSaga() {
   });
   yield takeEvery$1(editTodo.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
-    console.log("** starting saga");
     try {
       yield simulateAPIRequest();
       yield put(editTodo.commit(transitionId));
