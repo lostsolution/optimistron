@@ -1,14 +1,17 @@
 import type { AnyAction, Reducer } from 'redux';
-import { TransitionOperation, getTransitionMeta, isTransitionForNamespace } from './actions';
-import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
+
+import { ReducerMap, bindReducer, type HandlerReducer } from '~reducer';
+import type { StateHandler, TransitionState } from '~state';
+import { bindStateFactory, buildTransitionState, transitionStateFactory } from '~state';
 import {
-    TransitionState,
-    buildTransitionState,
-    bindStateFactory,
-    updateTransitionState,
-    type StateHandler,
-} from './state';
-import { processTransition, sanitizeTransitions } from './transitions';
+    TransitionOperation,
+    getTransitionID,
+    getTransitionMeta,
+    isTransitionForNamespace,
+    processTransition,
+    sanitizeTransitions,
+    updateTransition,
+} from '~transitions';
 
 export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
     namespace: string,
@@ -28,36 +31,43 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     const sanitizer = sanitizeTransitions(boundReducer, bindState);
     const initial: TransitionState<S> = buildTransitionState(initialState, [], namespace);
 
-    return (transition = initial, action) => {
-        const nextTransition: TransitionState<S> = (() => {
-            const { state, transitions } = transition;
-            const next = updateTransitionState(transition);
+    return (transitionState = initial, action) => {
+        const nextTransitionState: TransitionState<S> = (() => {
+            const { state, transitions } = transitionState;
+            const next = transitionStateFactory(transitionState);
 
             if (isTransitionForNamespace(action, namespace)) {
                 const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
-                const { operation } = getTransitionMeta(action);
+                const { operation, id } = getTransitionMeta(action);
 
                 switch (operation) {
-                    case TransitionOperation.COMMIT:
+                    case TransitionOperation.COMMIT: {
+                        /* Find the matching staged action in the transition list. If
+                         * it does not exist, do nothing else treat it as a commit */
+                        const staged = transitions.find((entry) => id === getTransitionID(entry));
+                        if (!staged) return next(state, nextTransitions);
+
                         /* Comitting will apply the action to the reducer */
-                        const commit = boundReducer(transition, action);
-                        return next(commit, nextTransitions);
-                    default:
+                        const commit = updateTransition(staged, { operation: TransitionOperation.COMMIT });
+                        return next(boundReducer(transitionState, commit), nextTransitions);
+                    }
+                    default: {
                         /* Every other transition actions will not be applied.
                          * If you need to get the optimistic state use the provided
                          * selectors which will apply the optimistic transitions */
                         return next(state, nextTransitions);
+                    }
                 }
             }
 
-            return next(boundReducer(transition, action), transitions);
+            return next(boundReducer(transitionState, action), transitions);
         })();
 
         /* only sanitize the mutations if the states are referentially different to avoid
-         * checking for conflicts unnecessarily on noops on the bound reducer */
-        const mutated = nextTransition !== transition;
-        nextTransition.transitions = mutated ? sanitizer(nextTransition) : nextTransition.transitions;
+         * checking for conflicts and noops unnecessarily on the bound reducer */
+        const mutated = nextTransitionState !== transitionState;
+        nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
 
-        return nextTransition;
+        return nextTransitionState;
     };
 };

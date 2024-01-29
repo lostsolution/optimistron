@@ -1,7 +1,21 @@
-import { StateHandler } from '../state';
-import { OptimisticMergeResult } from '../transitions';
+import type { StateHandler } from '~state';
+import { OptimisticMergeResult } from '~transitions';
 
 export type RecordState<T> = Record<string, T>;
+
+/** implement ord and eq  */
+export type RecordStateOptions<T> = {
+    itemIdKey: keyof T;
+    /** Given two items returns a sorting result.
+     * This allows checking for valid updates or conflicts.
+     * Return -1 if `a` is "smaller" than `b`
+     * Return 0 if `a` equals `b`
+     * Return 1 if `b` is "greater" than `a`*/
+    compare: (a: T) => (b: T) => 0 | 1 | -1;
+    /** Equality checker - it can potentially be different
+     * than comparing. */
+    eq: (a: T) => (b: T) => boolean;
+};
 
 /**
  * Creates a `StateHandler` for a record based state.
@@ -9,10 +23,16 @@ export type RecordState<T> = Record<string, T>;
  * - `compare` function allows determining if an incoming item is conflicting with its previous value. Your item
  *   data structure must hence support some kind of versioning or timestamping in order to leverage this.
  */
-export const recordHandlerFactory = <T extends { [key: string]: any }>(
-    itemIdKey: keyof T,
-    compare: (existing: T, incoming: T) => boolean,
-): StateHandler<RecordState<T>, [item: T], [itemId: string, partialItem: Partial<T>], [itemId: string]> => {
+export const recordHandlerFactory = <T extends { [key: string]: any }>({
+    itemIdKey,
+    compare,
+    eq,
+}: RecordStateOptions<T>): StateHandler<
+    RecordState<T>,
+    [item: T],
+    [itemId: string, partialItem: Partial<T>],
+    [itemId: string]
+> => {
     return {
         /*  Handles creating a new item in the state */
         create: (state: RecordState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
@@ -35,35 +55,66 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>(
             return state;
         },
 
-        /* Merges the current state with incoming changes while handling conflicts,
-         * deletions, creations, and valid updates.  */
-        merge: (curr: RecordState<T>, incoming: RecordState<T>) => {
-            const mergedState = { ...curr };
-            let mutated = false;
+        /** Merges the current state with incoming changes while handling conflicts,
+         * deletions, creations, and valid updates.
+         *
+         * Note: This merging function performs two iterations over each state.
+         * The first iteration checks for potential deletion mutations, and the second
+         * iteration handles creations and updates. Updates require validation, ensuring
+         * that an incoming update is "greater" than the existing entry, as determined
+         * by the `compare` function. If incoming and existing items are equal (as per the
+         * `eq` implementation), the update is skipped.
+         *
+         * Important: If your state is very large, be aware that the strategy employed by
+         * optimistron may not be well-suited for such scenarios  */
+        merge: (existing: RecordState<T>, incoming: RecordState<T>) => {
+            const mergedState = { ...existing };
 
-            for (const itemId in curr) {
-                const incomingItem = incoming[itemId];
+            let mutated = false; /* keep track of mutations */
 
-                /* item deleted */
-                if (!incomingItem) {
+            /* First iteration over existing items is to check
+             * for potential deletion mutations */
+            for (const itemId in existing) {
+                if (!incoming[itemId]) {
                     mutated = true;
                     delete mergedState[itemId];
                 }
             }
 
+            /** Second iteration over incoming items is to
+             * check for creation and update mutations */
             for (const itemId in incoming) {
+                const existingItem = existing[itemId];
                 const incomingItem = incoming[itemId];
-                const existingItem = curr[itemId];
 
-                /* item created or valid update */
-                if (!existingItem || compare(existingItem, incomingItem)) {
+                if (!existingItem) {
                     mutated = true;
                     mergedState[itemId] = incomingItem;
-                } else throw OptimisticMergeResult.CONFLICT;
+                    continue;
+                }
+
+                const check = compare(incomingItem)(existingItem);
+
+                if (check === 0) {
+                    /** If items are equal according to the `compare` function
+                     * but do not pass the `eq` check, then we have a conflict */
+                    if (eq(incomingItem)(existingItem)) continue;
+                    else throw OptimisticMergeResult.CONFLICT;
+                }
+
+                if (check === 1) {
+                    mutated = true; /* valid update */
+                    mergedState[itemId] = incomingItem;
+                    continue;
+                }
+
+                throw OptimisticMergeResult.CONFLICT;
             }
 
+            /** If no mutation has been detected at this point then
+             * the transition was a noop - skip it */
             if (!mutated) throw OptimisticMergeResult.SKIP;
-            return incoming;
+            return mergedState;
         },
     };
 };

@@ -1,5 +1,5 @@
-import { TransitionAction } from './actions';
-import { ReducerIdKey } from './constants';
+import { ReducerIdKey } from '~constants';
+import type { TransitionAction } from '~transitions';
 
 export type TransitionState<T> = { state: T; transitions: TransitionAction[]; [ReducerIdKey]: string };
 
@@ -61,7 +61,7 @@ export const buildTransitionState = <State>(
     return transitionState;
 };
 
-export const updateTransitionState =
+export const transitionStateFactory =
     <State>(prev: TransitionState<State>) =>
     (state: State, transitions: TransitionAction[]): TransitionState<State> => {
         if (state === prev.state && transitions === prev.transitions) return prev;

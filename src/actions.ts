@@ -1,121 +1,95 @@
 import type { ActionCreatorWithPreparedPayload, AnyAction, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
-import { MetaKey } from './constants';
 
-export enum TransitionOperation {
-    STAGE,
-    COMMIT,
-    STASH,
-    FAIL,
-}
-
-export type TransitionNamespace = `${string}::${string}`;
-export type TransitionAction<A = AnyAction> = A & { meta: { [MetaKey]: TransitionMeta } };
-export type TransitionMeta = { id: string; operation: TransitionOperation; conflict: boolean; failed: boolean };
-
-/** Extracts the transition meta definitions on an action */
-export const getTransitionMeta = (action: TransitionAction) => action.meta[MetaKey];
-export const getTransitionID = (action: TransitionAction) => action.meta[MetaKey].id;
-
-/**  Hydrates an action's transition meta definition */
-export const withTransitionMeta = (
-    action: ReturnType<PrepareAction<any>>,
-    options: TransitionMeta,
-): TransitionAction<typeof action> => ({
-    ...action,
-    meta: {
-        ...('meta' in action ? action.meta : {}),
-        [MetaKey]: options,
-    },
-});
-
-/** Checks wether an action is a transition for the supplied namespace */
-export const isTransitionForNamespace = (
-    action: AnyAction,
-    namespace: string,
-): action is TransitionAction<typeof action> =>
-    action?.meta && MetaKey in action?.meta && action.type.startsWith(`${namespace}::`);
-
-/** Updates the transition meta of a transition action */
-export const updateTransition = <T>(
-    action: TransitionAction<T>,
-    update: Partial<TransitionMeta>,
-): TransitionAction<T> => ({
-    ...action,
-    meta: {
-        ...action.meta,
-        [MetaKey]: {
-            ...action.meta[MetaKey],
-            ...update,
-        },
-    },
-});
+import type { MetaKey } from '~constants';
+import type { TransitionMeta, TransitionNamespace } from '~transitions';
+import {
+    TransitionDedupeMode,
+    TransitionOperation,
+    getTransitionMeta,
+    isTransitionForNamespace,
+    withTransitionMeta,
+} from '~transitions';
 
 /** Helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
-const createCommitMatcher =
+const createMatcher =
     <NS extends TransitionNamespace, PA extends PrepareAction<any>>(namespace: NS) =>
     <
         Result extends ReturnType<PA>,
         Error = Result extends { error: infer Err } ? Err : never,
-        Meta = { [MetaKey]: TransitionMeta } & (Result extends { meta: infer Meta } ? Meta : {}),
+        Meta = { [MetaKey]: TransitionMeta } & (Result extends { meta: infer Meta } ? Meta : object),
     >(
         action: AnyAction,
     ): action is PayloadAction<Result['payload'], NS, Meta, Error> =>
         isTransitionForNamespace(action, namespace) &&
         getTransitionMeta(action).operation === TransitionOperation.COMMIT;
 
-export const createTransition = <
-    PA extends PrepareAction<any>,
-    A extends ReturnType<PA>,
-    P extends Parameters<PA>,
-    T extends TransitionNamespace,
-    E = A extends { error: infer E } ? E : never,
-    M = { [MetaKey]: TransitionMeta } & (A extends { meta: infer M } ? M : {}),
->(
-    type: T,
-    operation: TransitionOperation,
-    prepare: PA,
-): ActionCreatorWithPreparedPayload<[transitionId: string, ...P], A['payload'], T, E, M> =>
-    createAction(type, (transitionId, ...params) =>
-        withTransitionMeta(prepare(...params), {
-            conflict: false,
-            failed: false,
-            id: transitionId,
-            operation,
-        }),
-    );
+export const createTransition =
+    <Type extends TransitionNamespace>(
+        type: Type,
+        operation: TransitionOperation,
+        dedupe: TransitionDedupeMode = TransitionDedupeMode.OVERWRITE,
+    ) =>
+    <
+        PA extends PrepareAction<any>,
+        Action extends ReturnType<PA>,
+        Params extends Parameters<PA>,
+        Err = Action extends { error: infer E } ? E : never,
+        Meta = { [MetaKey]: TransitionMeta } & (Action extends { meta: infer M } ? M : object),
+    >(
+        prepare: PA,
+    ): ActionCreatorWithPreparedPayload<[transitionId: string, ...Params], Action['payload'], Type, Err, Meta> =>
+        createAction(type, (transitionId, ...params) =>
+            withTransitionMeta(prepare(...params), {
+                conflict: false,
+                failed: false,
+                id: transitionId,
+                operation,
+                dedupe,
+            }),
+        );
 
-export const createTransitions = <
-    ActionType extends `${string}::${string}`,
-    PA_Stage extends PrepareAction<any>,
-    PA_Commit extends PA_Stage,
-    PA_Fail extends PrepareAction<any>,
-    PA_Stash extends PrepareAction<any>,
->(
-    type: ActionType,
-    options:
-        | PA_Stage
-        | {
-              stage: PA_Stage;
-              stash?: PA_Stash;
-              commit?: PA_Commit;
-              fail?: PA_Fail;
-          },
-) => {
-    const noOptions = typeof options === 'function';
-    const empty = () => ({ payload: {} });
+type EmptyPayload = { payload: never };
+type PA_Empty = () => EmptyPayload;
+type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
 
-    const stagePA = noOptions ? options : options.stage;
-    const commitPA = noOptions ? options : options.commit ?? options.stage;
-    const failPA = noOptions ? empty : options.fail ?? empty;
-    const stashPA = noOptions ? empty : options.stash ?? empty;
+export const createTransitions =
+    <Type extends TransitionNamespace>(type: Type, dedupe: TransitionDedupeMode = TransitionDedupeMode.OVERWRITE) =>
+    <
+        PA_Stage extends PrepareAction<any>,
+        PA_Commit extends PA_Stage | PA_Empty = PA_Empty,
+        PA_Stash extends PrepareAction<any> = PA_Empty,
+        PA_Fail extends PrepareAction<any> = PA_Error,
+    >(
+        options:
+            | PA_Stage
+            | {
+                  stage: PA_Stage;
+                  commit?: PA_Commit;
+                  fail?: PA_Fail;
+                  stash?: PA_Stash;
+              },
+    ) => {
+        const noOptions = typeof options === 'function';
+        const emptyPA = () => ({ payload: {} });
 
-    return {
-        stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, stagePA),
-        commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, commitPA),
-        fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, failPA),
-        stash: createTransition(`${type}::stash`, TransitionOperation.STASH, stashPA),
-        match: createCommitMatcher<ActionType, PA_Commit>(type),
+        const errorPA = (error: unknown) => ({
+            error: error instanceof Error ? error.message : error,
+            payload: {},
+        });
+
+        const stagePA = noOptions ? options : options.stage;
+        const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
+        const failPA = noOptions ? errorPA : options.fail ?? errorPA;
+        const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
+
+        return {
+            amend: createTransition(`${type}::amend`, TransitionOperation.AMEND, dedupe)(stagePA),
+            stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, dedupe)(stagePA),
+            commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, dedupe)(commitPA as PA_Commit),
+            fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, dedupe)(failPA as PA_Fail),
+            stash: createTransition(`${type}::stash`, TransitionOperation.STASH, dedupe)(stashPA as PA_Stash),
+            match: createMatcher<Type, PA_Stage>(type),
+        };
     };
-};

@@ -42,9 +42,9 @@ Depending on how you structure your state, applying an action on top of a partic
 To get started with Optimistron, you need to define transitions for your actions. Make sure to namespace them correctly :
 
 ```typescript
-const createTodo = createTransitions('todos::add', (todo: Todo) => ({ payload: { todo } }));
-const editTodo = createTransitions('todos::edit', (id: string, update: Partial<Todo>) => ({ payload: { id, update } }));
-const deleteTodo = createTransitions('todos::delete', (id: string) => ({ payload: { id } }));
+const createTodo = createTransitions('todos::add')((todo: Todo) => ({ payload: { todo } }));
+const editTodo = createTransitions('todos::edit')((id: string, update: Partial<Todo>) => ({ payload: { id, update } }));
+const deleteTodo = createTransitions('todos::delete')((id: string) => ({ payload: { id } }));
 ```
 
 This will essentially give you a set of transitions for you to dispatch. _By default staging and comitting will both have the same signature._
