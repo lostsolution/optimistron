@@ -29310,10 +29310,9 @@ var todos = optimistron("todos", initial, recordHandlerFactory({ itemIdKey: "id"
 var createDebugStore = (middleware2) => {
   const [debug, eventBus] = createOptimistronMiddlware();
   const store = configureStore({
-    reducer: combineReducers({ todos }),
+    reducer: { todos },
     middleware: (mw) => mw({ thunk: true }).concat([...middleware2 ? [middleware2] : [], debug])
   });
-  store.dispatch;
   return { store, eventBus };
 };
 
