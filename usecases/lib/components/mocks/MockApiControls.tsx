@@ -6,7 +6,6 @@ export const MockApiControls: FC = () => {
 
     return (
         <div>
-            <hr className="border-gray-300 mb-4" />
             <h2 className="text-rg font-bold mb-4">Mock API</h2>
             <ul>
                 <li>

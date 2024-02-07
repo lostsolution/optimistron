@@ -1,9 +1,15 @@
 import { type FC } from 'react';
 import { useDispatch } from 'react-redux';
 
+import { Layout } from '~usecases/lib/components/todo/Layout';
 import { TodoApp } from '~usecases/lib/components/todo/TodoApp';
 import { createTodo, deleteTodo, editTodo } from '~usecases/lib/store/actions';
 import type { Todo } from '~usecases/lib/store/types';
+
+const description = `
+This usecase handles async operations using redux sagas :
+each staging transition is observed and triggers the appropriate
+transition sequence.`;
 
 export const App: FC = () => {
     const dispatch = useDispatch();
@@ -24,16 +30,8 @@ export const App: FC = () => {
     };
 
     return (
-        <>
-            <h1 className="text-2xl mb-4">Sagas</h1>
-            <blockquote className="p-4 my-4 border-s-4 border-gray-300 bg-gray-50">
-                <p className="text-sm italic font-medium leading-relaxed text-gray-900">
-                    This usecase handles async operations using redux sagas : each staging transition is observed and
-                    triggers the appropriate transition sequence.
-                </p>
-            </blockquote>
-
+        <Layout title="Sagas" description={description}>
             <TodoApp onCreateTodo={handleCreate} onEditTodo={handleEdit} onDeleteTodo={handleDelete} />
-        </>
+        </Layout>
     );
 };
