@@ -56,7 +56,7 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
     }, [loading, failed]);
 
     return (
-        <div className="flex w-full justify-between items-center pt-1">
+        <div className="flex w-full justify-between items-center px-2 pt-1">
             <input className="hidden" type="checkbox" id={id} checked={todo.done} readOnly />
             <label
                 htmlFor={id}
