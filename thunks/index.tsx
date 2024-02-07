@@ -8,7 +8,7 @@ import { useMockApi } from '~usecases/lib/components/mocks/MockApiProvider';
 import { createDebugStore } from '~usecases/lib/store/store';
 import { App } from '~usecases/thunks/App';
 
-export const { store, eventBus } = createDebugStore(thunk);
+export const { store, eventBus } = createDebugStore(thunk.withExtraArgument({}));
 
 const Usecase: FC = () => {
     const mockApi = useMockApi();

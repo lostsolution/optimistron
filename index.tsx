@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Fragment } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Link, Route, HashRouter as Router, Routes } from 'react-router-dom';
+import { NavLink, Route, HashRouter as Router, Routes } from 'react-router-dom';
 
 import BasicUsecase from '~usecases/basic';
 import { MockApiControls } from '~usecases/lib/components/mocks/MockApiControls';
@@ -14,29 +14,39 @@ import './styles.css';
 const usecases = [
     { key: 'Home', path: '/', component: Fragment },
     { key: 'Basic', path: '/basic', component: BasicUsecase },
-    { key: 'Thunks', path: '/thunks', component: ThunksUsecase },
     { key: 'Sagas', path: '/sagas', component: SagasUsecase },
+    { key: 'Thunks', path: '/thunks', component: ThunksUsecase },
 ];
 
 export const App: FC = () => {
     return (
         <MockApiProvider>
             <Router>
-                <div className="flex w-full h-screen">
-                    <div className="w-80 bg-gray-200 p-4 h-full flex flex-col shrink-0 justify-between">
-                        <h2 className="text-lg font-bold mb-4">Usecases</h2>
-
-                        <ul className="grow">
-                            {usecases.map(({ key, path }) => (
-                                <li className="cursor-pointer" key={key}>
-                                    <Link to={path}>{key}</Link>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <MockApiControls />
+                <div className="flex w-full h-screen overflow-hidden">
+                    <div className="w-72 h-full overflow-hidden">
+                        <div className="relative h-full bg-gray-200">
+                            <div className="absolute top-0 bottom-44 w-full overflow-y-auto p-4">
+                                <h2 className="text-lg font-bold mb-4">Usecases</h2>
+                                <ul className="grow mb-4">
+                                    {usecases.map(({ key, path }) => (
+                                        <li className="cursor-pointer" key={key}>
+                                            <NavLink
+                                                to={path}
+                                                className={(props) => (props.isActive ? 'font-bold' : '')}
+                                            >
+                                                {key}
+                                            </NavLink>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="absolute bottom-0 w-full h-44 p-4">
+                                <MockApiControls />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 p-4 flex flex-col max-h-full overflow-auto">
+
+                    <div className="flex flex-col grow h-full overflow-hidden">
                         <Routes>
                             {usecases.map(({ key, path, component }) => (
                                 <Route key={key} path={path} Component={component} />

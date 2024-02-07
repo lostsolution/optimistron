@@ -26384,9 +26384,6 @@ initializeUseSelector(with_selector.useSyncExternalStoreWithSelector);
 initializeConnect(shim.useSyncExternalStore);
 setBatch(import_react_dom.unstable_batchedUpdates);
 
-// usecases/lib/components/todo/TodoApp.tsx
-var import_react8 = __toESM(require_react(), 1);
-
 // usecases/lib/components/graph/TransitionGraph.tsx
 var import_react4 = __toESM(require_react(), 1);
 
@@ -28740,7 +28737,7 @@ var TransitionGraph = () => {
     }
   }, [reflow]);
   return jsx_dev_runtime2.jsxDEV("div", {
-    className: "max-w-full overflow-x-auto",
+    className: "max-w-full overflow-hidden",
     children: [
       jsx_dev_runtime2.jsxDEV("div", {
         id: "transition-graph"
@@ -28752,6 +28749,46 @@ var TransitionGraph = () => {
     ]
   }, undefined, true, undefined, this);
 };
+
+// usecases/lib/components/todo/Layout.tsx
+var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
+var Layout = ({ children, title, description }) => jsx_dev_runtime3.jsxDEV("div", {
+  className: "relative h-full bg-gray-200",
+  children: [
+    jsx_dev_runtime3.jsxDEV("div", {
+      className: "flex flex-cols absolute w-full top-0 bottom-44 w-full overflow-hidden",
+      children: [
+        jsx_dev_runtime3.jsxDEV("div", {
+          className: "flex-shrink-0 w-1/2 h-full overflow-y-auto bg-gray-100",
+          children: jsx_dev_runtime3.jsxDEV("div", {
+            className: "h-full",
+            children
+          }, undefined, false, undefined, this)
+        }, undefined, false, undefined, this),
+        jsx_dev_runtime3.jsxDEV("blockquote", {
+          className: "flex-shrink-0 w-1/2 h-full overflow-y-auto p-4 border-s-4 border-gray-300 bg-gray-50 h-full",
+          children: [
+            jsx_dev_runtime3.jsxDEV("h1", {
+              className: "text-2xl mb-4",
+              children: title
+            }, undefined, false, undefined, this),
+            jsx_dev_runtime3.jsxDEV("p", {
+              className: "text-sm font-medium leading-relaxed text-gray-900",
+              children: description
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this)
+      ]
+    }, undefined, true, undefined, this),
+    jsx_dev_runtime3.jsxDEV("div", {
+      className: "absolute bottom-0 w-full p-4 h-44 bg-gray-100 border-t border-gray-300",
+      children: jsx_dev_runtime3.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+
+// usecases/lib/components/todo/TodoApp.tsx
+var import_react8 = __toESM(require_react(), 1);
 
 // usecases/lib/components/mocks/MockApiProvider.tsx
 var import_react5 = __toESM(require_react(), 1);
@@ -28773,7 +28810,7 @@ var simulateAPIRequest = async () => {
 };
 
 // usecases/lib/components/mocks/MockApiProvider.tsx
-var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
 var MockApiContext = import_react5.createContext(null);
 var MockApiProvider = ({ children }) => {
   const [state, setState] = import_react5.useState({ online: getMockApiOnline(), timeout: getMockApiTimeout() });
@@ -28781,7 +28818,7 @@ var MockApiProvider = ({ children }) => {
     setMockApiOnline(state.online);
     setMockApiTimeout(state.timeout);
   }, [state]);
-  return jsx_dev_runtime3.jsxDEV(MockApiContext.Provider, {
+  return jsx_dev_runtime4.jsxDEV(MockApiContext.Provider, {
     value: import_react5.useMemo(() => ({
       ...state,
       setResponseTime: (timeout) => setState((prev) => ({ ...prev, timeout })),
@@ -28823,25 +28860,25 @@ function clsx() {
 var import_react7 = __toESM(require_react(), 1);
 
 // usecases/lib/components/todo/Icons.tsx
-var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
-var Spinner = () => jsx_dev_runtime4.jsxDEV("svg", {
+var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var Spinner = () => jsx_dev_runtime5.jsxDEV("svg", {
   className: "w-4 h-4",
   xmlns: "http://www.w3.org/2000/svg",
   viewBox: "0 0 40 40",
   fill: "currentColor",
   children: [
-    jsx_dev_runtime4.jsxDEV("path", {
+    jsx_dev_runtime5.jsxDEV("path", {
       opacity: "0.2",
       fill: "currentColor",
       d: `M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946
     s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634
     c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z`
     }, undefined, false, undefined, this),
-    jsx_dev_runtime4.jsxDEV("path", {
+    jsx_dev_runtime5.jsxDEV("path", {
       fill: "currentColor",
       d: `M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0
     C22.32,8.481,24.301,9.057,26.013,10.047z`,
-      children: jsx_dev_runtime4.jsxDEV("animateTransform", {
+      children: jsx_dev_runtime5.jsxDEV("animateTransform", {
         attributeType: "xml",
         attributeName: "transform",
         type: "rotate",
@@ -28853,23 +28890,23 @@ var Spinner = () => jsx_dev_runtime4.jsxDEV("svg", {
     }, undefined, false, undefined, this)
   ]
 }, undefined, true, undefined, this);
-var CheckMark = () => jsx_dev_runtime4.jsxDEV("svg", {
+var CheckMark = () => jsx_dev_runtime5.jsxDEV("svg", {
   className: "w-4 h-4",
   xmlns: "http://www.w3.org/2000/svg",
   viewBox: "0 0 20 20",
   fill: "currentColor",
-  children: jsx_dev_runtime4.jsxDEV("path", {
+  children: jsx_dev_runtime5.jsxDEV("path", {
     fill: "currentColor",
     fillRule: "evenodd",
     d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z",
     clipRule: "evenodd"
   }, undefined, false, undefined, this)
 }, undefined, false, undefined, this);
-var Cross = () => jsx_dev_runtime4.jsxDEV("svg", {
+var Cross = () => jsx_dev_runtime5.jsxDEV("svg", {
   className: "w-4 h-4",
   viewBox: "0 0 93.934 93.934",
   xmlns: "http://www.w3.org/2000/svg",
-  children: jsx_dev_runtime4.jsxDEV("path", {
+  children: jsx_dev_runtime5.jsxDEV("path", {
     fill: "currentColor",
     d: `M80.178,13.757c-18.341-18.342-48.08-18.342-66.421,0c-18.342,18.341-18.342,48.08,0,66.421
 		c18.341,18.342,48.08,18.342,66.421,0C98.52,61.836,98.52,32.098,80.178,13.757z M71.576,61.737l-9.838,9.838l-14.771-14.77
@@ -28898,15 +28935,15 @@ var useTodoState = (todo) => {
 };
 
 // usecases/lib/components/todo/TodoItem.tsx
-var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
 var TodoConflict = ({ id }) => {
   const todo = useSelector(selectTodo(id));
   const Tag = todo.done ? "s" : "em";
-  return jsx_dev_runtime5.jsxDEV("span", {
+  return jsx_dev_runtime6.jsxDEV("span", {
     className: "text-xs text-red-400",
     children: [
       'Conflict : "',
-      jsx_dev_runtime5.jsxDEV(Tag, {
+      jsx_dev_runtime6.jsxDEV(Tag, {
         children: todo.value
       }, undefined, false, undefined, this),
       '"'
@@ -28936,37 +28973,37 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
   };
   const icon = import_react7.useMemo(() => {
     if (loading)
-      return jsx_dev_runtime5.jsxDEV(Spinner, {}, undefined, false, undefined, this);
+      return jsx_dev_runtime6.jsxDEV(Spinner, {}, undefined, false, undefined, this);
     if (failed)
-      return jsx_dev_runtime5.jsxDEV("span", {
+      return jsx_dev_runtime6.jsxDEV("span", {
         className: "text-xs",
         children: "!"
       }, undefined, false, undefined, this);
-    return jsx_dev_runtime5.jsxDEV(CheckMark, {}, undefined, false, undefined, this);
+    return jsx_dev_runtime6.jsxDEV(CheckMark, {}, undefined, false, undefined, this);
   }, [loading, failed]);
-  return jsx_dev_runtime5.jsxDEV("div", {
-    className: "flex w-full justify-between items-center pt-1",
+  return jsx_dev_runtime6.jsxDEV("div", {
+    className: "flex w-full justify-between items-center px-2 pt-1",
     children: [
-      jsx_dev_runtime5.jsxDEV("input", {
+      jsx_dev_runtime6.jsxDEV("input", {
         className: "hidden",
         type: "checkbox",
         id,
         checked: todo.done,
         readOnly: true
       }, undefined, false, undefined, this),
-      jsx_dev_runtime5.jsxDEV("label", {
+      jsx_dev_runtime6.jsxDEV("label", {
         htmlFor: id,
         className: clsx("todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-gray-200", loading && "loading pointer-events-none"),
         children: [
-          jsx_dev_runtime5.jsxDEV("span", {
+          jsx_dev_runtime6.jsxDEV("span", {
             onClick: () => handleMutation({ done: !todo.done }),
             className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-300 text-transparent rounded-full", error && "!border-amber-500 text-amber-500", todo.done && "!text-white !bg-emerald-500 !border-emerald-500", todo.done && error && "!bg-amber-500", loading && "!border-gray-300 !text-gray-500 !bg-transparent"),
             children: icon
           }, undefined, false, undefined, this),
-          jsx_dev_runtime5.jsxDEV("div", {
+          jsx_dev_runtime6.jsxDEV("div", {
             className: "flex-1 mx-4 flex flex-col",
             children: [
-              editable ? jsx_dev_runtime5.jsxDEV("input", {
+              editable ? jsx_dev_runtime6.jsxDEV("input", {
                 type: "text",
                 className: "text-sm",
                 defaultValue: todo.value,
@@ -28984,20 +29021,20 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
                     setEditable(false);
                   }
                 }
-              }, undefined, false, undefined, this) : jsx_dev_runtime5.jsxDEV("span", {
+              }, undefined, false, undefined, this) : jsx_dev_runtime6.jsxDEV("span", {
                 onClick: () => setEditable(true),
                 className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap", todo.done && "line-through text-gray-500", (failed || stashed) && "jiggle"),
                 children: todo.value
               }, undefined, false, undefined, this),
-              conflict && jsx_dev_runtime5.jsxDEV(TodoConflict, {
+              conflict && jsx_dev_runtime6.jsxDEV(TodoConflict, {
                 id: todo.id
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          jsx_dev_runtime5.jsxDEV("button", {
+          jsx_dev_runtime6.jsxDEV("button", {
             className: "self-center font-light text-xs text-red-400 hover:opacity-80",
             onClick: () => onDelete(todo),
-            children: jsx_dev_runtime5.jsxDEV(Cross, {}, undefined, false, undefined, this)
+            children: jsx_dev_runtime6.jsxDEV(Cross, {}, undefined, false, undefined, this)
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this)
@@ -29006,8 +29043,8 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
 };
 
 // usecases/lib/components/todo/TodoApp.tsx
-var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
-var TodoApp = ({ onCreateTodo, onEditTodo, onDeleteTodo }) => {
+var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
+var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
   const todos = useSelector(selectOptimisticTodos);
   const failedTransitions = useSelector(selectFailedTodos);
   const mockApi = useMockApi();
@@ -29035,69 +29072,56 @@ var TodoApp = ({ onCreateTodo, onEditTodo, onDeleteTodo }) => {
       });
     }
   }, [mockApi.online, failedTransitions]);
-  return jsx_dev_runtime6.jsxDEV("div", {
-    className: "flex flex-col w-full h-full justify-between overflow-hidden",
+  return jsx_dev_runtime7.jsxDEV(jsx_dev_runtime7.Fragment, {
     children: [
-      jsx_dev_runtime6.jsxDEV("div", {
-        className: "flex-1 max-w-lg overflow-auto",
-        children: [
-          jsx_dev_runtime6.jsxDEV("div", {
-            className: "flex flex-rows gap-2",
-            children: jsx_dev_runtime6.jsxDEV("button", {
-              className: "flex items-center w-full h-8 px-2 mt-2 text-sm font-medium rounded",
-              children: [
-                jsx_dev_runtime6.jsxDEV("svg", {
-                  className: "w-5 h-5 text-gray-400 fill-current",
-                  xmlns: "http://www.w3.org/2000/svg",
-                  fill: "none",
-                  viewBox: "0 0 24 24",
-                  stroke: "currentColor",
-                  children: jsx_dev_runtime6.jsxDEV("path", {
-                    strokeLinecap: "round",
-                    strokeLinejoin: "round",
-                    strokeWidth: "2",
-                    d: "M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  }, undefined, false, undefined, this)
-                }, undefined, false, undefined, this),
-                jsx_dev_runtime6.jsxDEV("input", {
-                  value,
-                  onChange: (e) => setValue(e.target.value),
-                  onKeyUp: (e) => e.key === "Enter" && handleAddTodo(value),
-                  className: "flex-grow h-8 ml-4 bg-transparent focus:outline-none font-medium",
-                  type: "text",
-                  placeholder: "add a new task"
-                }, undefined, false, undefined, this)
-              ]
-            }, undefined, true, undefined, this)
-          }, undefined, false, undefined, this),
-          jsx_dev_runtime6.jsxDEV("hr", {
-            className: "my-2"
-          }, undefined, false, undefined, this),
-          todos.map((todo) => jsx_dev_runtime6.jsxDEV(TodoItem, {
-            todo,
-            onEdit: onEditTodo,
-            onRetry: handleRetry,
-            onDelete: onDeleteTodo
-          }, todo.id, false, undefined, this))
-        ]
-      }, undefined, true, undefined, this),
-      jsx_dev_runtime6.jsxDEV("div", {
-        children: [
-          jsx_dev_runtime6.jsxDEV("hr", {
-            className: "mb-1"
-          }, undefined, false, undefined, this),
-          jsx_dev_runtime6.jsxDEV("div", {
-            className: "overflow-x-hidden flex align-center",
-            children: jsx_dev_runtime6.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
-          }, undefined, false, undefined, this)
-        ]
-      }, undefined, true, undefined, this)
+      jsx_dev_runtime7.jsxDEV("div", {
+        className: "flex flex-rows gap-2",
+        children: jsx_dev_runtime7.jsxDEV("button", {
+          className: "flex items-center w-full h-8 px-2 mt-2 text-sm font-medium rounded",
+          children: [
+            jsx_dev_runtime7.jsxDEV("svg", {
+              className: "w-5 h-5 text-gray-400 fill-current",
+              xmlns: "http://www.w3.org/2000/svg",
+              fill: "none",
+              viewBox: "0 0 24 24",
+              stroke: "currentColor",
+              children: jsx_dev_runtime7.jsxDEV("path", {
+                strokeLinecap: "round",
+                strokeLinejoin: "round",
+                strokeWidth: "2",
+                d: "M12 6v6m0 0v6m0-6h6m-6 0H6"
+              }, undefined, false, undefined, this)
+            }, undefined, false, undefined, this),
+            jsx_dev_runtime7.jsxDEV("input", {
+              value,
+              onChange: (e) => setValue(e.target.value),
+              onKeyUp: (e) => e.key === "Enter" && handleAddTodo(value),
+              className: "flex-grow h-8 ml-4 bg-transparent focus:outline-none font-medium",
+              type: "text",
+              placeholder: "add a new task"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this)
+      }, undefined, false, undefined, this),
+      jsx_dev_runtime7.jsxDEV("hr", {
+        className: "my-2"
+      }, undefined, false, undefined, this),
+      todos.map((todo) => jsx_dev_runtime7.jsxDEV(TodoItem, {
+        todo,
+        onEdit: onEditTodo,
+        onRetry: handleRetry,
+        onDelete: onDeleteTodo
+      }, todo.id, false, undefined, this))
     ]
   }, undefined, true, undefined, this);
 };
 
 // usecases/basic/App.tsx
-var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
+var description = `
+This usecase handles async operations at the component level.
+In the real world you would use some kind of redux async middleware
+to orchestrate your optimistic transitions.`;
 var App = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => {
@@ -29131,26 +29155,15 @@ var App = () => {
       dispatch(deleteTodo.stash(transitionId));
     }
   };
-  return jsx_dev_runtime7.jsxDEV(jsx_dev_runtime7.Fragment, {
-    children: [
-      jsx_dev_runtime7.jsxDEV("h1", {
-        className: "text-2xl mb-4",
-        children: "Basic"
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime7.jsxDEV("blockquote", {
-        className: "p-4 my-4 border-s-4 border-gray-300 bg-gray-50",
-        children: jsx_dev_runtime7.jsxDEV("p", {
-          className: "text-sm italic font-medium leading-relaxed text-gray-900",
-          children: "This usecase handles async operations at the component level. In the real world you would use some kind of redux async middleware to orchestrate your optimistic transitions."
-        }, undefined, false, undefined, this)
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime7.jsxDEV(TodoApp, {
-        onCreateTodo: handleCreate,
-        onEditTodo: handleEdit,
-        onDeleteTodo: handleDelete
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+  return jsx_dev_runtime8.jsxDEV(Layout, {
+    title: "Basic",
+    description,
+    children: jsx_dev_runtime8.jsxDEV(TodoApp, {
+      onCreateTodo: handleCreate,
+      onEditTodo: handleEdit,
+      onDeleteTodo: handleDelete
+    }, undefined, false, undefined, this)
+  }, undefined, false, undefined, this);
 };
 
 // usecases/lib/store/middleware.ts
@@ -29317,54 +29330,51 @@ var createDebugStore = (middleware2) => {
 };
 
 // usecases/basic/index.tsx
-var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
 var { store: store2, eventBus } = createDebugStore();
 var Usecase = () => {
   const mockApi = useMockApi();
   import_react9.useEffect(() => mockApi.setStore(store2), []);
-  return jsx_dev_runtime8.jsxDEV(Provider_default, {
+  return jsx_dev_runtime9.jsxDEV(Provider_default, {
     store: store2,
-    children: jsx_dev_runtime8.jsxDEV(TransitionHistoryProvider, {
+    children: jsx_dev_runtime9.jsxDEV(TransitionHistoryProvider, {
       eventBus,
-      children: jsx_dev_runtime8.jsxDEV(App, {}, undefined, false, undefined, this)
+      children: jsx_dev_runtime9.jsxDEV(App, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var basic_default = Usecase;
 
 // usecases/lib/components/mocks/MockApiControls.tsx
-var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
 var MockApiControls = () => {
   const mockApi = useMockApi();
-  return jsx_dev_runtime9.jsxDEV("div", {
+  return jsx_dev_runtime10.jsxDEV("div", {
     children: [
-      jsx_dev_runtime9.jsxDEV("hr", {
-        className: "border-gray-300 mb-4"
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime9.jsxDEV("h2", {
+      jsx_dev_runtime10.jsxDEV("h2", {
         className: "text-rg font-bold mb-4",
         children: "Mock API"
       }, undefined, false, undefined, this),
-      jsx_dev_runtime9.jsxDEV("ul", {
+      jsx_dev_runtime10.jsxDEV("ul", {
         children: [
-          jsx_dev_runtime9.jsxDEV("li", {
-            children: jsx_dev_runtime9.jsxDEV("label", {
+          jsx_dev_runtime10.jsxDEV("li", {
+            children: jsx_dev_runtime10.jsxDEV("label", {
               className: "flex w-full items-center mb-2 cursor-pointer align-center justify-between",
               children: [
-                jsx_dev_runtime9.jsxDEV("span", {
+                jsx_dev_runtime10.jsxDEV("span", {
                   className: "text-sm font-medium text-gray-400 dark:text-gray-500",
                   children: "Online"
                 }, undefined, false, undefined, this),
-                jsx_dev_runtime9.jsxDEV("div", {
+                jsx_dev_runtime10.jsxDEV("div", {
                   className: "relative",
                   children: [
-                    jsx_dev_runtime9.jsxDEV("input", {
+                    jsx_dev_runtime10.jsxDEV("input", {
                       type: "checkbox",
                       className: "sr-only peer",
                       checked: mockApi.online,
                       onChange: mockApi.toggleOnline
                     }, undefined, false, undefined, this),
-                    jsx_dev_runtime9.jsxDEV("div", {
+                    jsx_dev_runtime10.jsxDEV("div", {
                       className: "w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
                     }, undefined, false, undefined, this)
                   ]
@@ -29372,15 +29382,15 @@ var MockApiControls = () => {
               ]
             }, undefined, true, undefined, this)
           }, undefined, false, undefined, this),
-          jsx_dev_runtime9.jsxDEV("li", {
-            children: jsx_dev_runtime9.jsxDEV("label", {
+          jsx_dev_runtime10.jsxDEV("li", {
+            children: jsx_dev_runtime10.jsxDEV("label", {
               className: "w-full flex items-center mb-2 cursor-pointer align-center justify-between",
               children: [
-                jsx_dev_runtime9.jsxDEV("span", {
+                jsx_dev_runtime10.jsxDEV("span", {
                   className: "text-sm font-medium text-gray-400 dark:text-gray-500",
                   children: "Response time (ms)"
                 }, undefined, false, undefined, this),
-                jsx_dev_runtime9.jsxDEV("input", {
+                jsx_dev_runtime10.jsxDEV("input", {
                   type: "number",
                   min: 0,
                   max: 1e4,
@@ -29396,8 +29406,8 @@ var MockApiControls = () => {
               ]
             }, undefined, true, undefined, this)
           }, undefined, false, undefined, this),
-          jsx_dev_runtime9.jsxDEV("li", {
-            children: jsx_dev_runtime9.jsxDEV("button", {
+          jsx_dev_runtime10.jsxDEV("li", {
+            children: jsx_dev_runtime10.jsxDEV("button", {
               onClick: mockApi.sync,
               className: "bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm w-full text-center py-2 px-4 rounded",
               children: "Sync API"
@@ -30827,7 +30837,11 @@ var redux_saga_core_npm_proxy_esm_default = redux_saga_core_esm_default;
 var import_react10 = __toESM(require_react(), 1);
 
 // usecases/sagas/App.tsx
-var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
+var description2 = `
+This usecase handles async operations using redux sagas :
+each staging transition is observed and triggers the appropriate
+transition sequence.`;
 var App3 = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => {
@@ -30842,26 +30856,15 @@ var App3 = () => {
     const transitionId = todo.id;
     dispatch(deleteTodo.stage(transitionId, todo.id));
   };
-  return jsx_dev_runtime10.jsxDEV(jsx_dev_runtime10.Fragment, {
-    children: [
-      jsx_dev_runtime10.jsxDEV("h1", {
-        className: "text-2xl mb-4",
-        children: "Sagas"
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime10.jsxDEV("blockquote", {
-        className: "p-4 my-4 border-s-4 border-gray-300 bg-gray-50",
-        children: jsx_dev_runtime10.jsxDEV("p", {
-          className: "text-sm italic font-medium leading-relaxed text-gray-900",
-          children: "This usecase handles async operations using redux sagas : each staging transition is observed and triggers the appropriate transition sequence."
-        }, undefined, false, undefined, this)
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime10.jsxDEV(TodoApp, {
-        onCreateTodo: handleCreate,
-        onEditTodo: handleEdit,
-        onDeleteTodo: handleDelete
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+  return jsx_dev_runtime11.jsxDEV(Layout, {
+    title: "Sagas",
+    description: description2,
+    children: jsx_dev_runtime11.jsxDEV(TodoApp, {
+      onCreateTodo: handleCreate,
+      onEditTodo: handleEdit,
+      onDeleteTodo: handleDelete
+    }, undefined, false, undefined, this)
+  }, undefined, false, undefined, this);
 };
 // node_modules/@redux-saga/core/dist/redux-saga-effects.esm.js
 var safeName = function(patternOrChannel) {
@@ -30985,18 +30988,18 @@ function* rootSaga() {
 }
 
 // usecases/sagas/index.tsx
-var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
 var sagaMiddleware = redux_saga_core_npm_proxy_esm_default();
 var { store: store4, eventBus: eventBus2 } = createDebugStore(sagaMiddleware);
 sagaMiddleware.run(rootSaga);
 var Usecase2 = () => {
   const mockApi = useMockApi();
   import_react10.useEffect(() => mockApi.setStore(store4), []);
-  return jsx_dev_runtime11.jsxDEV(Provider_default, {
+  return jsx_dev_runtime12.jsxDEV(Provider_default, {
     store: store4,
-    children: jsx_dev_runtime11.jsxDEV(TransitionHistoryProvider, {
+    children: jsx_dev_runtime12.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus2,
-      children: jsx_dev_runtime11.jsxDEV(App3, {}, undefined, false, undefined, this)
+      children: jsx_dev_runtime12.jsxDEV(App3, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
@@ -31045,87 +31048,89 @@ var deleteTodoTunk = (id) => {
 };
 
 // usecases/thunks/App.tsx
-var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
+var description3 = `This usecase handles async operations using async thunks.`;
 var App5 = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => dispatch(createTodoThunk(todo));
   const handleEdit = async (update) => dispatch(editTodoThunk(update.id, update));
   const handleDelete = async ({ id }) => dispatch(deleteTodoTunk(id));
-  return jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
-    children: [
-      jsx_dev_runtime12.jsxDEV("h1", {
-        className: "text-2xl mb-4",
-        children: "Thunks"
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime12.jsxDEV("blockquote", {
-        className: "p-4 my-4 border-s-4 border-gray-300 bg-gray-50",
-        children: jsx_dev_runtime12.jsxDEV("p", {
-          className: "text-sm italic font-medium leading-relaxed text-gray-900",
-          children: "This usecase handles async operations using async thunks."
-        }, undefined, false, undefined, this)
-      }, undefined, false, undefined, this),
-      jsx_dev_runtime12.jsxDEV(TodoApp, {
-        onCreateTodo: handleCreate,
-        onEditTodo: handleEdit,
-        onDeleteTodo: handleDelete
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+  return jsx_dev_runtime13.jsxDEV(Layout, {
+    title: "Thunks",
+    description: description3,
+    children: jsx_dev_runtime13.jsxDEV(TodoApp, {
+      onCreateTodo: handleCreate,
+      onEditTodo: handleEdit,
+      onDeleteTodo: handleDelete
+    }, undefined, false, undefined, this)
+  }, undefined, false, undefined, this);
 };
 
 // usecases/thunks/index.tsx
-var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
-var { store: store6, eventBus: eventBus3 } = createDebugStore(es_default);
+var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
+var { store: store6, eventBus: eventBus3 } = createDebugStore(es_default.withExtraArgument({}));
 var Usecase3 = () => {
   const mockApi = useMockApi();
   import_react11.useEffect(() => mockApi.setStore(store6), []);
-  return jsx_dev_runtime13.jsxDEV(Provider_default, {
+  return jsx_dev_runtime14.jsxDEV(Provider_default, {
     store: store6,
-    children: jsx_dev_runtime13.jsxDEV(TransitionHistoryProvider, {
+    children: jsx_dev_runtime14.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus3,
-      children: jsx_dev_runtime13.jsxDEV(App5, {}, undefined, false, undefined, this)
+      children: jsx_dev_runtime14.jsxDEV(App5, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var thunks_default = Usecase3;
 // usecases/index.tsx
-var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
 var usecases = [
   { key: "Home", path: "/", component: import_react12.Fragment },
   { key: "Basic", path: "/basic", component: basic_default },
-  { key: "Thunks", path: "/thunks", component: thunks_default },
-  { key: "Sagas", path: "/sagas", component: sagas_default }
+  { key: "Sagas", path: "/sagas", component: sagas_default },
+  { key: "Thunks", path: "/thunks", component: thunks_default }
 ];
 var App7 = () => {
-  return jsx_dev_runtime14.jsxDEV(MockApiProvider, {
-    children: jsx_dev_runtime14.jsxDEV(HashRouter, {
-      children: jsx_dev_runtime14.jsxDEV("div", {
-        className: "flex w-full h-screen",
+  return jsx_dev_runtime15.jsxDEV(MockApiProvider, {
+    children: jsx_dev_runtime15.jsxDEV(HashRouter, {
+      children: jsx_dev_runtime15.jsxDEV("div", {
+        className: "flex w-full h-screen overflow-hidden",
         children: [
-          jsx_dev_runtime14.jsxDEV("div", {
-            className: "w-80 bg-gray-200 p-4 h-full flex flex-col shrink-0 justify-between",
-            children: [
-              jsx_dev_runtime14.jsxDEV("h2", {
-                className: "text-lg font-bold mb-4",
-                children: "Usecases"
-              }, undefined, false, undefined, this),
-              jsx_dev_runtime14.jsxDEV("ul", {
-                className: "grow",
-                children: usecases.map(({ key, path }) => jsx_dev_runtime14.jsxDEV("li", {
-                  className: "cursor-pointer",
-                  children: jsx_dev_runtime14.jsxDEV(Link, {
-                    to: path,
-                    children: key
-                  }, undefined, false, undefined, this)
-                }, key, false, undefined, this))
-              }, undefined, false, undefined, this),
-              jsx_dev_runtime14.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
-            ]
-          }, undefined, true, undefined, this),
-          jsx_dev_runtime14.jsxDEV("div", {
-            className: "flex-1 p-4 flex flex-col max-h-full overflow-auto",
-            children: jsx_dev_runtime14.jsxDEV(Routes, {
-              children: usecases.map(({ key, path, component }) => jsx_dev_runtime14.jsxDEV(Route, {
+          jsx_dev_runtime15.jsxDEV("div", {
+            className: "w-72 h-full overflow-hidden",
+            children: jsx_dev_runtime15.jsxDEV("div", {
+              className: "relative h-full bg-gray-200",
+              children: [
+                jsx_dev_runtime15.jsxDEV("div", {
+                  className: "absolute top-0 bottom-44 w-full overflow-y-auto p-4",
+                  children: [
+                    jsx_dev_runtime15.jsxDEV("h2", {
+                      className: "text-lg font-bold mb-4",
+                      children: "Usecases"
+                    }, undefined, false, undefined, this),
+                    jsx_dev_runtime15.jsxDEV("ul", {
+                      className: "grow mb-4",
+                      children: usecases.map(({ key, path }) => jsx_dev_runtime15.jsxDEV("li", {
+                        className: "cursor-pointer",
+                        children: jsx_dev_runtime15.jsxDEV(NavLink, {
+                          to: path,
+                          className: (props) => props.isActive ? "font-bold" : "",
+                          children: key
+                        }, undefined, false, undefined, this)
+                      }, key, false, undefined, this))
+                    }, undefined, false, undefined, this)
+                  ]
+                }, undefined, true, undefined, this),
+                jsx_dev_runtime15.jsxDEV("div", {
+                  className: "absolute bottom-0 w-full h-44 p-4",
+                  children: jsx_dev_runtime15.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
+                }, undefined, false, undefined, this)
+              ]
+            }, undefined, true, undefined, this)
+          }, undefined, false, undefined, this),
+          jsx_dev_runtime15.jsxDEV("div", {
+            className: "flex flex-col grow h-full overflow-hidden",
+            children: jsx_dev_runtime15.jsxDEV(Routes, {
+              children: usecases.map(({ key, path, component }) => jsx_dev_runtime15.jsxDEV(Route, {
                 path,
                 Component: component
               }, key, false, undefined, this))
@@ -31137,7 +31142,7 @@ var App7 = () => {
   }, undefined, false, undefined, this);
 };
 var root = client.createRoot(document.getElementById("root"));
-root.render(jsx_dev_runtime14.jsxDEV(App7, {}, undefined, false, undefined, this));
+root.render(jsx_dev_runtime15.jsxDEV(App7, {}, undefined, false, undefined, this));
 export {
   App7 as App
 };

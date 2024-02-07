@@ -73,7 +73,7 @@ export const TransitionGraph: FC = () => {
         }
     }, [reflow]);
     return (
-        <div className="max-w-full overflow-x-auto">
+        <div className="max-w-full overflow-hidden">
             <div id="transition-graph" />
             <pre ref={ref} className="min-h-28 flex items-center" />
         </div>
