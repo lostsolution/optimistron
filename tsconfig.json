@@ -8,9 +8,10 @@
         "strict": true,
         "noImplicitAny": true,
         "skipLibCheck": true,
+        "noEmit": true,
         "paths": {
             "~usecases/*": ["./usecases/*"],
-            "~*": ["./src/*"]
-        }
-    }
+            "~*": ["./src/*"],
+        },
+    },
 }
