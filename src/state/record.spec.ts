@@ -28,23 +28,40 @@ describe('RecordState', () => {
         expect(next[1]).toEqual({ id: '1', version: 1, value: 'newvalue' });
     });
 
-    test('remove', () => {
-        const item: TestItem = { id: '1', version: 0, value: 'test' };
-        const next = testHandler.remove({ [item.id]: item }, item.id);
-        expect(next).toEqual({});
+    describe('remove', () => {
+        test('should delete entry', () => {
+            const item: TestItem = { id: '1', version: 0, value: 'test' };
+            const next = testHandler.remove({ [item.id]: item }, item.id);
+            expect(next).toEqual({});
+        });
+
+        test('should noop if item does not exist', () => {
+            const item: TestItem = { id: '1', version: 0, value: 'test' };
+            const state = { [item.id]: item };
+            const next = testHandler.remove(state, 'non-existing');
+            expect(next).toEqual(state);
+        });
     });
 
     describe('merge', () => {
-        test('should detect created entries', () => {
+        test('should allow creations', () => {
             const item: TestItem = { id: '1', version: 0, value: 'test' };
             const next = testHandler.merge({}, { [item.id]: item });
             expect(next).toEqual({ [item.id]: item });
         });
 
-        test('should detect deleted entries', () => {
+        test('should allow valid deletions', () => {
             const item: TestItem = { id: '1', version: 0, value: 'test' };
             const next = testHandler.merge({ [item.id]: item }, {});
             expect(next).toEqual({});
+        });
+
+        test('shoud allow valid updates', () => {
+            const item: TestItem = { id: '1', version: 0, value: 'test' };
+            const update: TestItem = { id: '1', version: 2, value: 'test-update' };
+            const existing = { [item.id]: item };
+            const incoming = { [item.id]: update };
+            expect(testHandler.merge(existing, incoming)).toEqual(incoming);
         });
 
         test('should detect noops and throw `SKIP`', () => {
@@ -52,6 +69,15 @@ describe('RecordState', () => {
             const existing = { [item.id]: item };
             const incoming = { [item.id]: item };
             expect(() => testHandler.merge(existing, incoming)).toThrow(OptimisticMergeResult.SKIP);
+        });
+
+        test('should detect conflicts and throw `CONFLICT`', () => {
+            const item: TestItem = { id: '1', version: 0, value: 'test' };
+            const conflicting: TestItem = { id: '1', version: 0, value: 'test-conflict' };
+            const existing = { [item.id]: item };
+            const incoming = { [item.id]: conflicting };
+            expect(() => testHandler.merge(existing, incoming)).toThrow(OptimisticMergeResult.CONFLICT);
+            expect(() => testHandler.merge(incoming, existing)).toThrow(OptimisticMergeResult.CONFLICT);
         });
     });
 });

@@ -91,9 +91,9 @@ export const processTransition = (
                 const existing = nextTransitions[matchIdx];
                 const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
 
-                /* When dedupe mode is set to `TRAILING`, store the previous transition as a trailing
-                 * transition. This helps in handling reversion to the previous transition when stashing
-                 * the current one. */
+                /* When dedupe mode is set to `TRAILING`, store the previous transition as a
+                 * trailing transition. This helps in handling reversion to the previous
+                 * transition when stashing the current one. */
                 if (dedupe === TransitionDedupeMode.TRAILING) {
                     nextTransitions[matchIdx] = updateTransition(transition, { trailing });
                 } else nextTransitions[matchIdx] = transition;
@@ -173,10 +173,10 @@ export const sanitizeTransitions =
                         acc.transitionState.state = bindState(acc.transitionState.state).merge(nextState);
                         acc.transitions.push(action);
                     }
+                } catch (mergeError: unknown) {
                     /* This will catch any errors thrown from your handler's `merge` function.
                      * In addition, if an action application throws at the reducer level, the
                      * transition action will be treated as a `OptimisticMergeResult.SKIP` */
-                } catch (mergeError: unknown) {
                     acc.mutated = true;
                     switch (mergeError) {
                         case OptimisticMergeResult.SKIP:
