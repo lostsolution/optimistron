@@ -21,9 +21,9 @@ const TodoConflict: FC<{ id: string }> = ({ id }) => {
     const Tag: keyof JSX.IntrinsicElements = todo.done ? 's' : 'em';
 
     return (
-        <span className="text-xs text-red-400">
+        <div className="text-[9px] text-red-300">
             Conflict : "<Tag>{todo.value}</Tag>"
-        </span>
+        </div>
     );
 };
 
