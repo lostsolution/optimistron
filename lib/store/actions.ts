@@ -11,4 +11,9 @@ export const createTodo = createTransitions('todos::add')(create);
 export const editTodo = createTransitions('todos::edit')(edit);
 export const deleteTodo = createTransitions('todos::delete', TransitionDedupeMode.TRAILING)(remove);
 
+export type OptimisticActions =
+    | ReturnType<typeof createTodo.stage>
+    | ReturnType<typeof editTodo.stage>
+    | ReturnType<typeof deleteTodo.stage>;
+
 export const sync = createAction('todos::sync');

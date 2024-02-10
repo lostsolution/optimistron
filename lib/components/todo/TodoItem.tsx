@@ -4,14 +4,17 @@ import { useSelector } from 'react-redux';
 
 import type { TransitionAction } from '~transitions';
 
+import cloneDeep from 'lodash/cloneDeep';
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
+import type { OptimisticActions } from '~usecases/lib/store/actions';
+import { createTodo, editTodo } from '~usecases/lib/store/actions';
 import { useTodoState } from '~usecases/lib/store/hooks';
 import { selectTodo } from '~usecases/lib/store/selectors';
 import type { Todo } from '~usecases/lib/store/types';
 
 type Props = {
     todo: Todo;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: TransitionAction<OptimisticActions>) => void;
     onEdit: (todo: Todo) => void;
     onDelete: (todo: Todo) => void;
 };
@@ -21,9 +24,9 @@ const TodoConflict: FC<{ id: string }> = ({ id }) => {
     const Tag: keyof JSX.IntrinsicElements = todo.done ? 's' : 'em';
 
     return (
-        <span className="text-xs text-red-400">
+        <div className="text-[9px] text-red-300">
             Conflict : "<Tag>{todo.value}</Tag>"
-        </span>
+        </div>
     );
 };
 
@@ -37,15 +40,17 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
         if (loading) return;
 
         if (failedAction) {
-            onRetry({
-                ...failedAction,
-                payload: {
-                    todo: {
-                        ...failedAction.payload.todo,
-                        ...mutation,
-                    },
-                },
-            });
+            if (createTodo.stage.match(failedAction)) {
+                const create = cloneDeep(failedAction);
+                create.payload.todo = { ...create.payload.todo, ...mutation };
+                onRetry(create);
+            }
+
+            if (editTodo.stage.match(failedAction)) {
+                const edit = cloneDeep(failedAction);
+                edit.payload.todo = { ...edit.payload.todo, ...mutation };
+                onRetry(edit);
+            }
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
 
