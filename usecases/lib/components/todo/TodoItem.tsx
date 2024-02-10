@@ -5,13 +5,15 @@ import { useSelector } from 'react-redux';
 import type { TransitionAction } from '~transitions';
 
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
+import type { OptimisticActions } from '~usecases/lib/store/actions';
+import { createTodo, editTodo } from '~usecases/lib/store/actions';
 import { useTodoState } from '~usecases/lib/store/hooks';
 import { selectTodo } from '~usecases/lib/store/selectors';
 import type { Todo } from '~usecases/lib/store/types';
 
 type Props = {
     todo: Todo;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: TransitionAction<OptimisticActions>) => void;
     onEdit: (todo: Todo) => void;
     onDelete: (todo: Todo) => void;
 };
@@ -37,15 +39,30 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
         if (loading) return;
 
         if (failedAction) {
-            onRetry({
-                ...failedAction,
-                payload: {
-                    todo: {
-                        ...failedAction.payload.todo,
-                        ...mutation,
+            if (createTodo.stage.match(failedAction)) {
+                onRetry({
+                    ...failedAction,
+                    payload: {
+                        todo: {
+                            ...failedAction.payload.todo,
+                            ...mutation,
+                        },
                     },
-                },
-            });
+                });
+            }
+
+            if (editTodo.stage.match(failedAction)) {
+                onRetry({
+                    ...failedAction,
+                    payload: {
+                        ...failedAction.payload,
+                        todo: {
+                            ...failedAction.payload.todo,
+                            ...mutation,
+                        },
+                    },
+                });
+            }
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
 

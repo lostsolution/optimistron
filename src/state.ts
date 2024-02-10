@@ -1,7 +1,11 @@
 import { ReducerIdKey } from '~constants';
 import type { TransitionAction } from '~transitions';
 
-export type TransitionState<T> = { state: T; transitions: TransitionAction[]; [ReducerIdKey]: string };
+export type TransitionState<T> = {
+    state: T;
+    transitions: TransitionAction[];
+    [ReducerIdKey]: string;
+};
 
 export interface StateHandler<
     State,

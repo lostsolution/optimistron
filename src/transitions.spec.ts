@@ -17,7 +17,7 @@ const transitionTrailing = createTransitions(
 }));
 
 const applyTransitions = (...tansitions: TransitionAction[]) =>
-    tansitions.reduce<TransitionAction[]>((next, curr) => processTransition(curr, next), []);
+    tansitions.reduce<TransitionAction<any>[]>((next, curr) => processTransition(curr, next), []);
 
 describe('Transitions', () => {
     describe('stage', () => {

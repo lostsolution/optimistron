@@ -1,4 +1,4 @@
-import type { AnyAction, PrepareAction } from '@reduxjs/toolkit';
+import type { Action, PrepareAction } from '@reduxjs/toolkit';
 import { MetaKey } from '~constants';
 import { type BoundReducer } from '~reducer';
 import type { bindStateFactory } from '~state';
@@ -23,7 +23,7 @@ export enum TransitionDedupeMode {
 }
 
 export type TransitionNamespace = `${string}::${string}`;
-export type TransitionAction<Action = AnyAction> = Action & { meta: { [MetaKey]: TransitionMeta } };
+export type TransitionAction<A = Action> = A & { meta: { [MetaKey]: TransitionMeta } };
 
 export type TransitionMeta = {
     conflict: boolean;
@@ -50,11 +50,12 @@ export const withTransitionMeta = (
     },
 });
 
-export const isTransition = (action: AnyAction): action is TransitionAction => action?.meta && MetaKey in action.meta;
+export const isTransition = (action: Action): action is TransitionAction =>
+    'meta' in action && typeof action.meta === 'object' && action.meta !== null && MetaKey in action.meta;
 
 /** Checks wether an action is a transition for the supplied namespace */
 export const isTransitionForNamespace = (
-    action: AnyAction,
+    action: Action,
     namespace: string,
 ): action is TransitionAction<typeof action> => isTransition(action) && action.type.startsWith(`${namespace}::`);
 

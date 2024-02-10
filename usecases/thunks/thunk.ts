@@ -1,4 +1,4 @@
-import type { AnyAction } from 'redux';
+import type { Action } from 'redux';
 import type { ThunkAction } from 'redux-thunk';
 
 import { createTodo, deleteTodo, editTodo } from '~usecases/lib/store/actions';
@@ -6,7 +6,7 @@ import type { State } from '~usecases/lib/store/store';
 import type { Todo } from '~usecases/lib/store/types';
 import { generateId, simulateAPIRequest } from '~usecases/lib/utils/mock-api';
 
-export const createTodoThunk = (todo: Todo): ThunkAction<void, State, undefined, AnyAction> => {
+export const createTodoThunk = (todo: Todo): ThunkAction<void, State, undefined, Action> => {
     return async (dispatch) => {
         const transitionId = todo.id;
 
@@ -21,7 +21,7 @@ export const createTodoThunk = (todo: Todo): ThunkAction<void, State, undefined,
     };
 };
 
-export const editTodoThunk = (id: string, update: Todo): ThunkAction<void, State, undefined, AnyAction> => {
+export const editTodoThunk = (id: string, update: Todo): ThunkAction<void, State, undefined, Action> => {
     return async (dispatch) => {
         const transitionId = id;
 
@@ -35,7 +35,7 @@ export const editTodoThunk = (id: string, update: Todo): ThunkAction<void, State
     };
 };
 
-export const deleteTodoTunk = (id: string): ThunkAction<void, State, undefined, AnyAction> => {
+export const deleteTodoTunk = (id: string): ThunkAction<void, State, undefined, Action> => {
     return async (dispatch) => {
         const transitionId = id;
 

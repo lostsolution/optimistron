@@ -1,4 +1,4 @@
-import type { ActionCreatorWithPreparedPayload, AnyAction, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
+import type { Action, ActionCreatorWithPreparedPayload, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
 
 import type { MetaKey } from '~constants';
@@ -20,7 +20,7 @@ const createMatcher =
         Error = Result extends { error: infer Err } ? Err : never,
         Meta = { [MetaKey]: TransitionMeta } & (Result extends { meta: infer Meta } ? Meta : object),
     >(
-        action: AnyAction,
+        action: Action,
     ): action is PayloadAction<Result['payload'], NS, Meta, Error> =>
         isTransitionForNamespace(action, namespace) &&
         getTransitionMeta(action).operation === TransitionOperation.COMMIT;

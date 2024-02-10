@@ -7,7 +7,7 @@ import {
     selectIsOptimistic,
     selectOptimistic,
 } from '~selectors';
-import { type State } from '~usecases/lib/store/store';
+import type { State } from '~usecases/lib/store/store';
 
 export const selectTodo = (id: string) =>
     createSelector(
