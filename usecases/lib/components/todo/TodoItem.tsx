@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import type { TransitionAction } from '~transitions';
 
+import cloneDeep from 'lodash/cloneDeep';
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import type { OptimisticActions } from '~usecases/lib/store/actions';
 import { createTodo, editTodo } from '~usecases/lib/store/actions';
@@ -40,28 +41,15 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
 
         if (failedAction) {
             if (createTodo.stage.match(failedAction)) {
-                onRetry({
-                    ...failedAction,
-                    payload: {
-                        todo: {
-                            ...failedAction.payload.todo,
-                            ...mutation,
-                        },
-                    },
-                });
+                const create = cloneDeep(failedAction);
+                create.payload.todo = { ...create.payload.todo, ...mutation };
+                onRetry(create);
             }
 
             if (editTodo.stage.match(failedAction)) {
-                onRetry({
-                    ...failedAction,
-                    payload: {
-                        ...failedAction.payload,
-                        todo: {
-                            ...failedAction.payload.todo,
-                            ...mutation,
-                        },
-                    },
-                });
+                const edit = cloneDeep(failedAction);
+                edit.payload.todo = { ...edit.payload.todo, ...mutation };
+                onRetry(edit);
             }
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
