@@ -1,14 +1,14 @@
-import type { AnyAction } from 'redux';
+import type { Action } from 'redux';
 import type { BoundStateHandler, TransitionState } from '~state';
 
-export type BoundReducer<State = any> = (state: TransitionState<State>, action: AnyAction) => State;
+export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 
 export type HandlerReducer<
     State,
     CreateParams extends any[],
     UpdateParams extends any[],
     DeleteParams extends any[],
-> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: AnyAction) => State;
+> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: Action) => State;
 
 export const ReducerMap = new Map<string, BoundReducer>();
 

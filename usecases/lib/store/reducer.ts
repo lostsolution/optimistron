@@ -39,7 +39,13 @@ export const todos = optimistron(
             /** Simulate items all being bumped to a new revision. If we
              * have ongoing transitions, these should create conflicts */
             return Object.fromEntries(
-                Object.entries(getState()).map(([key, todo]) => [key, { ...todo, revision: todo.revision + 10 }]),
+                Object.entries(getState()).map(([key, todo]) => [
+                    key,
+                    {
+                        ...todo,
+                        revision: todo.revision + 10,
+                    },
+                ]),
             );
         }
 

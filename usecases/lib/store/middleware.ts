@@ -1,4 +1,4 @@
-import type { Middleware } from 'redux';
+import { isAction, type Middleware } from 'redux';
 import { isTransition, type TransitionAction } from '~transitions';
 
 type TransitionEvent = CustomEvent<TransitionAction>;
@@ -31,7 +31,7 @@ export const createOptimistronMiddlware = (): [Middleware, TransitionEventBus] =
 
     return [
         () => (next) => (action) => {
-            if (isTransition(action)) eventBus.publish(action);
+            if (isAction(action) && isTransition(action)) eventBus.publish(action);
             next(action);
         },
         eventBus,

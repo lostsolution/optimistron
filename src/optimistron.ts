@@ -1,4 +1,4 @@
-import type { AnyAction, Reducer } from 'redux';
+import type { Action, Reducer } from 'redux';
 
 import { ReducerMap, bindReducer, type HandlerReducer } from '~reducer';
 import type { StateHandler, TransitionState } from '~state';
@@ -18,7 +18,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     initialState: S,
     handler: StateHandler<S, C, U, D>,
     reducer: HandlerReducer<S, C, U, D>,
-    options?: { sanitizeAction: <T extends AnyAction>(action: T) => T },
+    options?: { sanitizeAction: <T extends Action>(action: T) => T },
 ): Reducer<TransitionState<S>> => {
     const bindState = bindStateFactory<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
@@ -29,7 +29,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     ReducerMap.set(namespace, boundReducer);
 
     const sanitizer = sanitizeTransitions(boundReducer, bindState);
-    const initial: TransitionState<S> = buildTransitionState(initialState, [], namespace);
+    const initial = buildTransitionState(initialState, [], namespace);
 
     return (transitionState = initial, action) => {
         const nextTransitionState: TransitionState<S> = (() => {
