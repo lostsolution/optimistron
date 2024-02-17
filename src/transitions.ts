@@ -2,47 +2,51 @@ import type { Action, PrepareAction } from '@reduxjs/toolkit';
 import { MetaKey } from '~constants';
 import { type BoundReducer } from '~reducer';
 import type { bindStateFactory } from '~state';
-import { cloneTransitionState, type TransitionState } from '~state';
+import { type TransitionState } from '~state';
 
 export enum OptimisticMergeResult {
     SKIP = 'SKIP',
     CONFLICT = 'CONFLICT',
 }
 
-export enum TransitionOperation {
-    AMEND,
-    COMMIT,
-    FAIL,
-    STAGE,
-    STASH,
+export enum Operation {
+    AMEND = 'amend',
+    COMMIT = 'commit',
+    FAIL = 'fail',
+    STAGE = 'stage',
+    STASH = 'stash',
 }
 
-export enum TransitionDedupeMode {
+export enum DedupeMode {
     OVERWRITE,
     TRAILING,
 }
 
-export type TransitionNamespace = `${string}::${string}`;
-export type TransitionAction<A = Action> = A & { meta: { [MetaKey]: TransitionMeta } };
+export type TransitionNamespace<T extends Operation = Operation> = `${string}::${T}`;
+export type WithTransition<T> = T & { meta: { [MetaKey]: TransitionMeta } };
+export type TransitionPreparator<PA extends ReturnType<PrepareAction<any>>> = WithTransition<PA>;
+export type TransitionAction<T extends Operation = Operation> = WithTransition<Action<TransitionNamespace<T>>>;
+export type StagedAction = TransitionAction<Operation.STAGE>;
+export type CommittedAction = TransitionAction<Operation.COMMIT>;
 
 export type TransitionMeta = {
-    conflict: boolean;
-    dedupe: TransitionDedupeMode;
-    failed: boolean;
     id: string;
-    operation: TransitionOperation;
-    trailing?: TransitionAction;
+    operation: Operation;
+    dedupe: DedupeMode;
+    conflict?: boolean;
+    failed?: boolean;
+    trailing?: StagedAction;
 };
 
 /** Extracts the transition meta definitions on an action */
 export const getTransitionMeta = (action: TransitionAction) => action.meta[MetaKey];
 export const getTransitionID = (action: TransitionAction) => action.meta[MetaKey].id;
 
-/**  Hydrates an action's transition meta definition */
-export const withTransitionMeta = (
+/** Hydrates an action's transition meta definition */
+export const prepareTransition = (
     action: ReturnType<PrepareAction<any>>,
     options: TransitionMeta,
-): TransitionAction<typeof action> => ({
+): TransitionPreparator<typeof action> => ({
     ...action,
     meta: {
         ...('meta' in action ? action.meta : {}),
@@ -54,59 +58,79 @@ export const isTransition = (action: Action): action is TransitionAction =>
     'meta' in action && typeof action.meta === 'object' && action.meta !== null && MetaKey in action.meta;
 
 /** Checks wether an action is a transition for the supplied namespace */
-export const isTransitionForNamespace = (
-    action: Action,
-    namespace: string,
-): action is TransitionAction<typeof action> => isTransition(action) && action.type.startsWith(`${namespace}::`);
+export const isTransitionForNamespace = (action: Action, namespace: string): action is TransitionAction =>
+    isTransition(action) && action.type.startsWith(`${namespace}::`);
+
+export const toType = <T extends Operation>(type: TransitionNamespace, operation: T): TransitionNamespace<T> => {
+    const parts = type.split('::');
+    const base = parts.slice(0, parts.length - 1).join('::');
+
+    return `${base}::${operation}`;
+};
 
 /** Updates the transition meta of a transition action */
-export const updateTransition = <T>(
-    action: TransitionAction<T>,
-    update: Partial<TransitionMeta>,
-): TransitionAction<T> => ({
-    ...action,
-    meta: {
-        ...action.meta,
-        [MetaKey]: {
-            ...action.meta[MetaKey],
-            ...update,
+export const updateTransition = <A extends TransitionAction, T extends Partial<TransitionMeta>>(action: A, update: T) =>
+    ({
+        ...action,
+        meta: {
+            ...action.meta,
+            [MetaKey]: {
+                ...action.meta[MetaKey],
+                ...update,
+            },
         },
-    },
-});
+    }) satisfies TransitionAction as T['operation'] extends Operation ? TransitionAction<T['operation']> : A;
 
-export const processTransition = (
-    transition: TransitionAction,
-    transitions: TransitionAction[],
-): TransitionAction[] => {
+/** Maps a transition to a staged transition */
+export const toStaged = (action: TransitionAction, update: Partial<TransitionMeta> = {}): StagedAction =>
+    updateTransition(
+        { ...action, type: toType(action.type, Operation.STAGE) },
+        { ...update, operation: Operation.STAGE },
+    );
+
+/** Maps a transition to a comitted transition */
+export const toCommit = (action: TransitionAction, update: Partial<TransitionMeta> = {}): CommittedAction =>
+    updateTransition(
+        { ...action, type: toType(action.type, Operation.COMMIT) },
+        { ...update, operation: Operation.COMMIT },
+    );
+
+export const processTransition = (transition: TransitionAction, transitions: StagedAction[]): StagedAction[] => {
     const { operation, id, dedupe } = getTransitionMeta(transition);
+    const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
+    const existing = transitions[matchIdx];
 
     switch (operation) {
         /* During the `stage` or `amend` transition, check for an existing transition with the same ID.
          * If found, replace it; otherwise, add the new transition to the list */
-        case TransitionOperation.STAGE:
-        case TransitionOperation.AMEND: {
+        case Operation.STAGE:
+        case Operation.AMEND: {
+            /** if no staging operation to amend return transitions in-place */
+            if (matchIdx === -1 && operation === Operation.AMEND) return transitions;
+
+            const stage = toStaged(transition, operation === Operation.AMEND ? getTransitionMeta(existing) : {});
             const nextTransitions = [...transitions];
-            const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
 
             if (matchIdx !== -1) {
-                const existing = nextTransitions[matchIdx];
                 const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
 
                 /* When dedupe mode is set to `TRAILING`, store the previous transition as a
                  * trailing transition. This helps in handling reversion to the previous
                  * transition when stashing the current one. */
-                if (dedupe === TransitionDedupeMode.TRAILING) {
-                    nextTransitions[matchIdx] = updateTransition(transition, { trailing });
-                } else nextTransitions[matchIdx] = transition;
+                if (dedupe === DedupeMode.TRAILING) {
+                    nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+                } else nextTransitions[matchIdx] = stage;
 
                 /* new transition */
-            } else nextTransitions.push(transition);
+            } else nextTransitions.push(stage);
 
             return nextTransitions;
         }
 
         /* During the 'fail' transition, we flag the matching transition as failed */
-        case TransitionOperation.FAIL: {
+        case Operation.FAIL: {
+            if (matchIdx === -1) return transitions;
+
             return transitions.map((entry) =>
                 getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry,
             );
@@ -115,8 +139,7 @@ export const processTransition = (
         /* During a 'stash' transition, check for trailing transitions related to the transition to
          * be stashed. If a trailing transition is found, replace the stashed transition, allowing
          * reversion to any trailing transitions. */
-        case TransitionOperation.STASH: {
-            const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
+        case Operation.STASH: {
             const existing = transitions[matchIdx];
 
             if (existing) {
@@ -133,7 +156,8 @@ export const processTransition = (
 
         /* In the 'commit' transitions, remove the transition with the specified ID
          * from the list of transitions. */
-        case TransitionOperation.COMMIT: {
+        case Operation.COMMIT: {
+            if (!transitions.length) return transitions;
             return transitions.filter((entry) => id !== getTransitionID(entry));
         }
     }
@@ -150,7 +174,7 @@ export const sanitizeTransitions =
     (state: TransitionState<State>) => {
         const sanitized = state.transitions.reduce<{
             mutated: boolean;
-            transitions: TransitionAction[];
+            transitions: StagedAction[];
             transitionState: TransitionState<State>;
         }>(
             (acc, action) => {
@@ -158,7 +182,7 @@ export const sanitizeTransitions =
                     /* apply the transition action as if it had been committed in order
                      * to detect if this action can still be applied or if - depending on
                      * the use-case - it should be flagged as `conflicting` */
-                    const asIfCommitted = updateTransition(action, { operation: TransitionOperation.COMMIT });
+                    const asIfCommitted = toCommit(action);
                     const nextState = boundReducer(acc.transitionState, asIfCommitted);
                     const noop = nextState === acc.transitionState;
 
@@ -184,8 +208,6 @@ export const sanitizeTransitions =
                             break; /* Discard the optimistic transition */
 
                         case OptimisticMergeResult.CONFLICT:
-                            /** FIXME: should we process the state update here ? */
-                            /* flag the optimistic transition as conflicting */
                             acc.transitions.push(updateTransition(action, { conflict: true }));
                             break;
                     }
@@ -196,7 +218,7 @@ export const sanitizeTransitions =
             {
                 mutated: false,
                 transitions: [],
-                transitionState: cloneTransitionState(state),
+                transitionState: Object.assign({}, state),
             },
         );
 

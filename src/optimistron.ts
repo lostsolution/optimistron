@@ -4,13 +4,13 @@ import { ReducerMap, bindReducer, type HandlerReducer } from '~reducer';
 import type { StateHandler, TransitionState } from '~state';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from '~state';
 import {
-    TransitionOperation,
+    Operation,
     getTransitionID,
     getTransitionMeta,
     isTransitionForNamespace,
     processTransition,
     sanitizeTransitions,
-    updateTransition,
+    toCommit,
 } from '~transitions';
 
 export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
@@ -40,24 +40,20 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
                 const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
                 const { operation, id } = getTransitionMeta(action);
 
-                switch (operation) {
-                    case TransitionOperation.COMMIT: {
-                        /* Find the matching staged action in the transition list. If
-                         * it does not exist, do nothing else treat it as a commit */
-                        const staged = transitions.find((entry) => id === getTransitionID(entry));
-                        if (!staged) return next(state, nextTransitions);
+                if (operation === Operation.COMMIT) {
+                    /* Find the matching staged action in the transition list.
+                     * Treat it as a commit if it exists - noop otherwise */
+                    const staged = transitions.find((entry) => id === getTransitionID(entry));
+                    if (!staged) return next(state, nextTransitions);
 
-                        /* Comitting will apply the action to the reducer */
-                        const commit = updateTransition(staged, { operation: TransitionOperation.COMMIT });
-                        return next(boundReducer(transitionState, commit), nextTransitions);
-                    }
-                    default: {
-                        /* Every other transition actions will not be applied.
-                         * If you need to get the optimistic state use the provided
-                         * selectors which will apply the optimistic transitions */
-                        return next(state, nextTransitions);
-                    }
+                    /* Comitting will apply the action to the reducer */
+                    return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
                 }
+
+                /* Every other transition actions will not be applied.
+                 * If you need to get the optimistic state use the provided
+                 * selectors which will apply the optimistic transitions */
+                return next(state, nextTransitions);
             }
 
             return next(boundReducer(transitionState, action), transitions);

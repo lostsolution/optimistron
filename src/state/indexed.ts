@@ -1,51 +1,37 @@
-import type { StateHandler } from '~state';
+import type { StateHandler, StateHandlerOptions } from '~state';
 import { OptimisticMergeResult } from '~transitions';
 
-export type RecordState<T> = Record<string, T>;
-
-/** implement ord and eq  */
-export type RecordStateOptions<T> = {
-    itemIdKey: keyof T;
-    /** Given two items returns a sorting result.
-     * This allows checking for valid updates or conflicts.
-     * Return -1 if `a` is "smaller" than `b`
-     * Return 0 if `a` equals `b`
-     * Return 1 if `b` is "greater" than `a`*/
-    compare: (a: T) => (b: T) => 0 | 1 | -1;
-    /** Equality checker - it can potentially be different
-     * than comparing. */
-    eq: (a: T) => (b: T) => boolean;
-};
+export type IndexedState<T> = Record<string, T>;
 
 /**
- * Creates a `StateHandler` for a record based state.
+ * Creates a `StateHandler` for a indexed record based state with depth 1.
  * - `itemIdKey` parameter is used for determining which key should be used for indexing the record state.
  * - `compare` function allows determining if an incoming item is conflicting with its previous value. Your item
  *   data structure must hence support some kind of versioning or timestamping in order to leverage this.
  */
-export const recordHandlerFactory = <T extends { [key: string]: any }>({
+export const indexedStateFactory = <T extends Record<string, any>>({
     itemIdKey,
     compare,
     eq,
-}: RecordStateOptions<T>): StateHandler<
-    RecordState<T>,
+}: StateHandlerOptions<T>): StateHandler<
+    IndexedState<T>,
     [item: T],
     [itemId: string, partialItem: Partial<T>],
     [itemId: string]
 > => {
     return {
         /*  Handles creating a new item in the state */
-        create: (state: RecordState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
+        create: (state: IndexedState<T>, item: T) => ({ ...state, [item[itemIdKey]]: item }),
 
         /* Handles updating an existing item in the state. Ensures the item exists to
          * correctly treat optimistic edits as no-ops when editing a non-existing item,
          * important for resolving noop edits as skippable mutations */
-        update: (state: RecordState<T>, itemId: string, partialItem: Partial<T>) =>
+        update: (state: IndexedState<T>, itemId: string, partialItem: Partial<T>) =>
             state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
 
         /* Handles deleting an item from state. Checks if the item exists in the state or
          * else no-ops. Important for resolving noop deletes as skippable mutations */
-        remove: (state: RecordState<T>, itemId: string) => {
+        remove: (state: IndexedState<T>, itemId: string) => {
             if (state[itemId]) {
                 const nextState = { ...state };
                 delete nextState[itemId];
@@ -67,7 +53,7 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>({
          *
          * Important: If your state is very large, be aware that the strategy employed by
          * optimistron may not be well-suited for such scenarios  */
-        merge: (existing: RecordState<T>, incoming: RecordState<T>) => {
+        merge: (existing: IndexedState<T>, incoming: IndexedState<T>) => {
             const mergedState = { ...existing };
 
             let mutated = false; /* keep track of mutations */
@@ -87,6 +73,8 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>({
                 const existingItem = existing[itemId];
                 const incomingItem = incoming[itemId];
 
+                if (existingItem === incomingItem) continue;
+
                 if (!existingItem) {
                     mutated = true;
                     mergedState[itemId] = incomingItem;
@@ -95,6 +83,7 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>({
 
                 const check = compare(incomingItem)(existingItem);
 
+                if (check === -1) throw OptimisticMergeResult.CONFLICT;
                 if (check === 0) {
                     /** If items are equal according to the `compare` function
                      * but do not pass the `eq` check, then we have a conflict */
@@ -102,13 +91,9 @@ export const recordHandlerFactory = <T extends { [key: string]: any }>({
                     else throw OptimisticMergeResult.CONFLICT;
                 }
 
-                if (check === 1) {
-                    mutated = true; /* valid update */
-                    mergedState[itemId] = incomingItem;
-                    continue;
-                }
-
-                throw OptimisticMergeResult.CONFLICT;
+                /* valid update */
+                mutated = true;
+                mergedState[itemId] = incomingItem;
             }
 
             /** If no mutation has been detected at this point then

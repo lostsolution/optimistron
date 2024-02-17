@@ -76,7 +76,7 @@ Next, create an optimistic reducer :
 export const todosReducer = optimistron(
     'todos',
     initial,
-    recordHandlerFactory<Todo>({ itemIdKey: 'id', compare, eq }) // see section about state handlers
+    indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }) // see section about state handlers
     ({ getState, create, update, remove }, action) => {
         if (createTodo.match(action)) return create(action.payload.todo);
         if (editTodo.match(action)) return update(action.payload.id, action.payload.update);

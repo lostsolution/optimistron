@@ -3,18 +3,16 @@ import { createAction } from '@reduxjs/toolkit';
 
 import type { MetaKey } from '~constants';
 import type { TransitionMeta, TransitionNamespace } from '~transitions';
-import {
-    TransitionDedupeMode,
-    TransitionOperation,
-    getTransitionMeta,
-    isTransitionForNamespace,
-    withTransitionMeta,
-} from '~transitions';
+import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace, prepareTransition } from '~transitions';
+
+type EmptyPayload = { payload: never };
+type PA_Empty = () => EmptyPayload;
+type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
 
 /** Helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
 const createMatcher =
-    <NS extends TransitionNamespace, PA extends PrepareAction<any>>(namespace: NS) =>
+    <NS extends string, PA extends PrepareAction<any>>(namespace: NS) =>
     <
         Result extends ReturnType<PA>,
         Error = Result extends { error: infer Err } ? Err : never,
@@ -22,14 +20,13 @@ const createMatcher =
     >(
         action: Action,
     ): action is PayloadAction<Result['payload'], NS, Meta, Error> =>
-        isTransitionForNamespace(action, namespace) &&
-        getTransitionMeta(action).operation === TransitionOperation.COMMIT;
+        isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
 
-export const createTransition =
-    <Type extends TransitionNamespace>(
+const createTransition =
+    <Type extends TransitionNamespace, Op extends Operation>(
         type: Type,
-        operation: TransitionOperation,
-        dedupe: TransitionDedupeMode = TransitionDedupeMode.OVERWRITE,
+        operation: Op,
+        dedupe: DedupeMode = DedupeMode.OVERWRITE,
     ) =>
     <
         PA extends PrepareAction<any>,
@@ -41,24 +38,18 @@ export const createTransition =
         prepare: PA,
     ): ActionCreatorWithPreparedPayload<[transitionId: string, ...Params], Action['payload'], Type, Err, Meta> =>
         createAction(type, (transitionId, ...params) =>
-            withTransitionMeta(prepare(...params), {
-                conflict: false,
-                failed: false,
+            prepareTransition(prepare(...params), {
                 id: transitionId,
                 operation,
                 dedupe,
             }),
         );
 
-type EmptyPayload = { payload: never };
-type PA_Empty = () => EmptyPayload;
-type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
-
 export const createTransitions =
-    <Type extends TransitionNamespace>(type: Type, dedupe: TransitionDedupeMode = TransitionDedupeMode.OVERWRITE) =>
+    <Type extends string>(type: Type, dedupe: DedupeMode = DedupeMode.OVERWRITE) =>
     <
         PA_Stage extends PrepareAction<any>,
-        PA_Commit extends PA_Stage | PA_Empty = PA_Empty,
+        PA_Commit extends PrepareAction<any> = PA_Empty,
         PA_Stash extends PrepareAction<any> = PA_Empty,
         PA_Fail extends PrepareAction<any> = PA_Error,
     >(
@@ -85,11 +76,11 @@ export const createTransitions =
         const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
 
         return {
-            amend: createTransition(`${type}::amend`, TransitionOperation.AMEND, dedupe)(stagePA),
-            stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, dedupe)(stagePA),
-            commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, dedupe)(commitPA as PA_Commit),
-            fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, dedupe)(failPA as PA_Fail),
-            stash: createTransition(`${type}::stash`, TransitionOperation.STASH, dedupe)(stashPA as PA_Stash),
+            amend: createTransition(`${type}::amend`, Operation.AMEND, dedupe)(stagePA),
+            stage: createTransition(`${type}::stage`, Operation.STAGE, dedupe)(stagePA),
+            commit: createTransition(`${type}::commit`, Operation.COMMIT, dedupe)(commitPA as PA_Commit),
+            fail: createTransition(`${type}::fail`, Operation.FAIL, dedupe)(failPA as PA_Fail),
+            stash: createTransition(`${type}::stash`, Operation.STASH, dedupe)(stashPA as PA_Stash),
             match: createMatcher<Type, PA_Stage>(type),
         };
     };
