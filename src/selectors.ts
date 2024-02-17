@@ -1,7 +1,7 @@
 import { ReducerIdKey } from '~constants';
 import { ReducerMap } from '~reducer';
-import { cloneTransitionState, type TransitionState } from '~state';
-import { getTransitionMeta, TransitionOperation, updateTransition } from '~transitions';
+import { type TransitionState } from '~state';
+import { getTransitionMeta, toCommit } from '~transitions';
 
 export const selectOptimistic =
     <State, Slice>(selector: (state: TransitionState<State>) => Slice) =>
@@ -9,10 +9,13 @@ export const selectOptimistic =
         const boundReducer = ReducerMap.get(state[ReducerIdKey]);
         if (!boundReducer) return selector(state);
 
-        const optimisticState = state.transitions.reduce((acc, transition) => {
-            acc.state = boundReducer(acc, updateTransition(transition, { operation: TransitionOperation.COMMIT }));
-            return acc;
-        }, cloneTransitionState(state));
+        const optimisticState = state.transitions.reduce(
+            (acc, transition) => {
+                acc.state = boundReducer(acc, toCommit(transition));
+                return acc;
+            },
+            Object.assign({}, state),
+        );
 
         return selector(optimisticState);
     };

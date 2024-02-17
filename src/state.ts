@@ -1,10 +1,27 @@
 import { ReducerIdKey } from '~constants';
-import type { TransitionAction } from '~transitions';
+import type { StagedAction, TransitionAction } from '~transitions';
 
 export type TransitionState<T> = {
     state: T;
-    transitions: TransitionAction[];
+    transitions: StagedAction[];
     [ReducerIdKey]: string;
+};
+
+type ItemIdKeys<T> = {
+    [K in keyof T]: T[K] extends string ? K : never;
+}[keyof T];
+
+export type StateHandlerOptions<T> = {
+    itemIdKey: ItemIdKeys<T>;
+    /** Given two items returns a sorting result.
+     * This allows checking for valid updates or conflicts.
+     * Return -1 if `a` is "smaller" than `b`
+     * Return 0 if `a` equals `b`
+     * Return 1 if `b` is "greater" than `a`*/
+    compare: (a: T) => (b: T) => 0 | 1 | -1;
+    /** Equality checker - it can potentially be different
+     * than comparing. */
+    eq: (a: T) => (b: T) => boolean;
 };
 
 export interface StateHandler<
@@ -46,13 +63,11 @@ export const bindStateFactory =
 
 export const isTransitionState = <State>(state: any): state is TransitionState<State> => ReducerIdKey in state;
 
-export const buildTransitionState = <State>(
-    state: State,
-    transitions: TransitionAction[],
-    namespace: string,
-): TransitionState<State> => {
+type UnwrapTransitionState<T> = T extends TransitionState<any> ? T : TransitionState<T>;
+
+export const buildTransitionState = <State>(state: State, transitions: TransitionAction[], namespace: string) => {
     const transitionState = isTransitionState<State>(state)
-        ? { ...state }
+        ? Object.assign({}, state)
         : { state, transitions, [ReducerIdKey]: namespace };
 
     /* make internal properties non-enumerable to avoid consumers
@@ -62,7 +77,7 @@ export const buildTransitionState = <State>(
         [ReducerIdKey]: { value: namespace, enumerable: false },
     });
 
-    return transitionState;
+    return transitionState as UnwrapTransitionState<State>;
 };
 
 export const transitionStateFactory =
@@ -71,7 +86,3 @@ export const transitionStateFactory =
         if (state === prev.state && transitions === prev.transitions) return prev;
         return buildTransitionState(state, transitions, prev[ReducerIdKey]);
     };
-
-export const cloneTransitionState = <State>(transitionState: TransitionState<State>): TransitionState<State> => ({
-    ...transitionState,
-});
