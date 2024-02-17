@@ -27383,54 +27383,28 @@ var import_react2 = __toESM(require_react(), 1);
 var MetaKey = "__OPTIMISTRON_META__";
 var ReducerIdKey = "__OPTIMISTRON_REF_ID__";
 
-// src/state.ts
-var bindStateFactory = (handler) => (state) => ({
-  create: (...args) => handler.create(state, ...args),
-  update: (...args) => handler.update(state, ...args),
-  remove: (...args) => handler.remove(state, ...args),
-  merge: (incoming) => handler.merge(state, incoming),
-  getState: () => state
-});
-var isTransitionState = (state) => (ReducerIdKey in state);
-var buildTransitionState = (state, transitions, namespace) => {
-  const transitionState = isTransitionState(state) ? { ...state } : { state, transitions, [ReducerIdKey]: namespace };
-  Object.defineProperties(transitionState, {
-    transitions: { value: transitions, enumerable: false },
-    [ReducerIdKey]: { value: namespace, enumerable: false }
-  });
-  return transitionState;
-};
-var transitionStateFactory = (prev) => (state, transitions) => {
-  if (state === prev.state && transitions === prev.transitions)
-    return prev;
-  return buildTransitionState(state, transitions, prev[ReducerIdKey]);
-};
-var cloneTransitionState = (transitionState) => ({
-  ...transitionState
-});
-
 // src/transitions.ts
 var OptimisticMergeResult;
 (function(OptimisticMergeResult2) {
   OptimisticMergeResult2["SKIP"] = "SKIP";
   OptimisticMergeResult2["CONFLICT"] = "CONFLICT";
 })(OptimisticMergeResult || (OptimisticMergeResult = {}));
-var TransitionOperation;
-(function(TransitionOperation2) {
-  TransitionOperation2[TransitionOperation2["AMEND"] = 0] = "AMEND";
-  TransitionOperation2[TransitionOperation2["COMMIT"] = 1] = "COMMIT";
-  TransitionOperation2[TransitionOperation2["FAIL"] = 2] = "FAIL";
-  TransitionOperation2[TransitionOperation2["STAGE"] = 3] = "STAGE";
-  TransitionOperation2[TransitionOperation2["STASH"] = 4] = "STASH";
-})(TransitionOperation || (TransitionOperation = {}));
-var TransitionDedupeMode;
-(function(TransitionDedupeMode2) {
-  TransitionDedupeMode2[TransitionDedupeMode2["OVERWRITE"] = 0] = "OVERWRITE";
-  TransitionDedupeMode2[TransitionDedupeMode2["TRAILING"] = 1] = "TRAILING";
-})(TransitionDedupeMode || (TransitionDedupeMode = {}));
+var Operation;
+(function(Operation2) {
+  Operation2["AMEND"] = "amend";
+  Operation2["COMMIT"] = "commit";
+  Operation2["FAIL"] = "fail";
+  Operation2["STAGE"] = "stage";
+  Operation2["STASH"] = "stash";
+})(Operation || (Operation = {}));
+var DedupeMode;
+(function(DedupeMode2) {
+  DedupeMode2[DedupeMode2["OVERWRITE"] = 0] = "OVERWRITE";
+  DedupeMode2[DedupeMode2["TRAILING"] = 1] = "TRAILING";
+})(DedupeMode || (DedupeMode = {}));
 var getTransitionMeta = (action) => action.meta[MetaKey];
 var getTransitionID = (action) => action.meta[MetaKey].id;
-var withTransitionMeta = (action, options) => ({
+var prepareTransition = (action, options) => ({
   ...action,
   meta: {
     ..."meta" in action ? action.meta : {},
@@ -27439,6 +27413,11 @@ var withTransitionMeta = (action, options) => ({
 });
 var isTransition = (action) => ("meta" in action) && typeof action.meta === "object" && action.meta !== null && (MetaKey in action.meta);
 var isTransitionForNamespace = (action, namespace) => isTransition(action) && action.type.startsWith(`${namespace}::`);
+var toType = (type, operation) => {
+  const parts = type.split("::");
+  const base = parts.slice(0, parts.length - 1).join("::");
+  return `${base}::${operation}`;
+};
 var updateTransition = (action, update) => ({
   ...action,
   meta: {
@@ -27449,32 +27428,38 @@ var updateTransition = (action, update) => ({
     }
   }
 });
+var toStaged = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, Operation.STAGE) }, { ...update, operation: Operation.STAGE });
+var toCommit = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, Operation.COMMIT) }, { ...update, operation: Operation.COMMIT });
 var processTransition = (transition, transitions) => {
   const { operation, id, dedupe } = getTransitionMeta(transition);
+  const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
+  const existing = transitions[matchIdx];
   switch (operation) {
-    case TransitionOperation.STAGE:
-    case TransitionOperation.AMEND: {
+    case Operation.STAGE:
+    case Operation.AMEND: {
+      if (matchIdx === -1 && operation === Operation.AMEND)
+        return transitions;
+      const stage = toStaged(transition, operation === Operation.AMEND ? getTransitionMeta(existing) : {});
       const nextTransitions = [...transitions];
-      const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
       if (matchIdx !== -1) {
-        const existing = nextTransitions[matchIdx];
         const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
-        if (dedupe === TransitionDedupeMode.TRAILING) {
-          nextTransitions[matchIdx] = updateTransition(transition, { trailing });
+        if (dedupe === DedupeMode.TRAILING) {
+          nextTransitions[matchIdx] = updateTransition(stage, { trailing });
         } else
-          nextTransitions[matchIdx] = transition;
+          nextTransitions[matchIdx] = stage;
       } else
-        nextTransitions.push(transition);
+        nextTransitions.push(stage);
       return nextTransitions;
     }
-    case TransitionOperation.FAIL: {
+    case Operation.FAIL: {
+      if (matchIdx === -1)
+        return transitions;
       return transitions.map((entry) => getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry);
     }
-    case TransitionOperation.STASH: {
-      const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
-      const existing = transitions[matchIdx];
-      if (existing) {
-        const { trailing } = getTransitionMeta(existing);
+    case Operation.STASH: {
+      const existing2 = transitions[matchIdx];
+      if (existing2) {
+        const { trailing } = getTransitionMeta(existing2);
         return [
           ...transitions.slice(0, matchIdx),
           ...trailing ? [trailing] : [],
@@ -27483,7 +27468,9 @@ var processTransition = (transition, transitions) => {
       }
       return transitions;
     }
-    case TransitionOperation.COMMIT: {
+    case Operation.COMMIT: {
+      if (!transitions.length)
+        return transitions;
       return transitions.filter((entry) => id !== getTransitionID(entry));
     }
   }
@@ -27491,7 +27478,7 @@ var processTransition = (transition, transitions) => {
 var sanitizeTransitions = (boundReducer, bindState) => (state) => {
   const sanitized = state.transitions.reduce((acc, action) => {
     try {
-      const asIfCommitted = updateTransition(action, { operation: TransitionOperation.COMMIT });
+      const asIfCommitted = toCommit(action);
       const nextState = boundReducer(acc.transitionState, asIfCommitted);
       const noop = nextState === acc.transitionState;
       if (noop)
@@ -27514,7 +27501,7 @@ var sanitizeTransitions = (boundReducer, bindState) => (state) => {
   }, {
     mutated: false,
     transitions: [],
-    transitionState: cloneTransitionState(state)
+    transitionState: Object.assign({}, state)
   });
   return sanitized.mutated ? sanitized.transitions : state.transitions;
 };
@@ -30086,9 +30073,9 @@ var selectOptimistic = (selector) => (state) => {
   if (!boundReducer)
     return selector(state);
   const optimisticState = state.transitions.reduce((acc, transition) => {
-    acc.state = boundReducer(acc, updateTransition(transition, { operation: TransitionOperation.COMMIT }));
+    acc.state = boundReducer(acc, toCommit(transition));
     return acc;
-  }, cloneTransitionState(state));
+  }, Object.assign({}, state));
   return selector(optimisticState);
 };
 var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
@@ -30125,7 +30112,7 @@ var TransitionHistoryProvider = ({ children, eventBus }) => {
   import_react.useEffect(() => eventBus.subscribe((transition) => {
     setCommitted((history) => {
       const meta = getTransitionMeta(transition);
-      if (meta.operation === TransitionOperation.COMMIT)
+      if (meta.operation === Operation.COMMIT)
         return [...history, transition];
       return history;
     });
@@ -30139,15 +30126,13 @@ var TransitionHistoryProvider = ({ children, eventBus }) => {
 var useTransitionHistory = () => import_react.useContext(TransitionHistoryContext);
 
 // src/actions.ts
-var createMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === TransitionOperation.COMMIT;
-var createTransition = (type, operation, dedupe = TransitionDedupeMode.OVERWRITE) => (prepare) => createAction(type, (transitionId, ...params) => withTransitionMeta(prepare(...params), {
-  conflict: false,
-  failed: false,
+var createMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
+var createTransition = (type, operation, dedupe = DedupeMode.OVERWRITE) => (prepare) => createAction(type, (transitionId, ...params) => prepareTransition(prepare(...params), {
   id: transitionId,
   operation,
   dedupe
 }));
-var createTransitions = (type, dedupe = TransitionDedupeMode.OVERWRITE) => (options) => {
+var createTransitions = (type, dedupe = DedupeMode.OVERWRITE) => (options) => {
   const noOptions = typeof options === "function";
   const emptyPA = () => ({ payload: {} });
   const errorPA = (error) => ({
@@ -30159,11 +30144,11 @@ var createTransitions = (type, dedupe = TransitionDedupeMode.OVERWRITE) => (opti
   const failPA = noOptions ? errorPA : options.fail ?? errorPA;
   const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
   return {
-    amend: createTransition(`${type}::amend`, TransitionOperation.AMEND, dedupe)(stagePA),
-    stage: createTransition(`${type}::stage`, TransitionOperation.STAGE, dedupe)(stagePA),
-    commit: createTransition(`${type}::commit`, TransitionOperation.COMMIT, dedupe)(commitPA),
-    fail: createTransition(`${type}::fail`, TransitionOperation.FAIL, dedupe)(failPA),
-    stash: createTransition(`${type}::stash`, TransitionOperation.STASH, dedupe)(stashPA),
+    amend: createTransition(`${type}::amend`, Operation.AMEND, dedupe)(stagePA),
+    stage: createTransition(`${type}::stage`, Operation.STAGE, dedupe)(stagePA),
+    commit: createTransition(`${type}::commit`, Operation.COMMIT, dedupe)(commitPA),
+    fail: createTransition(`${type}::fail`, Operation.FAIL, dedupe)(failPA),
+    stash: createTransition(`${type}::stash`, Operation.STASH, dedupe)(stashPA),
     match: createMatcher(type)
   };
 };
@@ -30174,7 +30159,7 @@ var edit = (id, todo) => ({ payload: { id, todo } });
 var remove = (id) => ({ payload: { id } });
 var createTodo = createTransitions("todos::add")(create);
 var editTodo = createTransitions("todos::edit")(edit);
-var deleteTodo = createTransitions("todos::delete", TransitionDedupeMode.TRAILING)(remove);
+var deleteTodo = createTransitions("todos::delete", DedupeMode.TRAILING)(remove);
 var sync = createAction("todos::sync");
 
 // usecases/lib/components/graph/TransitionGraph.tsx
@@ -30693,6 +30678,29 @@ var createOptimistronMiddlware = () => {
   ];
 };
 
+// src/state.ts
+var bindStateFactory = (handler) => (state) => ({
+  create: (...args) => handler.create(state, ...args),
+  update: (...args) => handler.update(state, ...args),
+  remove: (...args) => handler.remove(state, ...args),
+  merge: (incoming) => handler.merge(state, incoming),
+  getState: () => state
+});
+var isTransitionState = (state) => (ReducerIdKey in state);
+var buildTransitionState = (state, transitions, namespace) => {
+  const transitionState = isTransitionState(state) ? Object.assign({}, state) : { state, transitions, [ReducerIdKey]: namespace };
+  Object.defineProperties(transitionState, {
+    transitions: { value: transitions, enumerable: false },
+    [ReducerIdKey]: { value: namespace, enumerable: false }
+  });
+  return transitionState;
+};
+var transitionStateFactory = (prev) => (state, transitions) => {
+  if (state === prev.state && transitions === prev.transitions)
+    return prev;
+  return buildTransitionState(state, transitions, prev[ReducerIdKey]);
+};
+
 // src/optimistron.ts
 var optimistron = (namespace, initialState, handler, reducer, options) => {
   const bindState = bindStateFactory(handler);
@@ -30709,18 +30717,13 @@ var optimistron = (namespace, initialState, handler, reducer, options) => {
       if (isTransitionForNamespace(action, namespace)) {
         const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
         const { operation, id } = getTransitionMeta(action);
-        switch (operation) {
-          case TransitionOperation.COMMIT: {
-            const staged = transitions.find((entry) => id === getTransitionID(entry));
-            if (!staged)
-              return next(state, nextTransitions);
-            const commit = updateTransition(staged, { operation: TransitionOperation.COMMIT });
-            return next(boundReducer(transitionState, commit), nextTransitions);
-          }
-          default: {
+        if (operation === Operation.COMMIT) {
+          const staged = transitions.find((entry) => id === getTransitionID(entry));
+          if (!staged)
             return next(state, nextTransitions);
-          }
+          return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
         }
+        return next(state, nextTransitions);
       }
       return next(boundReducer(transitionState, action), transitions);
     })();
@@ -30730,8 +30733,8 @@ var optimistron = (namespace, initialState, handler, reducer, options) => {
   };
 };
 
-// src/state/record.ts
-var recordHandlerFactory = ({
+// src/state/indexed.ts
+var indexedStateFactory = ({
   itemIdKey,
   compare,
   eq
@@ -30759,24 +30762,24 @@ var recordHandlerFactory = ({
       for (const itemId in incoming) {
         const existingItem = existing[itemId];
         const incomingItem = incoming[itemId];
+        if (existingItem === incomingItem)
+          continue;
         if (!existingItem) {
           mutated = true;
           mergedState[itemId] = incomingItem;
           continue;
         }
         const check = compare(incomingItem)(existingItem);
+        if (check === -1)
+          throw OptimisticMergeResult.CONFLICT;
         if (check === 0) {
           if (eq(incomingItem)(existingItem))
             continue;
           else
             throw OptimisticMergeResult.CONFLICT;
         }
-        if (check === 1) {
-          mutated = true;
-          mergedState[itemId] = incomingItem;
-          continue;
-        }
-        throw OptimisticMergeResult.CONFLICT;
+        mutated = true;
+        mergedState[itemId] = incomingItem;
       }
       if (!mutated)
         throw OptimisticMergeResult.SKIP;
@@ -30805,7 +30808,7 @@ var compare = (a) => (b) => {
   return -1;
 };
 var eq = (a) => (b) => a.done === b.done && a.value === b.value;
-var todos = optimistron("todos", initial, recordHandlerFactory({ itemIdKey: "id", compare, eq }), ({ getState, create: create2, update, remove: remove2 }, action) => {
+var todos = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create: create2, update, remove: remove2 }, action) => {
   if (createTodo.match(action))
     return create2(action.payload.todo);
   if (editTodo.match(action))

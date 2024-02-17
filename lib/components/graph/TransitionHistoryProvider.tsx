@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import type { TransitionAction } from '~transitions';
-import { TransitionOperation, getTransitionMeta } from '~transitions';
+import { Operation, getTransitionMeta } from '~transitions';
 
 import type { TransitionEventBus } from '~usecases/lib/store/middleware';
 import { selectTransitions } from '~usecases/lib/store/selectors';
@@ -22,7 +22,7 @@ export const TransitionHistoryProvider: FC<Props> = ({ children, eventBus }) => 
             eventBus.subscribe((transition) => {
                 setCommitted((history) => {
                     const meta = getTransitionMeta(transition);
-                    if (meta.operation === TransitionOperation.COMMIT) return [...history, transition];
+                    if (meta.operation === Operation.COMMIT) return [...history, transition];
                     return history;
                 });
             }),
