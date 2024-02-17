@@ -10,8 +10,10 @@
         "skipLibCheck": true,
         "noEmit": true,
         "paths": {
+            "~test/*": ["./test/*"],
             "~usecases/*": ["./usecases/*"],
-            "~*": ["./src/*"],
+            "~*": ["./src/*"]
         },
-    },
+        "types": ["bun-types"]
+    }
 }
