@@ -27380,8 +27380,8 @@ initializeConnect(React22.useSyncExternalStore);
 var import_react2 = __toESM(require_react(), 1);
 
 // src/constants.ts
-var MetaKey = "__OPTIMISTRON_META__";
-var ReducerIdKey = "__OPTIMISTRON_REF_ID__";
+var META_KEY = "__OPTIMISTRON_META__";
+var REDUCER_KEY = "__OPTIMISTRON_REF_ID__";
 
 // src/transitions.ts
 var OptimisticMergeResult;
@@ -27402,16 +27402,9 @@ var DedupeMode;
   DedupeMode2[DedupeMode2["OVERWRITE"] = 0] = "OVERWRITE";
   DedupeMode2[DedupeMode2["TRAILING"] = 1] = "TRAILING";
 })(DedupeMode || (DedupeMode = {}));
-var getTransitionMeta = (action) => action.meta[MetaKey];
-var getTransitionID = (action) => action.meta[MetaKey].id;
-var prepareTransition = (action, options) => ({
-  ...action,
-  meta: {
-    ..."meta" in action ? action.meta : {},
-    [MetaKey]: options
-  }
-});
-var isTransition = (action) => ("meta" in action) && typeof action.meta === "object" && action.meta !== null && (MetaKey in action.meta);
+var getTransitionMeta = (action) => action.meta[META_KEY];
+var getTransitionID = (action) => action.meta[META_KEY].id;
+var isTransition = (action) => ("meta" in action) && typeof action.meta === "object" && action.meta !== null && (META_KEY in action.meta);
 var isTransitionForNamespace = (action, namespace) => isTransition(action) && action.type.startsWith(`${namespace}::`);
 var toType = (type, operation) => {
   const parts = type.split("::");
@@ -27422,8 +27415,8 @@ var updateTransition = (action, update) => ({
   ...action,
   meta: {
     ...action.meta,
-    [MetaKey]: {
-      ...action.meta[MetaKey],
+    [META_KEY]: {
+      ...action.meta[META_KEY],
       ...update
     }
   }
@@ -30069,7 +30062,7 @@ var bindReducer = (reducer, bindState) => (transitionState, action) => {
 
 // src/selectors.ts
 var selectOptimistic = (selector) => (state) => {
-  const boundReducer = ReducerMap.get(state[ReducerIdKey]);
+  const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
   if (!boundReducer)
     return selector(state);
   const optimisticState = state.transitions.reduce((acc, transition) => {
@@ -30078,16 +30071,16 @@ var selectOptimistic = (selector) => (state) => {
   }, Object.assign({}, state));
   return selector(optimisticState);
 };
-var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
-var selectFailedTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
+var selectFailedTransitions = ({ transitions: transitions2 }) => transitions2.filter((action) => getTransitionMeta(action).failed);
+var selectFailedTransition = (transitionId) => ({ transitions: transitions2 }) => transitions2.find((action) => {
   const { id, failed } = getTransitionMeta(action);
   return id === transitionId && failed;
 });
-var selectConflictingTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
+var selectConflictingTransition = (transitionId) => ({ transitions: transitions2 }) => transitions2.find((action) => {
   const { id, conflict } = getTransitionMeta(action);
   return id === transitionId && conflict;
 });
-var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
+var selectIsOptimistic = (transitionId) => ({ transitions: transitions2 }) => transitions2.some((action) => getTransitionMeta(action).id === transitionId);
 var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
 var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
 
@@ -30126,7 +30119,14 @@ var TransitionHistoryProvider = ({ children, eventBus }) => {
 var useTransitionHistory = () => import_react.useContext(TransitionHistoryContext);
 
 // src/actions.ts
-var createMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
+var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
+var prepareTransition = (action, options) => ({
+  ...action,
+  meta: {
+    ..."meta" in action ? action.meta : {},
+    [META_KEY]: options
+  }
+});
 var createTransition = (type, operation, dedupe = DedupeMode.OVERWRITE) => (prepare) => createAction(type, (transitionId, ...params) => prepareTransition(prepare(...params), {
   id: transitionId,
   operation,
@@ -30149,7 +30149,7 @@ var createTransitions = (type, dedupe = DedupeMode.OVERWRITE) => (options) => {
     commit: createTransition(`${type}::commit`, Operation.COMMIT, dedupe)(commitPA),
     fail: createTransition(`${type}::fail`, Operation.FAIL, dedupe)(failPA),
     stash: createTransition(`${type}::stash`, Operation.STASH, dedupe)(stashPA),
-    match: createMatcher(type)
+    match: createCommitMatcher(type)
   };
 };
 
@@ -30686,25 +30686,25 @@ var bindStateFactory = (handler) => (state) => ({
   merge: (incoming) => handler.merge(state, incoming),
   getState: () => state
 });
-var isTransitionState = (state) => (ReducerIdKey in state);
-var buildTransitionState = (state, transitions, namespace) => {
-  const transitionState = isTransitionState(state) ? Object.assign({}, state) : { state, transitions, [ReducerIdKey]: namespace };
+var isTransitionState = (state) => (REDUCER_KEY in state);
+var buildTransitionState = (state, transitions3, namespace) => {
+  const transitionState = isTransitionState(state) ? Object.assign({}, state) : { state, transitions: transitions3, [REDUCER_KEY]: namespace };
   Object.defineProperties(transitionState, {
-    transitions: { value: transitions, enumerable: false },
-    [ReducerIdKey]: { value: namespace, enumerable: false }
+    transitions: { value: transitions3, enumerable: false },
+    [REDUCER_KEY]: { value: namespace, enumerable: false }
   });
   return transitionState;
 };
-var transitionStateFactory = (prev) => (state, transitions) => {
-  if (state === prev.state && transitions === prev.transitions)
+var transitionStateFactory = (prev) => (state, transitions3) => {
+  if (state === prev.state && transitions3 === prev.transitions)
     return prev;
-  return buildTransitionState(state, transitions, prev[ReducerIdKey]);
+  return buildTransitionState(state, transitions3, prev[REDUCER_KEY]);
 };
 
 // src/optimistron.ts
-var optimistron = (namespace, initialState, handler, reducer, options) => {
+var optimistron = (namespace, initialState, handler, reducer3, options) => {
   const bindState = bindStateFactory(handler);
-  const boundReducer = bindReducer(reducer, bindState);
+  const boundReducer = bindReducer(reducer3, bindState);
   if (ReducerMap.has(namespace))
     throw new Error(`An optimistic reducer for [${namespace}] is already registered`);
   ReducerMap.set(namespace, boundReducer);
@@ -30712,20 +30712,20 @@ var optimistron = (namespace, initialState, handler, reducer, options) => {
   const initial = buildTransitionState(initialState, [], namespace);
   return (transitionState = initial, action) => {
     const nextTransitionState = (() => {
-      const { state, transitions } = transitionState;
+      const { state: state2, transitions: transitions4 } = transitionState;
       const next = transitionStateFactory(transitionState);
       if (isTransitionForNamespace(action, namespace)) {
-        const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
+        const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions4);
         const { operation, id } = getTransitionMeta(action);
         if (operation === Operation.COMMIT) {
-          const staged = transitions.find((entry) => id === getTransitionID(entry));
+          const staged = transitions4.find((entry) => id === getTransitionID(entry));
           if (!staged)
-            return next(state, nextTransitions);
+            return next(state2, nextTransitions);
           return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
         }
-        return next(state, nextTransitions);
+        return next(state2, nextTransitions);
       }
-      return next(boundReducer(transitionState, action), transitions);
+      return next(boundReducer(transitionState, action), transitions4);
     })();
     const mutated = nextTransitionState !== transitionState;
     nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
@@ -30740,15 +30740,15 @@ var indexedStateFactory = ({
   eq
 }) => {
   return {
-    create: (state, item) => ({ ...state, [item[itemIdKey]]: item }),
-    update: (state, itemId, partialItem) => state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
-    remove: (state, itemId) => {
-      if (state[itemId]) {
-        const nextState = { ...state };
+    create: (state2, item) => ({ ...state2, [item[itemIdKey]]: item }),
+    update: (state2, itemId, partialItem) => state2[itemId] ? { ...state2, [itemId]: { ...state2[itemId], ...partialItem } } : state2,
+    remove: (state2, itemId) => {
+      if (state2[itemId]) {
+        const nextState = { ...state2 };
         delete nextState[itemId];
         return nextState;
       }
-      return state;
+      return state2;
     },
     merge: (existing, incoming) => {
       const mergedState = { ...existing };
@@ -31882,8 +31882,8 @@ var runRaceEffect = function(env, effects, cb, _ref12) {
 var runSelectEffect = function(env, _ref13, cb) {
   var { selector, args } = _ref13;
   try {
-    var state = selector.apply(undefined, [env.getState()].concat(args));
-    cb(state);
+    var state2 = selector.apply(undefined, [env.getState()].concat(args));
+    cb(state2);
   } catch (error) {
     cb(error, true);
   }
