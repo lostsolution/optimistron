@@ -1,5 +1,5 @@
 {
-    "name": "optimistron",
+    "name": "@lostsolution/optimistron",
     "packageManager": "yarn@1.22.19",
     "devDependencies": {
         "@types/lodash": "^4.14.202",
