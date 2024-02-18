@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { ReducerIdKey } from '~constants';
+import { REDUCER_KEY } from '~constants';
 import { optimistron } from '~optimistron';
 import { ReducerMap } from '~reducer';
 import {
@@ -28,7 +28,7 @@ describe('selectors', () => {
             expect(
                 selectOptimistic(() => 1337)({
                     transitions: [],
-                    [ReducerIdKey]: 'unknown',
+                    [REDUCER_KEY]: 'unknown',
                     state: 42,
                 }),
             ).toEqual(1337);

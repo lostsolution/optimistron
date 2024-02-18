@@ -1,8 +1,8 @@
 import type { Action, Reducer } from 'redux';
 
-import { ReducerMap, bindReducer, type HandlerReducer } from '~reducer';
-import type { StateHandler, TransitionState } from '~state';
-import { bindStateFactory, buildTransitionState, transitionStateFactory } from '~state';
+import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
+import type { StateHandler, TransitionState } from './state';
+import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state';
 import {
     Operation,
     getTransitionID,
@@ -11,7 +11,7 @@ import {
     processTransition,
     sanitizeTransitions,
     toCommit,
-} from '~transitions';
+} from './transitions';
 
 export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
     namespace: string,

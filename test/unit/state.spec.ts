@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test';
-import { ReducerIdKey } from '~constants';
+import { REDUCER_KEY } from '~constants';
 import type { StateHandler } from '~state';
 import { bindStateFactory, buildTransitionState, isTransitionState, transitionStateFactory } from '~state';
 import { create, createIndexedState, createItem } from '~test/utils';
@@ -47,7 +47,7 @@ describe('state', () => {
 
     describe('isTransitionState', () => {
         test('should return `true` if `ReducerIdKey` in parameter', () => {
-            expect(isTransitionState({ [ReducerIdKey]: 'test' })).toBe(true);
+            expect(isTransitionState({ [REDUCER_KEY]: 'test' })).toBe(true);
         });
 
         test('should return `false` otherwise', () => {

@@ -1,12 +1,12 @@
-import { ReducerIdKey } from '~constants';
-import { ReducerMap } from '~reducer';
-import { type TransitionState } from '~state';
-import { getTransitionMeta, toCommit } from '~transitions';
+import { REDUCER_KEY } from './constants';
+import { ReducerMap } from './reducer';
+import { type TransitionState } from './state';
+import { getTransitionMeta, toCommit } from './transitions';
 
 export const selectOptimistic =
     <State, Slice>(selector: (state: TransitionState<State>) => Slice) =>
     (state: TransitionState<State>): Slice => {
-        const boundReducer = ReducerMap.get(state[ReducerIdKey]);
+        const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
         if (!boundReducer) return selector(state);
 
         const optimisticState = state.transitions.reduce(

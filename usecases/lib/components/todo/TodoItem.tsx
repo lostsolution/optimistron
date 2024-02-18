@@ -2,8 +2,6 @@ import { clsx } from 'clsx';
 import { useMemo, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
-
 import cloneDeep from 'lodash/cloneDeep';
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import type { OptimisticActions } from '~usecases/lib/store/actions';
@@ -14,7 +12,7 @@ import type { Todo } from '~usecases/lib/store/types';
 
 type Props = {
     todo: Todo;
-    onRetry: (action: TransitionAction<OptimisticActions>) => void;
+    onRetry: (action: OptimisticActions) => void;
     onEdit: (todo: Todo) => void;
     onDelete: (todo: Todo) => void;
 };

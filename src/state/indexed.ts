@@ -1,5 +1,5 @@
-import type { StateHandler, StateHandlerOptions } from '~state';
-import { OptimisticMergeResult } from '~transitions';
+import type { StateHandler, StateHandlerOptions } from '../state';
+import { OptimisticMergeResult } from '../transitions';
 
 export type IndexedState<T> = Record<string, T>;
 

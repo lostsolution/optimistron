@@ -1,19 +1,19 @@
 {
     "compilerOptions": {
-        "target": "es2017",
-        "jsx": "preserve",
-        "module": "commonjs",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "strict": true,
-        "noImplicitAny": true,
-        "skipLibCheck": true,
+        "jsx": "preserve",
+        "module": "commonjs",
         "noEmit": true,
+        "noImplicitAny": true,
         "paths": {
             "~test/*": ["./test/*"],
             "~usecases/*": ["./usecases/*"],
             "~*": ["./src/*"]
         },
+        "skipLibCheck": true,
+        "strict": true,
+        "target": "es2017",
         "types": ["bun-types"]
     }
 }

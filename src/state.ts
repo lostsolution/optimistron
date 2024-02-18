@@ -1,10 +1,10 @@
-import { ReducerIdKey } from '~constants';
-import type { StagedAction, TransitionAction } from '~transitions';
+import { REDUCER_KEY } from './constants';
+import type { StagedAction, TransitionAction } from './transitions';
 
 export type TransitionState<T> = {
     state: T;
     transitions: StagedAction[];
-    [ReducerIdKey]: string;
+    [REDUCER_KEY]: string;
 };
 
 type ItemIdKeys<T> = {
@@ -61,20 +61,20 @@ export const bindStateFactory =
         getState: () => state,
     });
 
-export const isTransitionState = <State>(state: any): state is TransitionState<State> => ReducerIdKey in state;
+export const isTransitionState = <State>(state: any): state is TransitionState<State> => REDUCER_KEY in state;
 
 type UnwrapTransitionState<T> = T extends TransitionState<any> ? T : TransitionState<T>;
 
 export const buildTransitionState = <State>(state: State, transitions: TransitionAction[], namespace: string) => {
     const transitionState = isTransitionState<State>(state)
         ? Object.assign({}, state)
-        : { state, transitions, [ReducerIdKey]: namespace };
+        : { state, transitions, [REDUCER_KEY]: namespace };
 
     /* make internal properties non-enumerable to avoid consumers
      * from unintentionally accessing them when iterating */
     Object.defineProperties(transitionState, {
         transitions: { value: transitions, enumerable: false },
-        [ReducerIdKey]: { value: namespace, enumerable: false },
+        [REDUCER_KEY]: { value: namespace, enumerable: false },
     });
 
     return transitionState as UnwrapTransitionState<State>;
@@ -84,5 +84,5 @@ export const transitionStateFactory =
     <State>(prev: TransitionState<State>) =>
     (state: State, transitions: TransitionAction[]): TransitionState<State> => {
         if (state === prev.state && transitions === prev.transitions) return prev;
-        return buildTransitionState(state, transitions, prev[ReducerIdKey]);
+        return buildTransitionState(state, transitions, prev[REDUCER_KEY]);
     };

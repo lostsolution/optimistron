@@ -1,8 +1,8 @@
-import type { Action, PrepareAction } from '@reduxjs/toolkit';
-import { MetaKey } from '~constants';
-import { type BoundReducer } from '~reducer';
-import type { bindStateFactory } from '~state';
-import { type TransitionState } from '~state';
+import type { Action } from '@reduxjs/toolkit';
+import { META_KEY } from './constants';
+import { type BoundReducer } from './reducer';
+import type { bindStateFactory } from './state';
+import { type TransitionState } from './state';
 
 export enum OptimisticMergeResult {
     SKIP = 'SKIP',
@@ -23,15 +23,15 @@ export enum DedupeMode {
 }
 
 export type TransitionNamespace<T extends Operation = Operation> = `${string}::${T}`;
-export type WithTransition<T> = T & { meta: { [MetaKey]: TransitionMeta } };
-export type TransitionPreparator<PA extends ReturnType<PrepareAction<any>>> = WithTransition<PA>;
+export type WithTransition<A, T = Operation> = A & { meta: TransitionMeta<T> };
+export type TransitionMeta<T = Operation> = { [META_KEY]: Transition<T> };
 export type TransitionAction<T extends Operation = Operation> = WithTransition<Action<TransitionNamespace<T>>>;
 export type StagedAction = TransitionAction<Operation.STAGE>;
 export type CommittedAction = TransitionAction<Operation.COMMIT>;
 
-export type TransitionMeta = {
+export type Transition<T = Operation> = {
     id: string;
-    operation: Operation;
+    operation: T;
     dedupe: DedupeMode;
     conflict?: boolean;
     failed?: boolean;
@@ -39,23 +39,11 @@ export type TransitionMeta = {
 };
 
 /** Extracts the transition meta definitions on an action */
-export const getTransitionMeta = (action: TransitionAction) => action.meta[MetaKey];
-export const getTransitionID = (action: TransitionAction) => action.meta[MetaKey].id;
-
-/** Hydrates an action's transition meta definition */
-export const prepareTransition = (
-    action: ReturnType<PrepareAction<any>>,
-    options: TransitionMeta,
-): TransitionPreparator<typeof action> => ({
-    ...action,
-    meta: {
-        ...('meta' in action ? action.meta : {}),
-        [MetaKey]: options,
-    },
-});
+export const getTransitionMeta = (action: TransitionAction) => action.meta[META_KEY];
+export const getTransitionID = (action: TransitionAction) => action.meta[META_KEY].id;
 
 export const isTransition = (action: Action): action is TransitionAction =>
-    'meta' in action && typeof action.meta === 'object' && action.meta !== null && MetaKey in action.meta;
+    'meta' in action && typeof action.meta === 'object' && action.meta !== null && META_KEY in action.meta;
 
 /** Checks wether an action is a transition for the supplied namespace */
 export const isTransitionForNamespace = (action: Action, namespace: string): action is TransitionAction =>
@@ -69,27 +57,27 @@ export const toType = <T extends Operation>(type: TransitionNamespace, operation
 };
 
 /** Updates the transition meta of a transition action */
-export const updateTransition = <A extends TransitionAction, T extends Partial<TransitionMeta>>(action: A, update: T) =>
+export const updateTransition = <A extends TransitionAction, T extends Partial<Transition>>(action: A, update: T) =>
     ({
         ...action,
         meta: {
             ...action.meta,
-            [MetaKey]: {
-                ...action.meta[MetaKey],
+            [META_KEY]: {
+                ...action.meta[META_KEY],
                 ...update,
             },
         },
     }) satisfies TransitionAction as T['operation'] extends Operation ? TransitionAction<T['operation']> : A;
 
 /** Maps a transition to a staged transition */
-export const toStaged = (action: TransitionAction, update: Partial<TransitionMeta> = {}): StagedAction =>
+export const toStaged = (action: TransitionAction, update: Partial<Transition> = {}): StagedAction =>
     updateTransition(
         { ...action, type: toType(action.type, Operation.STAGE) },
         { ...update, operation: Operation.STAGE },
     );
 
 /** Maps a transition to a comitted transition */
-export const toCommit = (action: TransitionAction, update: Partial<TransitionMeta> = {}): CommittedAction =>
+export const toCommit = (action: TransitionAction, update: Partial<Transition> = {}): CommittedAction =>
     updateTransition(
         { ...action, type: toType(action.type, Operation.COMMIT) },
         { ...update, operation: Operation.COMMIT },

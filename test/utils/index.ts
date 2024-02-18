@@ -1,5 +1,5 @@
 import { createTransitions } from '~actions';
-import { ReducerIdKey } from '~constants';
+import { REDUCER_KEY } from '~constants';
 import type { HandlerReducer } from '~reducer';
 import type { TransitionState } from '~state';
 import { indexedStateFactory } from '~state/indexed';
@@ -43,7 +43,7 @@ export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: st
 };
 
 export const createIndexedState = (transitions: StagedAction[] = []): TransitionState<TestIndexedState> => ({
-    [ReducerIdKey]: 'test',
+    [REDUCER_KEY]: 'test',
     state: {},
     transitions,
 });
