@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import { ReducerIdKey } from '~constants';
+import { REDUCER_KEY } from '~constants';
 import { bindReducer } from '~reducer';
 import type { TransitionState } from '~state';
 import { bindStateFactory } from '~state';
@@ -17,7 +17,7 @@ describe('bindReducer', () => {
     const transitionState: TransitionState<TestIndexedState> = {
         transitions: [],
         state: { [item.id]: item },
-        [ReducerIdKey]: 'test-reducer',
+        [REDUCER_KEY]: 'test-reducer',
     };
 
     const warn = spyOn(console, 'warn').mockImplementation(mock());
