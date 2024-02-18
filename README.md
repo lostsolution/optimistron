@@ -6,7 +6,7 @@ Optimistron is a _(very)_ opinionated library designed to simplify optimistic st
 
 Optimistron introduces the concept of _"transitions"_ to manage optimistic actions (essentially transitions are just actions with extra metadata). These transitions are tracked alongside your reducer's state. Until these transitions are _"committed"_, they are applied to your reducer only through selectors. This eliminates the need to keep a separate copy of the state as a checkpoint, which is a common practice in other optimistic state management libraries.
 
-Transitions are comprised of four operations:
+Transitions are comprised of five operations:
 
 -   `STAGE`: The action is added to the transition list.
 -   `AMEND`: The action is amended from the transition list.
@@ -29,7 +29,7 @@ Depending on how you structure your state, applying an action on top of a partic
 ## 🪖 Rules of transitions
 
 -   Transitions should have unique identifiers that you can use to map back to your entities. (In most cases, just use your entity's identifier as a the transition id).
--   One entity should never have multiple transitions at the same time. This is already enforced in the internal `processTransition` function but depending on how you model your transition identifiers, we may not be able to enforce this rule. This essentially means that before starting a new transition on one of your entities, stash any ongoing ones.
+-   One entity should never have multiple transitions at the same time. This is already enforced in the internal `processTransition` function but depending on how you model your transition identifiers, we may not be able to enforce this rule. This essentially means that before starting a new transition on one of your entities, ensure there are no ongoing ones.
 -   Keep transition effects on state as granular as possible.
 
 ## 🏗️ Getting Started
@@ -52,12 +52,13 @@ const deleteTodo = createTransitions(
 )((id: string) => ({ payload: { id } }));
 ```
 
-This will essentially give you a set of transitions for you to dispatch. _By default staging and comitting will both have the same signature._
+This will essentially give you a set of transitions for you to dispatch.
 
 ```typescript
 const transitionId = 'some-entity-id';
 createTodo.stage(transitionId, todo);
-createTodo.commit(transitionId, todo);
+createTodo.amend(transitionId);
+createTodo.commit(transitionId);
 createTodo.stash(transitionId);
 createTodo.fail(transitionId);
 ```
