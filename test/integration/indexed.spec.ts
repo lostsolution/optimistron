@@ -3,18 +3,19 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { optimistron } from '~optimistron';
 import { ReducerMap } from '~reducer';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic, selectOptimistic } from '~selectors';
-import { create, createItem, indexedState, reducer, selectState } from '~test/utils';
+import { buildTransitionState } from '~state';
+import type { TestIndexedState } from '~test/utils';
+import { create, createItem, edit, indexedState, reducer, selectState } from '~test/utils';
 import { toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
     afterAll(() => ReducerMap.clear());
 
     const optimisticReducer = optimistron('test', {}, indexedState, reducer);
-    const initial = optimisticReducer(undefined, { type: 'INIT' });
 
     describe('IndexedState', () => {
         describe('create', () => {
-            describe('stage', () => {
+            test('stage', () => {
                 const item = createItem();
                 const conflictItem = { ...item, revision: -1 };
                 const amendedItem = { ...item, value: 'amended value' };
@@ -26,6 +27,7 @@ describe('optimistron', () => {
                 const commit = create.commit(item.id);
                 const conflict = create.stage(item.id, conflictItem);
 
+                const initial = buildTransitionState(<TestIndexedState>{}, [], 'test');
                 const state = optimisticReducer(initial, stage);
 
                 expect(state.state).toStrictEqual(initial.state);
@@ -79,7 +81,7 @@ describe('optimistron', () => {
                     expect(selectIsConflicting(item.id)(next)).toBe(true);
                 });
 
-                describe('fail', () => {
+                test('fail', () => {
                     const next = optimisticReducer(state, fail);
 
                     expect(next.state).toStrictEqual(initial.state);
@@ -133,6 +135,87 @@ describe('optimistron', () => {
                         expect(selectIsConflicting(item.id)(nextAfterCommit)).toBe(false);
                     });
                 });
+            });
+        });
+    });
+
+    describe('update', () => {
+        const item = createItem();
+        const conflictItem = { ...item, revision: -1 };
+        const updatedItem = { ...item, revision: 2, value: 'updated value' };
+        const amendedItem = { ...updatedItem, value: 'amended value' };
+
+        const stage = edit.stage(updatedItem.id, updatedItem);
+        const amend = edit.amend(updatedItem.id, amendedItem);
+        const fail = edit.fail(updatedItem.id, new Error());
+        const stash = edit.stash(updatedItem.id);
+        const commit = edit.commit(updatedItem.id);
+        const conflict = edit.stage(updatedItem.id, conflictItem);
+
+        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, [], 'test');
+        const state = optimisticReducer(initial, stage);
+
+        test('stage', () => {
+            expect(state.state).toStrictEqual(initial.state);
+            expect(state.transitions).toStrictEqual([stage]);
+            expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: updatedItem });
+            expect(selectIsOptimistic(item.id)(state)).toBe(true);
+            expect(selectIsFailed(item.id)(state)).toBe(false);
+            expect(selectIsConflicting(item.id)(state)).toBe(false);
+
+            test('amend', () => {
+                const next = optimisticReducer(state, amend);
+
+                expect(next.state).toStrictEqual(initial.state);
+                expect(next.transitions).toStrictEqual([toStaged(amend)]);
+                expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: amendedItem });
+                expect(selectIsOptimistic(item.id)(next)).toBe(true);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('commit', () => {
+                const next = optimisticReducer(state, commit);
+
+                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.transitions).toStrictEqual([]);
+                expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: updatedItem });
+                expect(selectIsOptimistic(item.id)(next)).toBe(false);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('stash', () => {
+                const next = optimisticReducer(state, stash);
+
+                expect(next.state).toStrictEqual({});
+                expect(next.transitions).toStrictEqual([]);
+                expect(selectOptimistic(selectState)(next)).toEqual({});
+                expect(selectIsOptimistic(item.id)(next)).toBe(false);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('fail', () => {
+                const next = optimisticReducer(state, fail);
+
+                expect(next.state).toStrictEqual(initial.state);
+                expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
+                expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: updatedItem });
+                expect(selectIsOptimistic(item.id)(next)).toBe(true);
+                expect(selectIsFailed(item.id)(next)).toBe(true);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('conflict', () => {
+                const next = [conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
+
+                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.transitions).toStrictEqual([updateTransition(conflict, { conflict: true })]);
+                expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: conflictItem });
+                expect(selectIsOptimistic(item.id)(next)).toBe(true);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(true);
             });
         });
     });

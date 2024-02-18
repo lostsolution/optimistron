@@ -72,6 +72,11 @@ export const createTransition =
                 dedupe,
             })) as PrepareAction<any>);
 
+/** Generates transition actions for a specified transition type. By default, it uses the
+ * `OVERWRITE` dedupe strategy, which overwrites transitions with the same `transitionId` in
+ * the transition list. You can provide an action preparator or a configuration object of
+ * action preparators for more granular control over the internal transition actions.
+ * The resulting matching function will exclusively match COMMIT operations. */
 export const createTransitions =
     <Type extends string>(type: Type, dedupe: DedupeMode = DedupeMode.OVERWRITE) =>
     <
