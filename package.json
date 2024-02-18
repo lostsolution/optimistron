@@ -32,11 +32,12 @@
         "redux": "^5.0.1"
     },
     "scripts": {
+        "build:esm": "tsc -p tsconfig.esm.json",
         "build:usecases": "bun build ./usecases/index.tsx  --outdir ./usecases/dist --entry-naming [dir]/[name].[ext] --asset-naming [name].[ext] --target browser",
         "serve:usecases": "bun serve ./usecases/",
         "watch:usecases": "bun build:usecases --watch"
     },
-    "version": "1.0.0",
+    "version": "0.0.1",
     "main": "index.js",
     "author": "Edvin CANDON <edvin.candon@proton.ch>",
     "license": "MIT"
