@@ -30221,14 +30221,7 @@ var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
 
 // src/reducer.ts
 var ReducerMap = new Map;
-var bindReducer = (reducer, bindState) => (transitionState, action) => {
-  try {
-    return reducer(bindState(transitionState.state), action);
-  } catch (error) {
-    console.warn(`Error while processing action ${action.type}`, error);
-    return transitionState.state;
-  }
-};
+var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
 
 // src/selectors.ts
 var selectOptimistic = (selector) => (state) => {
@@ -30237,11 +30230,16 @@ var selectOptimistic = (selector) => (state) => {
     return selector(state);
   if (!state.transitions.length)
     return selector(state);
-  const optimisticState = state.transitions.reduce((acc, transition) => {
-    acc.state = boundReducer(acc, toCommit(transition));
-    return acc;
-  }, Object.assign({}, state));
-  return selector(optimisticState);
+  try {
+    const optimisticState = state.transitions.reduce((acc, transition) => {
+      acc.state = boundReducer(acc, toCommit(transition));
+      return acc;
+    }, Object.assign({}, state));
+    return selector(optimisticState);
+  } catch (error) {
+    console.warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+    return selector(state);
+  }
 };
 var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
 var selectFailedTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
@@ -31166,18 +31164,23 @@ var optimistron = (namespace, initialState, handler, reducer, options) => {
     const nextTransitionState = (() => {
       const { state, transitions } = transitionState;
       const next = transitionStateFactory(transitionState);
-      if (isTransitionForNamespace(action, namespace)) {
-        const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
-        const { operation, id } = getTransitionMeta(action);
-        if (operation === "commit" /* COMMIT */) {
-          const staged = transitions.find((entry) => id === getTransitionID(entry));
-          if (!staged)
-            return next(state, nextTransitions);
-          return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
+      try {
+        if (isTransitionForNamespace(action, namespace)) {
+          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
+          const { operation, id } = getTransitionMeta(action);
+          if (operation === "commit" /* COMMIT */) {
+            const staged = transitions.find((entry) => id === getTransitionID(entry));
+            if (!staged)
+              return next(state, nextTransitions);
+            return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
+          }
+          return next(state, nextTransitions);
         }
-        return next(state, nextTransitions);
+        return next(boundReducer(transitionState, action), transitions);
+      } catch (error) {
+        console.warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+        return next(state, transitions);
       }
-      return next(boundReducer(transitionState, action), transitions);
     })();
     const mutated = nextTransitionState !== transitionState;
     nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
