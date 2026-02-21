@@ -1,0 +1,50 @@
+/* usecases/styles.css */
+.todo-item {
+  transition: opacity .25s ease-in-out, background-color .25s ease-in-out;
+}
+
+.loading {
+  opacity: .5;
+}
+
+span.item-failed {
+  color: orange;
+}
+
+@keyframes jiggle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  50% {
+    transform: translateX(4px);
+  }
+
+  75% {
+    transform: translateX(-4px);
+  }
+}
+
+.jiggle {
+  animation: jiggle .33s ease-in-out;
+}
+
+input[type="number"]::-webkit-outer-spin-button {
+  position: absolute;
+  opacity: 1;
+  height: 100%;
+  top: 0;
+  right: 0;
+}
+
+input[type="number"]::-webkit-inner-spin-button {
+  position: absolute;
+  opacity: 1;
+  height: 100%;
+  top: 0;
+  right: 0;
+}
