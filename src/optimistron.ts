@@ -60,7 +60,9 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
         })();
 
         /* only sanitize the mutations if the states are referentially different to avoid
-         * checking for conflicts and noops unnecessarily on the bound reducer */
+         * checking for conflicts and noops unnecessarily on the bound reducer.
+         * FIXME: this should be configurable - depending on the state structure,
+         * we may have to employ different strategies to check for changes */
         const mutated = nextTransitionState !== transitionState;
         nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
 

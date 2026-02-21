@@ -10,13 +10,13 @@ type PA_Empty = () => EmptyPayload;
 type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
 
 export type TransitionWithPreparedPayload<
-    Type extends TransitionNamespace,
+    ActionType extends TransitionNamespace,
     Op extends Operation,
     PA extends PrepareAction<any>,
 > = ActionCreatorWithPreparedPayload<
     [transitionId: string, ...Parameters<PA>],
     ReturnType<PA>['payload'],
-    Type,
+    ActionType,
     ReturnType<PA> extends { error: infer E } ? E : never,
     TransitionMeta<Op> & (ReturnType<PA> extends { meta: infer M } ? M : object)
 >;
@@ -103,9 +103,9 @@ export const createTransitions =
         });
 
         const stagePA = noOptions ? options : options.stage;
-        const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
-        const failPA = noOptions ? errorPA : options.fail ?? errorPA;
-        const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
+        const commitPA = noOptions ? emptyPA : (options.commit ?? emptyPA);
+        const failPA = noOptions ? errorPA : (options.fail ?? errorPA);
+        const stashPA = noOptions ? emptyPA : (options.stash ?? emptyPA);
 
         return {
             amend: createTransition(`${type}::amend`, Operation.AMEND, dedupe)(stagePA),
