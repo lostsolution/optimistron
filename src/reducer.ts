@@ -17,11 +17,4 @@ export const bindReducer =
         reducer: HandlerReducer<S, C, U, D>,
         bindState: (state: S) => BoundStateHandler<S, C, U, D>,
     ): BoundReducer<S> =>
-    (transitionState, action) => {
-        try {
-            return reducer(bindState(transitionState.state), action);
-        } catch (error) {
-            console.warn(`Error while processing action ${action.type}`, error);
-            return transitionState.state;
-        }
-    };
+    (transitionState, action) => reducer(bindState(transitionState.state), action);

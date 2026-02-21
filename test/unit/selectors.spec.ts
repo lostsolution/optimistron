@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 import { REDUCER_KEY } from '~constants';
 import { optimistron } from '~optimistron';
 import { ReducerMap } from '~reducer';
@@ -11,7 +11,7 @@ import {
     selectIsOptimistic,
     selectOptimistic,
 } from '~selectors';
-import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
+import { create, createIndexedState, createItem, indexedState, reducer, selectState, throwAction } from '~test/utils';
 import { updateTransition } from '~transitions';
 
 describe('selectors', () => {
@@ -23,6 +23,8 @@ describe('selectors', () => {
 
     describe('selectOptimistic', () => {
         const state = createIndexedState([stage]);
+        const warn = spyOn(console, 'warn').mockImplementation(mock());
+        afterAll(() => warn.mockRestore());
 
         test('should apply default selector if no registered reducer', () => {
             expect(
@@ -36,6 +38,28 @@ describe('selectors', () => {
 
         test('should apply transitions as if committed and run selector', () =>
             expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: item }));
+
+        test('should warn and return committed state on replay error', () => {
+            optimistron(
+                'test-throw',
+                {},
+                indexedState,
+                () => {
+                    throw new Error('replay error');
+                },
+            );
+
+            const errorState = {
+                [REDUCER_KEY]: 'test-throw',
+                state: {},
+                transitions: [stage],
+            } as typeof state;
+
+            warn.mockClear();
+            expect(selectOptimistic(selectState)(errorState)).toEqual(errorState.state);
+            expect(warn).toHaveBeenCalledTimes(1);
+            ReducerMap.delete('test-throw');
+        });
     });
 
     describe('selectFailedTransitions', () => {

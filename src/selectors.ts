@@ -12,15 +12,20 @@ export const selectOptimistic =
         /** Fast-path: no transitions to replay */
         if (!state.transitions.length) return selector(state);
 
-        const optimisticState = state.transitions.reduce(
-            (acc, transition) => {
-                acc.state = boundReducer(acc, toCommit(transition));
-                return acc;
-            },
-            Object.assign({}, state),
-        );
+        try {
+            const optimisticState = state.transitions.reduce(
+                (acc, transition) => {
+                    acc.state = boundReducer(acc, toCommit(transition));
+                    return acc;
+                },
+                Object.assign({}, state),
+            );
 
-        return selector(optimisticState);
+            return selector(optimisticState);
+        } catch (error) {
+            console.warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+            return selector(state);
+        }
     };
 
 export const selectFailedTransitions = <State>({ transitions }: TransitionState<State>) =>

@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
+import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { REDUCER_KEY } from '~constants';
 import { bindReducer } from '~reducer';
@@ -20,10 +20,7 @@ describe('bindReducer', () => {
         [REDUCER_KEY]: 'test-reducer',
     };
 
-    const warn = spyOn(console, 'warn').mockImplementation(mock());
-
     beforeEach(() => innerReducer.mockClear());
-    afterAll(() => warn.mockReset());
 
     test('should return a bound reducer over the provided state handler', () => {
         boundReducer(transitionState, action);
@@ -38,8 +35,8 @@ describe('bindReducer', () => {
             expect(boundReducer(transitionState, action)).toEqual(transitionState.state);
         });
 
-        test('should return the unwrapped transition state on error', () => {
-            expect(boundReducer(transitionState, throwAction)).toEqual(transitionState.state);
+        test('should propagate reducer errors', () => {
+            expect(() => boundReducer(transitionState, throwAction)).toThrow('test error');
         });
     });
 });

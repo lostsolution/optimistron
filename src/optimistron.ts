@@ -38,27 +38,35 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
             const { state, transitions } = transitionState;
             const next = transitionStateFactory(transitionState);
 
-            if (isTransitionForNamespace(action, namespace)) {
-                const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
-                const { operation, id } = getTransitionMeta(action);
+            try {
+                if (isTransitionForNamespace(action, namespace)) {
+                    const nextTransitions = processTransition(
+                        options?.sanitizeAction?.(action) ?? action,
+                        transitions,
+                    );
+                    const { operation, id } = getTransitionMeta(action);
 
-                if (operation === Operation.COMMIT) {
-                    /* Find the matching staged action in the transition list.
-                     * Treat it as a commit if it exists - noop otherwise */
-                    const staged = transitions.find((entry) => id === getTransitionID(entry));
-                    if (!staged) return next(state, nextTransitions);
+                    if (operation === Operation.COMMIT) {
+                        /* Find the matching staged action in the transition list.
+                         * Treat it as a commit if it exists - noop otherwise */
+                        const staged = transitions.find((entry) => id === getTransitionID(entry));
+                        if (!staged) return next(state, nextTransitions);
 
-                    /* Committing will apply the action to the reducer */
-                    return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
+                        /* Committing will apply the action to the reducer */
+                        return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
+                    }
+
+                    /* Every other transition actions will not be applied.
+                     * If you need to get the optimistic state use the provided
+                     * selectors which will apply the optimistic transitions */
+                    return next(state, nextTransitions);
                 }
 
-                /* Every other transition actions will not be applied.
-                 * If you need to get the optimistic state use the provided
-                 * selectors which will apply the optimistic transitions */
-                return next(state, nextTransitions);
+                return next(boundReducer(transitionState, action), transitions);
+            } catch (error) {
+                console.warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+                return next(state, transitions);
             }
-
-            return next(boundReducer(transitionState, action), transitions);
         })();
 
         /* only sanitize the mutations if the states are referentially different to avoid

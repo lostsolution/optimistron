@@ -1,11 +1,11 @@
-import { afterAll, describe, expect, test } from 'bun:test';
+import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { optimistron } from '~optimistron';
 import { ReducerMap } from '~reducer';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic, selectOptimistic } from '~selectors';
 import { buildTransitionState } from '~state';
 import type { TestIndexedState } from '~test/utils';
-import { create, createItem, edit, indexedState, reducer, selectState } from '~test/utils';
+import { create, createItem, edit, indexedState, reducer, selectState, throwAction } from '~test/utils';
 import { toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
@@ -141,6 +141,17 @@ describe('optimistron', () => {
                 });
             });
         });
+    });
+
+    test('should warn and return unchanged state on reducer error', () => {
+        const warn = spyOn(console, 'warn').mockImplementation(mock());
+        const initial = buildTransitionState(<TestIndexedState>{}, [], 'test');
+        const state = optimisticReducer(initial, throwAction);
+
+        expect(state.state).toStrictEqual(initial.state);
+        expect(state.transitions).toStrictEqual([]);
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
     });
 
     describe('update', () => {
