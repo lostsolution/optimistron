@@ -31153,6 +31153,8 @@ var transitionStateFactory = (prev) => (state, transitions) => {
 
 // src/optimistron.ts
 var optimistron = (namespace, initialState, handler, reducer, options) => {
+  if (!namespace)
+    throw new Error("optimistron: namespace cannot be empty");
   const bindState = bindStateFactory(handler);
   const boundReducer = bindReducer(reducer, bindState);
   if (ReducerMap.has(namespace))
