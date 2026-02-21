@@ -1,4 +1,5 @@
 import { REDUCER_KEY } from './constants';
+import { warn } from './logger';
 import { ReducerMap } from './reducer';
 import { type TransitionState } from './state';
 import { getTransitionMeta, toCommit } from './transitions';
@@ -23,7 +24,7 @@ export const selectOptimistic =
 
             return selector(optimisticState);
         } catch (error) {
-            console.warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+            warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
             return selector(state);
         }
     };

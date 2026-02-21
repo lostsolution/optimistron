@@ -1,5 +1,6 @@
 import type { Action, Reducer } from 'redux';
 
+import { warn } from './logger';
 import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
 import type { StateHandler, TransitionState } from './state';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state';
@@ -64,7 +65,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
 
                 return next(boundReducer(transitionState, action), transitions);
             } catch (error) {
-                console.warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+                warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
                 return next(state, transitions);
             }
         })();
