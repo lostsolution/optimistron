@@ -9,6 +9,9 @@ export const selectOptimistic =
         const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
         if (!boundReducer) return selector(state);
 
+        /** Fast-path: no transitions to replay */
+        if (!state.transitions.length) return selector(state);
+
         const optimisticState = state.transitions.reduce(
             (acc, transition) => {
                 acc.state = boundReducer(acc, toCommit(transition));
