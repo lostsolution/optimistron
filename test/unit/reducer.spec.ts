@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import { REDUCER_KEY } from '~constants';
 import { bindReducer } from '~reducer';
 import type { TransitionState } from '~state';
 import { bindStateFactory } from '~state';
@@ -17,7 +16,6 @@ describe('bindReducer', () => {
     const transitionState: TransitionState<TestIndexedState> = {
         transitions: [],
         state: { [item.id]: item },
-        [REDUCER_KEY]: 'test-reducer',
     };
 
     beforeEach(() => innerReducer.mockClear());

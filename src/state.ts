@@ -1,10 +1,8 @@
-import { REDUCER_KEY } from './constants';
 import type { StagedAction, TransitionAction } from './transitions';
 
 export type TransitionState<T> = {
     state: T;
     transitions: StagedAction[];
-    [REDUCER_KEY]: string;
 };
 
 type ItemIdKeys<T> = {
@@ -26,9 +24,9 @@ export type StateHandlerOptions<T> = {
 
 export interface StateHandler<
     State,
-    CreateParams extends any[],
-    UpdateParams extends any[],
-    DeleteParams extends any[],
+    CreateParams extends unknown[],
+    UpdateParams extends unknown[],
+    DeleteParams extends unknown[],
 > {
     create: (state: State, ...args: CreateParams) => State;
     update: (state: State, ...args: UpdateParams) => State;
@@ -38,9 +36,9 @@ export interface StateHandler<
 
 export interface BoundStateHandler<
     State,
-    CreateParams extends any[],
-    UpdateParams extends any[],
-    DeleteParams extends any[],
+    CreateParams extends unknown[],
+    UpdateParams extends unknown[],
+    DeleteParams extends unknown[],
 > {
     create: (...args: CreateParams) => State;
     update: (...args: UpdateParams) => State;
@@ -50,7 +48,7 @@ export interface BoundStateHandler<
 }
 
 export const bindStateFactory =
-    <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
+    <State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]>(
         handler: StateHandler<State, CreateParams, UpdateParams, DeleteParams>,
     ) =>
     (state: State): BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams> => ({
@@ -61,28 +59,21 @@ export const bindStateFactory =
         getState: () => state,
     });
 
-export const isTransitionState = <State>(state: any): state is TransitionState<State> => REDUCER_KEY in state;
+export const buildTransitionState = <State>(state: State, transitions: TransitionAction[]): TransitionState<State> => {
+    const transitionState = { state } as TransitionState<State>;
 
-type UnwrapTransitionState<T> = T extends TransitionState<any> ? T : TransitionState<T>;
-
-export const buildTransitionState = <State>(state: State, transitions: TransitionAction[], namespace: string) => {
-    const transitionState = isTransitionState<State>(state)
-        ? Object.assign({}, state)
-        : { state, transitions, [REDUCER_KEY]: namespace };
-
-    /* make internal properties non-enumerable to avoid consumers
+    /* make transitions non-enumerable to avoid consumers
      * from unintentionally accessing them when iterating */
     Object.defineProperties(transitionState, {
-        transitions: { value: transitions, enumerable: false },
-        [REDUCER_KEY]: { value: namespace, enumerable: false },
+        transitions: { value: transitions, enumerable: false, writable: true },
     });
 
-    return transitionState as UnwrapTransitionState<State>;
+    return transitionState;
 };
 
 export const transitionStateFactory =
     <State>(prev: TransitionState<State>) =>
     (state: State, transitions: TransitionAction[]): TransitionState<State> => {
         if (state === prev.state && transitions === prev.transitions) return prev;
-        return buildTransitionState(state, transitions, prev[REDUCER_KEY]);
+        return buildTransitionState(state, transitions);
     };

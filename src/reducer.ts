@@ -5,15 +5,13 @@ export type BoundReducer<State = any> = (state: TransitionState<State>, action: 
 
 export type HandlerReducer<
     State,
-    CreateParams extends any[],
-    UpdateParams extends any[],
-    DeleteParams extends any[],
+    CreateParams extends unknown[],
+    UpdateParams extends unknown[],
+    DeleteParams extends unknown[],
 > = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: Action) => State;
 
-export const ReducerMap = new Map<string, BoundReducer>();
-
 export const bindReducer =
-    <S, C extends any[], U extends any[], D extends any[]>(
+    <S, C extends unknown[], U extends unknown[], D extends unknown[]>(
         reducer: HandlerReducer<S, C, U, D>,
         bindState: (state: S) => BoundStateHandler<S, C, U, D>,
     ): BoundReducer<S> =>

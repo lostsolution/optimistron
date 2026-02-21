@@ -133,13 +133,12 @@ This runs on every reducer call, gated by referential equality (`===`) to skip w
 
 ### TransitionState\<T\>
 
-Wraps your state `T` with a `transitions` list and a namespace key. Both internal fields are **non-enumerable** — your state spreads cleanly and serializers ignore them.
+Wraps your state `T` with a `transitions` list. The `transitions` field is **non-enumerable** — your state spreads cleanly and serializers ignore it.
 
 ```typescript
 type TransitionState<T> = {
     state: T;
     transitions: StagedAction[]; // non-enumerable
-    [REDUCER_KEY]: string; // non-enumerable
 };
 ```
 
@@ -210,7 +209,7 @@ Each returns `{ stage, amend, commit, fail, stash, match }` — action creators 
 ```typescript
 import { optimistron, indexedStateFactory } from '@lostsolution/optimistron';
 
-const todos = optimistron(
+const { reducer: todos, selectOptimistic } = optimistron(
     'todos', // namespace
     initialState, // initial state
     indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }), // state handler
@@ -224,7 +223,7 @@ const todos = optimistron(
 );
 ```
 
-The reducer receives a **bound state handler** — not the raw state. This ensures all mutations go through the handler's CRUD operations, keeping them granular and mergeable.
+`optimistron()` returns `{ reducer, selectOptimistic }`. The reducer receives a **bound state handler** — not the raw state. The `selectOptimistic` is scoped to this reducer instance — no global state.
 
 ### 3. Dispatch transitions
 
@@ -247,7 +246,8 @@ try {
 
 ```typescript
 import { createSelector } from '@reduxjs/toolkit';
-import { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } from '@lostsolution/optimistron';
+import { selectIsOptimistic, selectIsFailed, selectIsConflicting } from '@lostsolution/optimistron';
+import { selectOptimistic } from './reducer'; // returned from optimistron()
 
 // Derive the optimistic view — transitions replayed on committed state
 const selectTodos = createSelector(
@@ -267,4 +267,4 @@ const selectTodoStatus = (id: string) =>
     );
 ```
 
-`selectOptimistic` replays transitions on every call — wrap with `createSelector` for memoization.
+`selectOptimistic` replays transitions on every call — wrap with `createSelector` for memoization. It is returned from `optimistron()`, not a standalone import.
