@@ -72,58 +72,64 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                     onClick={() => handleMutation({ done: !todo.done })}
                     className={clsx(
                         'todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full',
-                        error && '!border-amber-500 text-amber-500',
+                        failed && !conflict && '!border-amber-500 text-amber-500',
+                        conflict && '!border-red-500 text-red-500',
                         todo.done && '!text-white !bg-emerald-500 !border-emerald-500',
-                        todo.done && error && '!bg-amber-500',
+                        todo.done && failed && !conflict && '!bg-amber-500',
+                        todo.done && conflict && '!bg-red-500',
                         loading && '!border-gray-600 !text-gray-500 !bg-transparent',
                     )}
                 >
                     {icon}
                 </span>
 
-                <div className="flex-1 mx-4 flex flex-col">
-                    <div className="flex items-center gap-2">
-                        {editable ? (
-                            <input
-                                type="text"
-                                className="text-sm flex-1 text-gray-200 bg-transparent focus:outline-none"
-                                defaultValue={todo.value}
-                                autoFocus
-                                onBlur={({ currentTarget }) => {
-                                    const value = currentTarget.value;
-                                    if (value !== todo.value) handleMutation({ value });
-
-                                    setEditable(false);
-                                }}
-                                onKeyDown={({ currentTarget, key }) => {
-                                    if (key === 'Enter') {
+                <div className="flex-1 mx-4 flex items-center gap-2">
+                    <div className="flex-1 flex flex-col min-w-0">
+                        <div className="flex items-center">
+                            {editable ? (
+                                <input
+                                    type="text"
+                                    className="text-sm flex-1 text-gray-200 bg-transparent focus:outline-none"
+                                    defaultValue={todo.value}
+                                    autoFocus
+                                    onBlur={({ currentTarget }) => {
                                         const value = currentTarget.value;
-                                        handleMutation({ value });
+                                        if (value !== todo.value) handleMutation({ value });
+
                                         setEditable(false);
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <span
-                                onClick={() => setEditable(true)}
-                                className={clsx(
-                                    'todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300',
-                                    todo.done && 'line-through !text-gray-600',
-                                    loading && '!text-blue-400/70',
-                                    failed && !conflict && '!text-amber-400 jiggle',
-                                    conflict && '!text-red-400 jiggle',
-                                    stashed && !failed && '!text-purple-400 jiggle',
-                                )}
-                            >
-                                {todo.value}
-                            </span>
-                        )}
-                        {loading && <code className="text-[8px] font-mono text-blue-400/70">opt</code>}
-                        {failed && !conflict && <code className="text-[8px] font-mono text-amber-400">fail</code>}
-                        {conflict && <code className="text-[8px] font-mono text-red-400">conflict</code>}
-                        {stashed && <code className="text-[8px] font-mono text-purple-400">stash</code>}
+                                    }}
+                                    onKeyDown={({ currentTarget, key }) => {
+                                        if (key === 'Enter') {
+                                            const value = currentTarget.value;
+                                            handleMutation({ value });
+                                            setEditable(false);
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <span
+                                    onClick={() => setEditable(true)}
+                                    className={clsx(
+                                        'todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300',
+                                        todo.done && 'line-through !text-gray-600',
+                                        loading && '!text-blue-400/70',
+                                        failed && !conflict && '!text-amber-400 jiggle',
+                                        conflict && '!text-red-400 jiggle',
+                                        stashed && !failed && '!text-purple-400 jiggle',
+                                    )}
+                                >
+                                    {todo.value}
+                                </span>
+                            )}
+                        </div>
+                        {conflict && <TodoConflict id={todo.id} />}
                     </div>
-                    {conflict && <TodoConflict id={todo.id} />}
+                    <code className="flex-shrink-0 self-center text-[8px] font-mono leading-none text-left">
+                        {loading && <span className="text-blue-400/70">optimistic</span>}
+                        {failed && !conflict && <span className="text-amber-400">fail</span>}
+                        {conflict && <span className="text-red-400">conflict</span>}
+                        {stashed && <span className="text-purple-400">stash</span>}
+                    </code>
                 </div>
 
                 <button
