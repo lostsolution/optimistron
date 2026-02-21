@@ -1,7 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
-import { REDUCER_KEY } from '~constants';
 import type { StateHandler } from '~state';
-import { bindStateFactory, buildTransitionState, isTransitionState, transitionStateFactory } from '~state';
+import { bindStateFactory, buildTransitionState, transitionStateFactory } from '~state';
 import { create, createIndexedState, createItem } from '~test/utils';
 
 describe('state', () => {
@@ -45,29 +44,17 @@ describe('state', () => {
         });
     });
 
-    describe('isTransitionState', () => {
-        test('should return `true` if `ReducerIdKey` in parameter', () => {
-            expect(isTransitionState({ [REDUCER_KEY]: 'test' })).toBe(true);
-        });
-
-        test('should return `false` otherwise', () => {
-            expect(isTransitionState({})).toBe(false);
-        });
-    });
-
     describe('buildTransitionState', () => {
-        test('should return state clone if already is a transition state', () => {
-            const state = createIndexedState();
-            const result = buildTransitionState(state, [], 'test');
+        test('should build transition state with non-enumerable transitions', () => {
+            const result = buildTransitionState({}, []);
 
-            expect(isTransitionState(result)).toBe(true);
-            expect(state).toMatchObject(result);
+            expect(result.state).toEqual({});
+            expect(result.transitions).toEqual([]);
+            expect(Object.keys(result)).not.toContain('transitions');
         });
 
-        test('should build transition state otherwise', () => {
-            const result = buildTransitionState({}, [], 'test');
-
-            expect(isTransitionState(result)).toBe(true);
+        test('should match createIndexedState structure', () => {
+            const result = buildTransitionState({}, []);
             expect(result).toMatchObject(createIndexedState());
         });
     });

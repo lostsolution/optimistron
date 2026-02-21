@@ -1,17 +1,14 @@
 import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { optimistron } from '~optimistron';
-import { ReducerMap } from '~reducer';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic, selectOptimistic } from '~selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors';
 import { buildTransitionState } from '~state';
 import type { TestIndexedState } from '~test/utils';
 import { create, createItem, edit, indexedState, reducer, remove, selectState, sync, throwAction } from '~test/utils';
 import { toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
-    afterAll(() => ReducerMap.clear());
-
-    const optimisticReducer = optimistron('test', {}, indexedState, reducer);
+    const { reducer: optimisticReducer, selectOptimistic } = optimistron('test', {}, indexedState, reducer);
 
     describe('IndexedState', () => {
         describe('create', () => {
@@ -26,7 +23,7 @@ describe('optimistron', () => {
             const commit = create.commit(item.id);
             const conflict = create.stage(item.id, conflictItem);
 
-            const initial = buildTransitionState(<TestIndexedState>{}, [], 'test');
+            const initial = buildTransitionState(<TestIndexedState>{}, []);
             const state = optimisticReducer(initial, stage);
 
             describe('stage', () => {
@@ -145,7 +142,7 @@ describe('optimistron', () => {
 
     test('should warn and return unchanged state on reducer error', () => {
         const warn = spyOn(console, 'warn').mockImplementation(mock());
-        const initial = buildTransitionState(<TestIndexedState>{}, [], 'test');
+        const initial = buildTransitionState(<TestIndexedState>{}, []);
         const state = optimisticReducer(initial, throwAction);
 
         expect(state.state).toStrictEqual(initial.state);
@@ -163,7 +160,7 @@ describe('optimistron', () => {
         const stash = remove.stash(item.id);
         const commit = remove.commit(item.id);
 
-        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, [], 'test');
+        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, []);
         const state = optimisticReducer(initial, stage);
 
         describe('stage', () => {
@@ -236,7 +233,7 @@ describe('optimistron', () => {
         const commit = edit.commit(updatedItem.id);
         const conflict = edit.stage(updatedItem.id, conflictItem);
 
-        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, [], 'test');
+        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, []);
         const state = optimisticReducer(initial, stage);
 
         describe('stage', () => {

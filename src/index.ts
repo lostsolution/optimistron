@@ -7,7 +7,6 @@ export {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-    selectOptimistic,
 } from './selectors';
 export { indexedStateFactory, type IndexedState } from './state/indexed';
 export { DedupeMode, Operation, OptimisticMergeResult, isTransition } from './transitions';

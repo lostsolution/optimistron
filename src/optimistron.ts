@@ -1,7 +1,8 @@
 import type { Action, Reducer } from 'redux';
 
 import { warn } from './logger';
-import { ReducerMap, bindReducer, type HandlerReducer } from './reducer';
+import { bindReducer, type BoundReducer, type HandlerReducer } from './reducer';
+import { createSelectOptimistic } from './selectors';
 import type { StateHandler, TransitionState } from './state';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state';
 import {
@@ -12,29 +13,39 @@ import {
     processTransition,
     sanitizeTransitions,
     toCommit,
+    type StagedAction,
 } from './transitions';
 
-export const optimistron = <S, C extends any[], U extends any[], D extends any[]>(
+/** Applies a staged transition as a commit via the bound reducer.
+ * Returns undefined if no matching staged action exists. */
+const commitTransition = <S>(
+    boundReducer: BoundReducer<S>,
+    transitionState: TransitionState<S>,
+    transitions: StagedAction[],
+    id: string,
+): S | undefined => {
+    const staged = transitions.find((entry) => id === getTransitionID(entry));
+    if (!staged) return undefined;
+    return boundReducer(transitionState, toCommit(staged));
+};
+
+export const optimistron = <S, C extends unknown[], U extends unknown[], D extends unknown[]>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,
     reducer: HandlerReducer<S, C, U, D>,
     options?: { sanitizeAction: <T extends Action>(action: T) => T },
-): Reducer<TransitionState<S>> => {
+): { reducer: Reducer<TransitionState<S>>; selectOptimistic: ReturnType<typeof createSelectOptimistic<S>> } => {
     if (!namespace) throw new Error('optimistron: namespace cannot be empty');
 
     const bindState = bindStateFactory<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
 
-    /* keep a reference to the underlying reducer in order for optimistic
-     * selectors to apply the optimistic transitions when executed */
-    if (ReducerMap.has(namespace)) throw new Error(`An optimistic reducer for [${namespace}] is already registered`);
-    ReducerMap.set(namespace, boundReducer);
-
     const sanitizer = sanitizeTransitions(boundReducer, bindState);
-    const initial = buildTransitionState(initialState, [], namespace);
+    const initial = buildTransitionState(initialState, []);
+    const selectOptimistic = createSelectOptimistic<S>(boundReducer, namespace);
 
-    return (transitionState = initial, action) => {
+    const optimisticReducer: Reducer<TransitionState<S>> = (transitionState = initial, action) => {
         const nextTransitionState: TransitionState<S> = (() => {
             const { state, transitions } = transitionState;
             const next = transitionStateFactory(transitionState);
@@ -48,13 +59,8 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
                     const { operation, id } = getTransitionMeta(action);
 
                     if (operation === Operation.COMMIT) {
-                        /* Find the matching staged action in the transition list.
-                         * Treat it as a commit if it exists - noop otherwise */
-                        const staged = transitions.find((entry) => id === getTransitionID(entry));
-                        if (!staged) return next(state, nextTransitions);
-
-                        /* Committing will apply the action to the reducer */
-                        return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
+                        const committed = commitTransition(boundReducer, transitionState, transitions, id);
+                        return next(committed ?? state, nextTransitions);
                     }
 
                     /* Every other transition actions will not be applied.
@@ -79,4 +85,6 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
 
         return nextTransitionState;
     };
+
+    return { reducer: optimisticReducer, selectOptimistic };
 };

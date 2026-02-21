@@ -26,7 +26,7 @@ const compare = (a: Todo) => (b: Todo) => {
 
 const eq = (a: Todo) => (b: Todo) => a.done === b.done && a.value === b.value;
 
-export const todos = optimistron(
+export const { reducer: todos, selectOptimistic } = optimistron(
     'todos',
     initial,
     indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }),

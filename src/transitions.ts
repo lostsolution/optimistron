@@ -155,7 +155,7 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
  * and performing a sanity 'merge' check on each iteration. This process helps cleanse the transitions
  * list by eliminating no-op actions and identifying potential conflicts. */
 export const sanitizeTransitions =
-    <State, CreateParams extends any[], UpdateParams extends any[], DeleteParams extends any[]>(
+    <State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]>(
         boundReducer: BoundReducer<State>,
         bindState: ReturnType<typeof bindStateFactory<State, CreateParams, UpdateParams, DeleteParams>>,
     ) =>

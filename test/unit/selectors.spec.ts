@@ -1,7 +1,5 @@
-import { afterAll, afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
-import { REDUCER_KEY } from '~constants';
+import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 import { optimistron } from '~optimistron';
-import { ReducerMap } from '~reducer';
 import {
     selectConflictingTransition,
     selectFailedTransition,
@@ -9,15 +7,11 @@ import {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-    selectOptimistic,
 } from '~selectors';
-import { create, createIndexedState, createItem, indexedState, reducer, selectState, throwAction } from '~test/utils';
+import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
 import { updateTransition } from '~transitions';
 
 describe('selectors', () => {
-    beforeEach(() => optimistron('test', {}, indexedState, reducer));
-    afterEach(() => ReducerMap.clear());
-
     const item = createItem();
     const stage = create.stage(item.id, item);
 
@@ -26,22 +20,20 @@ describe('selectors', () => {
         const warn = spyOn(console, 'warn').mockImplementation(mock());
         afterAll(() => warn.mockRestore());
 
-        test('should apply default selector if no registered reducer', () => {
-            expect(
-                selectOptimistic(() => 1337)({
-                    transitions: [],
-                    [REDUCER_KEY]: 'unknown',
-                    state: 42,
-                }),
-            ).toEqual(1337);
+        test('should fast-path when no transitions', () => {
+            const { selectOptimistic } = optimistron('test', {}, indexedState, reducer);
+            const emptyState = createIndexedState();
+            expect(selectOptimistic(() => 1337)(emptyState)).toEqual(1337);
         });
 
-        test('should apply transitions as if committed and run selector', () =>
-            expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: item }));
+        test('should apply transitions as if committed and run selector', () => {
+            const { selectOptimistic } = optimistron('test', {}, indexedState, reducer);
+            expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: item });
+        });
 
         test('should warn and return committed state on replay error', () => {
-            optimistron(
-                'test-throw',
+            const { selectOptimistic } = optimistron(
+                'test',
                 {},
                 indexedState,
                 () => {
@@ -49,16 +41,11 @@ describe('selectors', () => {
                 },
             );
 
-            const errorState = {
-                [REDUCER_KEY]: 'test-throw',
-                state: {},
-                transitions: [stage],
-            } as typeof state;
+            const errorState = createIndexedState([stage]);
 
             warn.mockClear();
             expect(selectOptimistic(selectState)(errorState)).toEqual(errorState.state);
             expect(warn).toHaveBeenCalledTimes(1);
-            ReducerMap.delete('test-throw');
         });
     });
 

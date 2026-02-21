@@ -1,15 +1,14 @@
-import { REDUCER_KEY } from './constants';
 import { warn } from './logger';
-import { ReducerMap } from './reducer';
+import type { BoundReducer } from './reducer';
 import { type TransitionState } from './state';
 import { getTransitionMeta, toCommit } from './transitions';
 
-export const selectOptimistic =
-    <State, Slice>(selector: (state: TransitionState<State>) => Slice) =>
+/** Creates a `selectOptimistic` selector closed over the bound reducer.
+ * Used internally by `optimistron()` — not part of the public API. */
+export const createSelectOptimistic =
+    <State>(boundReducer: BoundReducer<State>, namespace: string) =>
+    <Slice>(selector: (state: TransitionState<State>) => Slice) =>
     (state: TransitionState<State>): Slice => {
-        const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
-        if (!boundReducer) return selector(state);
-
         /** Fast-path: no transitions to replay */
         if (!state.transitions.length) return selector(state);
 
@@ -24,7 +23,7 @@ export const selectOptimistic =
 
             return selector(optimisticState);
         } catch (error) {
-            warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+            warn(`selectOptimistic: error replaying transitions for "${namespace}"`, error);
             return selector(state);
         }
     };
