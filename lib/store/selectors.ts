@@ -5,8 +5,8 @@ import {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-    selectOptimistic,
 } from '~selectors';
+import { selectOptimistic } from '~usecases/lib/store/reducer';
 import type { State } from '~usecases/lib/store/store';
 
 export const selectTodo = (id: string) =>

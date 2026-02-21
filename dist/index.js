@@ -23725,19 +23725,19 @@ var require__listCacheClear = __commonJS((exports, module) => {
 
 // node_modules/lodash/eq.js
 var require_eq = __commonJS((exports, module) => {
-  function eq(value, other) {
+  function eq2(value, other) {
     return value === other || value !== value && other !== other;
   }
-  module.exports = eq;
+  module.exports = eq2;
 });
 
 // node_modules/lodash/_assocIndexOf.js
 var require__assocIndexOf = __commonJS((exports, module) => {
-  var eq = require_eq();
+  var eq2 = require_eq();
   function assocIndexOf(array, key) {
     var length = array.length;
     while (length--) {
-      if (eq(array[length][0], key)) {
+      if (eq2(array[length][0], key)) {
         return length;
       }
     }
@@ -24334,12 +24334,12 @@ var require__baseAssignValue = __commonJS((exports, module) => {
 // node_modules/lodash/_assignValue.js
 var require__assignValue = __commonJS((exports, module) => {
   var baseAssignValue = require__baseAssignValue();
-  var eq = require_eq();
+  var eq2 = require_eq();
   var objectProto = Object.prototype;
   var hasOwnProperty = objectProto.hasOwnProperty;
   function assignValue(object, key, value) {
     var objValue = object[key];
-    if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) || value === undefined && !(key in object)) {
+    if (!(hasOwnProperty.call(object, key) && eq2(objValue, value)) || value === undefined && !(key in object)) {
       baseAssignValue(object, key, value);
     }
   }
@@ -27569,7 +27569,6 @@ var import_react2 = __toESM(require_react(), 1);
 
 // src/constants.ts
 var META_KEY = "__OPTIMISTRON_META__";
-var REDUCER_KEY = "__OPTIMISTRON_REF_ID__";
 
 // src/transitions.ts
 var getTransitionMeta = (action) => action.meta[META_KEY];
@@ -30225,15 +30224,8 @@ var warn = (...args) => {
     console.warn(...args);
 };
 
-// src/reducer.ts
-var ReducerMap = new Map;
-var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
-
 // src/selectors.ts
-var selectOptimistic = (selector) => (state) => {
-  const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
-  if (!boundReducer)
-    return selector(state);
+var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) => {
   if (!state.transitions.length)
     return selector(state);
   try {
@@ -30243,7 +30235,7 @@ var selectOptimistic = (selector) => (state) => {
     }, Object.assign({}, state));
     return selector(optimisticState);
   } catch (error) {
-    warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+    warn(`selectOptimistic: error replaying transitions for "${namespace}"`, error);
     return selector(state);
   }
 };
@@ -30260,39 +30252,126 @@ var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some
 var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
 var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
 
-// usecases/lib/store/selectors.ts
-var selectTodo = (id) => createSelector((state) => state.todos, ({ state }) => state[id]);
-var selectOptimisticTodos = createSelector((state) => state.todos, selectOptimistic((todos) => Object.values(todos.state).sort((a, b) => b.createdAt - a.createdAt)));
-var selectOptimisticTodoState = (id) => createSelector((state) => state.todos, (todos) => ({
-  optimistic: selectIsOptimistic(id)(todos),
-  failed: selectIsFailed(id)(todos),
-  retry: selectFailedTransition(id)(todos),
-  conflict: selectIsConflicting(id)(todos)
-}));
-var selectFailedTodos = createSelector((state) => state.todos, (todos) => selectFailedTransitions(todos));
-var selectTransitions = createSelector((state) => state.todos, (todos) => todos.transitions);
+// src/reducer.ts
+var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
 
-// usecases/lib/components/graph/TransitionHistoryProvider.tsx
-var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var TransitionHistoryContext = import_react.createContext({ committed: [], staged: [] });
-var TransitionHistoryProvider = ({ children, eventBus }) => {
-  const [committed, setCommitted] = import_react.useState([]);
-  const staged = useSelector(selectTransitions);
-  import_react.useEffect(() => eventBus.subscribe((transition) => {
-    setCommitted((history) => {
-      const meta = getTransitionMeta(transition);
-      if (meta.operation === "commit" /* COMMIT */)
-        return [...history, transition];
-      return history;
-    });
-  }), []);
-  const value = import_react.useMemo(() => ({ staged, committed }), [staged, committed]);
-  return /* @__PURE__ */ jsx_dev_runtime.jsxDEV(TransitionHistoryContext.Provider, {
-    value,
-    children
-  }, undefined, false, undefined, this);
+// src/state.ts
+var bindStateFactory = (handler) => (state) => ({
+  create: (...args) => handler.create(state, ...args),
+  update: (...args) => handler.update(state, ...args),
+  remove: (...args) => handler.remove(state, ...args),
+  merge: (incoming) => handler.merge(state, incoming),
+  getState: () => state
+});
+var buildTransitionState = (state, transitions) => {
+  const transitionState = { state };
+  Object.defineProperties(transitionState, {
+    transitions: { value: transitions, enumerable: false, writable: true }
+  });
+  return transitionState;
 };
-var useTransitionHistory = () => import_react.useContext(TransitionHistoryContext);
+var transitionStateFactory = (prev) => (state, transitions) => {
+  if (state === prev.state && transitions === prev.transitions)
+    return prev;
+  return buildTransitionState(state, transitions);
+};
+
+// src/optimistron.ts
+var commitTransition = (boundReducer, transitionState, transitions, id) => {
+  const staged = transitions.find((entry) => id === getTransitionID(entry));
+  if (!staged)
+    return;
+  return boundReducer(transitionState, toCommit(staged));
+};
+var optimistron = (namespace, initialState, handler, reducer, options) => {
+  if (!namespace)
+    throw new Error("optimistron: namespace cannot be empty");
+  const bindState = bindStateFactory(handler);
+  const boundReducer = bindReducer(reducer, bindState);
+  const sanitizer = sanitizeTransitions(boundReducer, bindState);
+  const initial = buildTransitionState(initialState, []);
+  const selectOptimistic = createSelectOptimistic(boundReducer, namespace);
+  const optimisticReducer = (transitionState = initial, action) => {
+    const nextTransitionState = (() => {
+      const { state, transitions } = transitionState;
+      const next = transitionStateFactory(transitionState);
+      try {
+        if (isTransitionForNamespace(action, namespace)) {
+          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
+          const { operation, id } = getTransitionMeta(action);
+          if (operation === "commit" /* COMMIT */) {
+            const committed = commitTransition(boundReducer, transitionState, transitions, id);
+            return next(committed ?? state, nextTransitions);
+          }
+          return next(state, nextTransitions);
+        }
+        return next(boundReducer(transitionState, action), transitions);
+      } catch (error) {
+        warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+        return next(state, transitions);
+      }
+    })();
+    const mutated = nextTransitionState !== transitionState;
+    nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
+    return nextTransitionState;
+  };
+  return { reducer: optimisticReducer, selectOptimistic };
+};
+
+// src/state/indexed.ts
+var indexedStateFactory = ({
+  itemIdKey,
+  compare,
+  eq
+}) => {
+  return {
+    create: (state, item) => ({ ...state, [item[itemIdKey]]: item }),
+    update: (state, itemId, partialItem) => state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
+    remove: (state, itemId) => {
+      if (state[itemId]) {
+        const nextState = { ...state };
+        delete nextState[itemId];
+        return nextState;
+      }
+      return state;
+    },
+    merge: (existing, incoming) => {
+      const mergedState = { ...existing };
+      let mutated = false;
+      for (const itemId in existing) {
+        if (!incoming[itemId]) {
+          mutated = true;
+          delete mergedState[itemId];
+        }
+      }
+      for (const itemId in incoming) {
+        const existingItem = existing[itemId];
+        const incomingItem = incoming[itemId];
+        if (existingItem === incomingItem)
+          continue;
+        if (!existingItem) {
+          mutated = true;
+          mergedState[itemId] = incomingItem;
+          continue;
+        }
+        const check = compare(incomingItem)(existingItem);
+        if (check === -1)
+          throw "CONFLICT" /* CONFLICT */;
+        if (check === 0) {
+          if (eq(incomingItem)(existingItem))
+            continue;
+          else
+            throw "CONFLICT" /* CONFLICT */;
+        }
+        mutated = true;
+        mergedState[itemId] = incomingItem;
+      }
+      if (!mutated)
+        throw "SKIP" /* SKIP */;
+      return mergedState;
+    }
+  };
+};
 
 // src/actions.ts
 var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === "commit" /* COMMIT */;
@@ -30337,6 +30416,95 @@ var createTodo = createTransitions("todos::add")(create);
 var editTodo = createTransitions("todos::edit")(edit);
 var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(remove);
 var sync = createAction("todos::sync");
+
+// usecases/lib/utils/mock-api.ts
+var getMockApiOnline = () => window.__mock_api_online ?? true;
+var setMockApiOnline = (value) => window.__mock_api_online = value;
+var getMockApiTimeout = () => window.__mock_api_timeout ?? 500;
+var setMockApiTimeout = (value) => window.__mock_api_timeout = value;
+var generateId = () => {
+  const arr = new Uint8Array(20);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (val) => val.toString(16).padStart(2, "0")).join("");
+};
+var simulateAPIRequest = async () => {
+  await new Promise((resolve) => setTimeout(resolve, getMockApiTimeout()));
+  if (!getMockApiOnline())
+    throw new Error("Offline ☠️");
+};
+
+// usecases/lib/store/reducer.ts
+var initial = (() => {
+  const createdAt = Date.now();
+  const todo1 = { id: generateId(), value: "Try out optimistron", revision: 0, done: true, createdAt };
+  const todo2 = { id: generateId(), value: "Toggle API Mock", revision: 42, done: false, createdAt };
+  const todo3 = { id: generateId(), value: "Add a new todo", revision: 2, done: true, createdAt };
+  return {
+    [todo1.id]: todo1,
+    [todo2.id]: todo2,
+    [todo3.id]: todo3
+  };
+})();
+var compare = (a) => (b) => {
+  if (a.revision === b.revision)
+    return 0;
+  if (a.revision > b.revision)
+    return 1;
+  return -1;
+};
+var eq = (a) => (b) => a.done === b.done && a.value === b.value;
+var { reducer: todos, selectOptimistic } = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create: create2, update, remove: remove2 }, action) => {
+  if (createTodo.match(action))
+    return create2(action.payload.todo);
+  if (editTodo.match(action))
+    return update(action.payload.id, action.payload.todo);
+  if (deleteTodo.match(action))
+    return remove2(action.payload.id);
+  if (sync.match(action)) {
+    return Object.fromEntries(Object.entries(getState()).map(([key, todo]) => [
+      key,
+      {
+        ...todo,
+        revision: todo.revision + 10
+      }
+    ]));
+  }
+  return getState();
+});
+
+// usecases/lib/store/selectors.ts
+var selectTodo = (id) => createSelector((state) => state.todos, ({ state }) => state[id]);
+var selectOptimisticTodos = createSelector((state) => state.todos, selectOptimistic((todos2) => Object.values(todos2.state).sort((a, b) => b.createdAt - a.createdAt)));
+var selectOptimisticTodoState = (id) => createSelector((state) => state.todos, (todos2) => ({
+  optimistic: selectIsOptimistic(id)(todos2),
+  failed: selectIsFailed(id)(todos2),
+  retry: selectFailedTransition(id)(todos2),
+  conflict: selectIsConflicting(id)(todos2)
+}));
+var selectFailedTodos = createSelector((state) => state.todos, (todos2) => selectFailedTransitions(todos2));
+var selectTransitions = createSelector((state) => state.todos, (todos2) => todos2.transitions);
+
+// usecases/lib/components/graph/TransitionHistoryProvider.tsx
+var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
+var TransitionHistoryContext = import_react.createContext({ committed: [], staged: [] });
+var TransitionHistoryProvider = ({ children, eventBus }) => {
+  const [committed, setCommitted] = import_react.useState([]);
+  const staged = useSelector(selectTransitions);
+  import_react.useEffect(() => eventBus.subscribe((transition) => {
+    setCommitted((history) => {
+      const meta = getTransitionMeta(transition);
+      if (meta.operation === "commit" /* COMMIT */)
+        return [...history, transition];
+      return history;
+    });
+  }), []);
+  const value = import_react.useMemo(() => ({ staged, committed }), [staged, committed]);
+  return /* @__PURE__ */ jsx_dev_runtime.jsxDEV(TransitionHistoryContext.Provider, {
+    value,
+    children
+  }, undefined, false, undefined, this);
+};
+var useTransitionHistory = () => import_react.useContext(TransitionHistoryContext);
 
 // usecases/lib/components/graph/TransitionGraph.tsx
 var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
@@ -30620,24 +30788,6 @@ var import_react6 = __toESM(require_react(), 1);
 
 // usecases/lib/components/mocks/MockApiProvider.tsx
 var import_react3 = __toESM(require_react(), 1);
-
-// usecases/lib/utils/mock-api.ts
-var getMockApiOnline = () => window.__mock_api_online ?? true;
-var setMockApiOnline = (value) => window.__mock_api_online = value;
-var getMockApiTimeout = () => window.__mock_api_timeout ?? 500;
-var setMockApiTimeout = (value) => window.__mock_api_timeout = value;
-var generateId = () => {
-  const arr = new Uint8Array(20);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, (val) => val.toString(16).padStart(2, "0")).join("");
-};
-var simulateAPIRequest = async () => {
-  await new Promise((resolve) => setTimeout(resolve, getMockApiTimeout()));
-  if (!getMockApiOnline())
-    throw new Error("Offline ☠️");
-};
-
-// usecases/lib/components/mocks/MockApiProvider.tsx
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
 var MockApiContext = import_react3.createContext(null);
 var MockApiProvider = ({ children }) => {
@@ -30901,7 +31051,7 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
 // usecases/lib/components/todo/TodoApp.tsx
 var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
 var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
-  const todos = useSelector(selectOptimisticTodos);
+  const todos2 = useSelector(selectOptimisticTodos);
   const failedTransitions = useSelector(selectFailedTodos);
   const mockApi = useMockApi();
   const [value, setValue] = import_react6.useState("");
@@ -30956,7 +31106,7 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      todos.map((todo) => /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(TodoItem, {
+      todos2.map((todo) => /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(TodoItem, {
         todo,
         onEdit: onEditTodo,
         onRetry: handleRetry,
@@ -31131,162 +31281,6 @@ var createOptimistronMiddlware = () => {
     eventBus
   ];
 };
-
-// src/state.ts
-var bindStateFactory = (handler) => (state) => ({
-  create: (...args) => handler.create(state, ...args),
-  update: (...args) => handler.update(state, ...args),
-  remove: (...args) => handler.remove(state, ...args),
-  merge: (incoming) => handler.merge(state, incoming),
-  getState: () => state
-});
-var isTransitionState = (state) => (REDUCER_KEY in state);
-var buildTransitionState = (state, transitions, namespace) => {
-  const transitionState = isTransitionState(state) ? Object.assign({}, state) : { state, transitions, [REDUCER_KEY]: namespace };
-  Object.defineProperties(transitionState, {
-    transitions: { value: transitions, enumerable: false },
-    [REDUCER_KEY]: { value: namespace, enumerable: false }
-  });
-  return transitionState;
-};
-var transitionStateFactory = (prev) => (state, transitions) => {
-  if (state === prev.state && transitions === prev.transitions)
-    return prev;
-  return buildTransitionState(state, transitions, prev[REDUCER_KEY]);
-};
-
-// src/optimistron.ts
-var optimistron = (namespace, initialState, handler, reducer, options) => {
-  if (!namespace)
-    throw new Error("optimistron: namespace cannot be empty");
-  const bindState = bindStateFactory(handler);
-  const boundReducer = bindReducer(reducer, bindState);
-  if (ReducerMap.has(namespace))
-    throw new Error(`An optimistic reducer for [${namespace}] is already registered`);
-  ReducerMap.set(namespace, boundReducer);
-  const sanitizer = sanitizeTransitions(boundReducer, bindState);
-  const initial = buildTransitionState(initialState, [], namespace);
-  return (transitionState = initial, action) => {
-    const nextTransitionState = (() => {
-      const { state, transitions } = transitionState;
-      const next = transitionStateFactory(transitionState);
-      try {
-        if (isTransitionForNamespace(action, namespace)) {
-          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
-          const { operation, id } = getTransitionMeta(action);
-          if (operation === "commit" /* COMMIT */) {
-            const staged = transitions.find((entry) => id === getTransitionID(entry));
-            if (!staged)
-              return next(state, nextTransitions);
-            return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
-          }
-          return next(state, nextTransitions);
-        }
-        return next(boundReducer(transitionState, action), transitions);
-      } catch (error) {
-        warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
-        return next(state, transitions);
-      }
-    })();
-    const mutated = nextTransitionState !== transitionState;
-    nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
-    return nextTransitionState;
-  };
-};
-
-// src/state/indexed.ts
-var indexedStateFactory = ({
-  itemIdKey,
-  compare,
-  eq
-}) => {
-  return {
-    create: (state, item) => ({ ...state, [item[itemIdKey]]: item }),
-    update: (state, itemId, partialItem) => state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
-    remove: (state, itemId) => {
-      if (state[itemId]) {
-        const nextState = { ...state };
-        delete nextState[itemId];
-        return nextState;
-      }
-      return state;
-    },
-    merge: (existing, incoming) => {
-      const mergedState = { ...existing };
-      let mutated = false;
-      for (const itemId in existing) {
-        if (!incoming[itemId]) {
-          mutated = true;
-          delete mergedState[itemId];
-        }
-      }
-      for (const itemId in incoming) {
-        const existingItem = existing[itemId];
-        const incomingItem = incoming[itemId];
-        if (existingItem === incomingItem)
-          continue;
-        if (!existingItem) {
-          mutated = true;
-          mergedState[itemId] = incomingItem;
-          continue;
-        }
-        const check = compare(incomingItem)(existingItem);
-        if (check === -1)
-          throw "CONFLICT" /* CONFLICT */;
-        if (check === 0) {
-          if (eq(incomingItem)(existingItem))
-            continue;
-          else
-            throw "CONFLICT" /* CONFLICT */;
-        }
-        mutated = true;
-        mergedState[itemId] = incomingItem;
-      }
-      if (!mutated)
-        throw "SKIP" /* SKIP */;
-      return mergedState;
-    }
-  };
-};
-
-// usecases/lib/store/reducer.ts
-var initial = (() => {
-  const createdAt = Date.now();
-  const todo1 = { id: generateId(), value: "Try out optimistron", revision: 0, done: true, createdAt };
-  const todo2 = { id: generateId(), value: "Toggle API Mock", revision: 42, done: false, createdAt };
-  const todo3 = { id: generateId(), value: "Add a new todo", revision: 2, done: true, createdAt };
-  return {
-    [todo1.id]: todo1,
-    [todo2.id]: todo2,
-    [todo3.id]: todo3
-  };
-})();
-var compare = (a) => (b) => {
-  if (a.revision === b.revision)
-    return 0;
-  if (a.revision > b.revision)
-    return 1;
-  return -1;
-};
-var eq = (a) => (b) => a.done === b.done && a.value === b.value;
-var todos = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create: create2, update, remove: remove2 }, action) => {
-  if (createTodo.match(action))
-    return create2(action.payload.todo);
-  if (editTodo.match(action))
-    return update(action.payload.id, action.payload.todo);
-  if (deleteTodo.match(action))
-    return remove2(action.payload.id);
-  if (sync.match(action)) {
-    return Object.fromEntries(Object.entries(getState()).map(([key, todo]) => [
-      key,
-      {
-        ...todo,
-        revision: todo.revision + 10
-      }
-    ]));
-  }
-  return getState();
-});
 
 // usecases/lib/store/store.ts
 var createDebugStore = (middleware) => {
