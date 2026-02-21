@@ -39,7 +39,7 @@ describe('optimistron', () => {
         expect(nextState === initial).toBe(true);
     });
 
-    test('comitting a non-staged action should noop', () => {
+    test('committing a non-staged action should noop', () => {
         const optimisticReducer = optimistron('test', {}, indexedState, reducer);
         const initial = optimisticReducer(undefined, { type: 'init' });
         const commit = create.commit(item.id);
@@ -49,7 +49,7 @@ describe('optimistron', () => {
         expect(nextState === initial).toBe(true);
     });
 
-    test('comitting should resolve staged transition and apply as if committed', () => {
+    test('committing should resolve staged transition and apply as if committed', () => {
         const testReducerSpy = mock(reducer);
         const optimisticReducer = optimistron('test', {}, indexedState, testReducerSpy);
         const initial = optimisticReducer(undefined, { type: 'init' });

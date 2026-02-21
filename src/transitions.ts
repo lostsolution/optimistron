@@ -45,7 +45,7 @@ export const getTransitionID = (action: TransitionAction) => action.meta[META_KE
 export const isTransition = (action: Action): action is TransitionAction =>
     'meta' in action && typeof action.meta === 'object' && action.meta !== null && META_KEY in action.meta;
 
-/** Checks wether an action is a transition for the supplied namespace */
+/** Checks whether an action is a transition for the supplied namespace */
 export const isTransitionForNamespace = (action: Action, namespace: string): action is TransitionAction =>
     isTransition(action) && action.type.startsWith(`${namespace}::`);
 
@@ -76,7 +76,7 @@ export const toStaged = (action: TransitionAction, update: Partial<Transition> =
         { ...update, operation: Operation.STAGE },
     );
 
-/** Maps a transition to a comitted transition */
+/** Maps a transition to a committed transition */
 export const toCommit = (action: TransitionAction, update: Partial<Transition> = {}): CommittedAction =>
     updateTransition(
         { ...action, type: toType(action.type, Operation.COMMIT) },

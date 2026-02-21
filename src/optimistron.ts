@@ -46,7 +46,7 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
                     const staged = transitions.find((entry) => id === getTransitionID(entry));
                     if (!staged) return next(state, nextTransitions);
 
-                    /* Comitting will apply the action to the reducer */
+                    /* Committing will apply the action to the reducer */
                     return next(boundReducer(transitionState, toCommit(staged)), nextTransitions);
                 }
 
