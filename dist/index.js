@@ -25283,7 +25283,6 @@ var require_cloneDeep = __commonJS((exports, module) => {
 });
 
 // usecases/index.tsx
-var import_react10 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
 // node_modules/react-router-dom/dist/index.js
@@ -30337,6 +30336,11 @@ var sync = createAction("todos::sync");
 
 // usecases/lib/components/graph/TransitionGraph.tsx
 var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
+var GRAPH_COLORS = {
+  committed: "#34d399",
+  optimistic: "#60a5fa",
+  failed: "#f87171"
+};
 var getCommit = (options) => {
   let commit = `	commit  type: ${options.type ?? "NORMAL"}`;
   if (options.tag)
@@ -30373,7 +30377,26 @@ var TransitionGraph = () => {
     const el = ref.current;
     if (el && mermaid) {
       mermaid.initialize({
-        theme: "neutral",
+        theme: "base",
+        themeVariables: {
+          darkMode: true,
+          background: "transparent",
+          primaryColor: "#1c1f2b",
+          primaryTextColor: "#e5e7eb",
+          primaryBorderColor: "#2a2d3a",
+          lineColor: "#353849",
+          git0: GRAPH_COLORS.committed,
+          gitBranchLabel0: "#ffffff",
+          gitInv0: GRAPH_COLORS.failed,
+          git1: GRAPH_COLORS.optimistic,
+          gitBranchLabel1: "#ffffff",
+          gitInv1: GRAPH_COLORS.failed,
+          tagLabelColor: "#9ca3af",
+          tagLabelBackground: "transparent",
+          tagLabelBorder: "#353849",
+          commitLabelColor: "#6b7280",
+          commitLabelBackground: "transparent"
+        },
         gitGraph: {
           mainBranchName: "state",
           rotateCommitLabel: false,
@@ -30403,7 +30426,7 @@ var TransitionGraph = () => {
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("pre", {
         ref,
-        className: "min-h-28 flex items-center"
+        className: "min-h-24 flex items-center"
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
@@ -30412,37 +30435,179 @@ var TransitionGraph = () => {
 // usecases/lib/components/todo/Layout.tsx
 var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
 var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-  className: "relative h-full bg-gray-200",
+  className: "relative h-full",
   children: [
     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-      className: "flex flex-cols absolute w-full top-0 bottom-44 w-full overflow-hidden",
+      className: "flex absolute inset-0 bottom-48 overflow-hidden",
       children: [
         /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "flex-shrink-0 w-1/2 h-full overflow-y-auto bg-gray-100",
-          children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-            className: "h-full",
-            children
-          }, undefined, false, undefined, this)
+          className: "w-1/2 h-full overflow-y-auto bg-surface-1 border-r border-border-subtle",
+          children
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("blockquote", {
-          className: "flex-shrink-0 w-1/2 h-full overflow-y-auto p-4 border-s-4 border-gray-300 bg-gray-50 h-full",
+        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+          className: "w-1/2 h-full overflow-y-auto p-5 bg-surface-0",
           children: [
             /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h1", {
-              className: "text-2xl mb-4",
+              className: "text-lg font-semibold text-white mb-0.5",
               children: title
             }, undefined, false, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("p", {
-              className: "text-sm font-medium leading-relaxed text-gray-900",
-              children: description
-            }, undefined, false, undefined, this)
+              className: "text-xs text-gray-500 mb-5",
+              children: description.subtitle
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("section", {
+              className: "mb-5",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
+                  className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-2",
+                  children: "How it works"
+                }, undefined, false, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("ul", {
+                  className: "text-sm text-gray-400 leading-relaxed space-y-1",
+                  children: description.howItWorks.map((item, i) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
+                    className: "flex gap-2",
+                    children: [
+                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                        className: "text-gray-600 select-none",
+                        children: "›"
+                      }, undefined, false, undefined, this),
+                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                        children: item
+                      }, undefined, false, undefined, this)
+                    ]
+                  }, i, true, undefined, this))
+                }, undefined, false, undefined, this)
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("section", {
+              className: "mb-4",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
+                  className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-1.5",
+                  children: "Try it"
+                }, undefined, false, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("ul", {
+                  className: "text-xs text-gray-500 leading-relaxed space-y-0.5",
+                  children: description.tryIt.map((item, i) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
+                    className: "flex gap-1.5 items-start",
+                    children: [
+                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                        className: "text-gray-700 select-none",
+                        children: "›"
+                      }, undefined, false, undefined, this),
+                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                        children: item
+                      }, undefined, false, undefined, this)
+                    ]
+                  }, i, true, undefined, this))
+                }, undefined, false, undefined, this)
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+              className: "flex items-center justify-center gap-3 text-[10px] font-mono text-gray-600",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
+                      className: "text-blue-400",
+                      children: "opt"
+                    }, undefined, false, undefined, this),
+                    " pending"
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
+                      className: "text-amber-400",
+                      children: "fail"
+                    }, undefined, false, undefined, this),
+                    " error"
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
+                      className: "text-purple-400",
+                      children: "stash"
+                    }, undefined, false, undefined, this),
+                    " reverted"
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
+                      className: "text-red-400",
+                      children: "conflict"
+                    }, undefined, false, undefined, this),
+                    " diverged"
+                  ]
+                }, undefined, true, undefined, this)
+              ]
+            }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this)
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-      className: "absolute bottom-0 w-full p-4 h-44 bg-gray-100 border-t border-gray-300",
-      children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
-    }, undefined, false, undefined, this)
+      className: "absolute bottom-0 inset-x-0 h-48 bg-surface-1 border-t border-border-subtle",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+          className: "flex items-center justify-between px-4 pt-2.5 pb-1",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
+              className: "text-[10px] font-medium uppercase tracking-widest text-gray-600",
+              children: "Transitions"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+              className: "flex gap-3 text-[10px] font-mono",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  style: { color: GRAPH_COLORS.committed },
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      className: "legend-dot",
+                      style: { background: GRAPH_COLORS.committed }
+                    }, undefined, false, undefined, this),
+                    "state"
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  style: { color: GRAPH_COLORS.optimistic },
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      className: "legend-dot",
+                      style: { background: GRAPH_COLORS.optimistic }
+                    }, undefined, false, undefined, this),
+                    "optimistic"
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                  className: "flex items-center gap-1",
+                  style: { color: GRAPH_COLORS.failed },
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      className: "legend-dot",
+                      style: { background: GRAPH_COLORS.failed }
+                    }, undefined, false, undefined, this),
+                    "failed"
+                  ]
+                }, undefined, true, undefined, this)
+              ]
+            }, undefined, true, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+          className: "px-4",
+          children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
+        }, undefined, false, undefined, this)
+      ]
+    }, undefined, true, undefined, this)
   ]
 }, undefined, true, undefined, this);
 
@@ -30453,7 +30618,7 @@ var import_react6 = __toESM(require_react(), 1);
 var import_react3 = __toESM(require_react(), 1);
 
 // usecases/lib/utils/mock-api.ts
-var getMockApiOnline = () => window.__mock_api_online ?? false;
+var getMockApiOnline = () => window.__mock_api_online ?? true;
 var setMockApiOnline = (value) => window.__mock_api_online = value;
 var getMockApiTimeout = () => window.__mock_api_timeout ?? 500;
 var setMockApiTimeout = (value) => window.__mock_api_timeout = value;
@@ -30601,9 +30766,13 @@ var TodoConflict = ({ id }) => {
   const todo = useSelector(selectTodo(id));
   const Tag = todo.done ? "s" : "em";
   return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
-    className: "text-[9px] text-red-300",
+    className: "text-[9px] font-mono text-red-400/60 leading-tight",
     children: [
-      'Conflict : "',
+      /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+        className: "text-red-400/80",
+        children: "conflict"
+      }, undefined, false, undefined, this),
+      ' "',
       /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Tag, {
         children: todo.value
       }, undefined, false, undefined, this),
@@ -30655,46 +30824,67 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("label", {
         htmlFor: id,
-        className: clsx("todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-gray-200", loading && "loading pointer-events-none"),
+        className: clsx("todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-surface-3", loading && "loading pointer-events-none"),
         children: [
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
             onClick: () => handleMutation({ done: !todo.done }),
-            className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-300 text-transparent rounded-full", error && "!border-amber-500 text-amber-500", todo.done && "!text-white !bg-emerald-500 !border-emerald-500", todo.done && error && "!bg-amber-500", loading && "!border-gray-300 !text-gray-500 !bg-transparent"),
+            className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full", error && "!border-amber-500 text-amber-500", todo.done && "!text-white !bg-emerald-500 !border-emerald-500", todo.done && error && "!bg-amber-500", loading && "!border-gray-600 !text-gray-500 !bg-transparent"),
             children: icon
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
             className: "flex-1 mx-4 flex flex-col",
             children: [
-              editable ? /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("input", {
-                type: "text",
-                className: "text-sm",
-                defaultValue: todo.value,
-                autoFocus: true,
-                onBlur: ({ currentTarget }) => {
-                  const value = currentTarget.value;
-                  if (value !== todo.value)
-                    handleMutation({ value });
-                  setEditable(false);
-                },
-                onKeyDown: ({ currentTarget, key }) => {
-                  if (key === "Enter") {
-                    const value = currentTarget.value;
-                    handleMutation({ value });
-                    setEditable(false);
-                  }
-                }
-              }, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-                onClick: () => setEditable(true),
-                className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap", todo.done && "line-through text-gray-500", (failed || stashed) && "jiggle"),
-                children: todo.value
-              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
+                className: "flex items-center gap-2",
+                children: [
+                  editable ? /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("input", {
+                    type: "text",
+                    className: "text-sm flex-1 text-gray-200 bg-transparent focus:outline-none",
+                    defaultValue: todo.value,
+                    autoFocus: true,
+                    onBlur: ({ currentTarget }) => {
+                      const value = currentTarget.value;
+                      if (value !== todo.value)
+                        handleMutation({ value });
+                      setEditable(false);
+                    },
+                    onKeyDown: ({ currentTarget, key }) => {
+                      if (key === "Enter") {
+                        const value = currentTarget.value;
+                        handleMutation({ value });
+                        setEditable(false);
+                      }
+                    }
+                  }, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                    onClick: () => setEditable(true),
+                    className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300", todo.done && "line-through !text-gray-600", loading && "!text-blue-400/70", failed && !conflict && "!text-amber-400 jiggle", conflict && "!text-red-400 jiggle", stashed && !failed && "!text-purple-400 jiggle"),
+                    children: todo.value
+                  }, undefined, false, undefined, this),
+                  loading && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("code", {
+                    className: "text-[8px] font-mono text-blue-400/70",
+                    children: "opt"
+                  }, undefined, false, undefined, this),
+                  failed && !conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("code", {
+                    className: "text-[8px] font-mono text-amber-400",
+                    children: "fail"
+                  }, undefined, false, undefined, this),
+                  conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("code", {
+                    className: "text-[8px] font-mono text-red-400",
+                    children: "conflict"
+                  }, undefined, false, undefined, this),
+                  stashed && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("code", {
+                    className: "text-[8px] font-mono text-purple-400",
+                    children: "stash"
+                  }, undefined, false, undefined, this)
+                ]
+              }, undefined, true, undefined, this),
               conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(TodoConflict, {
                 id: todo.id
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("button", {
-            className: "self-center font-light text-xs text-red-400 hover:opacity-80",
+            className: "self-center font-light text-xs text-gray-600 hover:text-red-400 transition-colors",
             onClick: () => onDelete(todo),
             children: /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Cross, {}, undefined, false, undefined, this)
           }, undefined, false, undefined, this)
@@ -30737,37 +30927,31 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
   return /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(jsx_dev_runtime7.Fragment, {
     children: [
       /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("div", {
-        className: "flex flex-rows gap-2",
-        children: /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("button", {
-          className: "flex items-center w-full h-8 px-2 mt-2 text-sm font-medium rounded",
-          children: [
-            /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("svg", {
-              className: "w-5 h-5 text-gray-400 fill-current",
-              xmlns: "http://www.w3.org/2000/svg",
-              fill: "none",
-              viewBox: "0 0 24 24",
-              stroke: "currentColor",
-              children: /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("path", {
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                strokeWidth: "2",
-                d: "M12 6v6m0 0v6m0-6h6m-6 0H6"
-              }, undefined, false, undefined, this)
-            }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("input", {
-              value,
-              onChange: (e) => setValue(e.target.value),
-              onKeyUp: (e) => e.key === "Enter" && handleAddTodo(value),
-              className: "flex-grow h-8 ml-4 bg-transparent focus:outline-none font-medium",
-              type: "text",
-              placeholder: "add a new task"
+        className: "flex items-center gap-2 px-3 py-2 border-b border-border-subtle",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("svg", {
+            className: "w-3.5 h-3.5 text-gray-600 flex-shrink-0",
+            xmlns: "http://www.w3.org/2000/svg",
+            fill: "none",
+            viewBox: "0 0 24 24",
+            stroke: "currentColor",
+            children: /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("path", {
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              strokeWidth: "2",
+              d: "M12 6v6m0 0v6m0-6h6m-6 0H6"
             }, undefined, false, undefined, this)
-          ]
-        }, undefined, true, undefined, this)
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("hr", {
-        className: "my-2"
-      }, undefined, false, undefined, this),
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("input", {
+            value,
+            onChange: (e) => setValue(e.target.value),
+            onKeyUp: (e) => e.key === "Enter" && handleAddTodo(value),
+            className: "flex-grow h-7 text-sm text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic",
+            type: "text",
+            placeholder: "Add a todo..."
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
       todos.map((todo) => /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(TodoItem, {
         todo,
         onEdit: onEditTodo,
@@ -30780,10 +30964,98 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
 
 // usecases/basic/App.tsx
 var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
-var description = `
-This usecase handles async operations at the component level.
-In the real world you would use some kind of redux async middleware
-to orchestrate your optimistic transitions.`;
+var C = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+  className: "text-emerald-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var O = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+  className: "text-blue-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var F = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+  className: "text-amber-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var X = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+  className: "text-red-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var description = {
+  subtitle: "Component-level async — the simplest optimistic pattern.",
+  howItWorks: [
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        "Component dispatches ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        ", then awaits the API call."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        "On success: ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+          children: "amend"
+        }, undefined, false, undefined, this),
+        " (server ID) → ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(C, {
+          children: "commit"
+        }, undefined, false, undefined, this),
+        ". On failure: ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+          children: "fail"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: "Optimistic state is computed at the selector level — no state copies."
+    }, undefined, false, undefined, this)
+  ],
+  tryIt: [
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        "Add a todo online — appears instantly (",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+          children: "opt"
+        }, undefined, false, undefined, this),
+        "), then ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(C, {
+          children: "commits"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        "Toggle offline, add a todo — it ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+          children: "fails"
+        }, undefined, false, undefined, this),
+        " with a jiggle."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        "Toggle back online — ",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+          children: "failed"
+        }, undefined, false, undefined, this),
+        " todos auto-retry."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+      children: [
+        'Click "Sync API" — observe ',
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(X, {
+          children: "conflict"
+        }, undefined, false, undefined, this),
+        " detection."
+      ]
+    }, undefined, true, undefined, this)
+  ]
+};
 var App = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => {
@@ -31037,67 +31309,67 @@ var MockApiControls = () => {
   const mockApi = useMockApi();
   return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
     children: [
-      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("h2", {
-        className: "text-rg font-bold mb-4",
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("h3", {
+        className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-3",
         children: "Mock API"
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("ul", {
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+        className: "space-y-2.5",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("li", {
-            children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
-              className: "flex w-full items-center mb-2 cursor-pointer align-center justify-between",
-              children: [
-                /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
-                  className: "text-sm font-medium text-gray-400 dark:text-gray-500",
-                  children: "Online"
-                }, undefined, false, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
-                  className: "relative",
-                  children: [
-                    /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
-                      type: "checkbox",
-                      className: "sr-only peer",
-                      checked: mockApi.online,
-                      onChange: mockApi.toggleOnline
-                    }, undefined, false, undefined, this),
-                    /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
-                      className: "w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                    }, undefined, false, undefined, this)
-                  ]
-                }, undefined, true, undefined, this)
-              ]
-            }, undefined, true, undefined, this)
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("li", {
-            children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
-              className: "w-full flex items-center mb-2 cursor-pointer align-center justify-between",
-              children: [
-                /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
-                  className: "text-sm font-medium text-gray-400 dark:text-gray-500",
-                  children: "Response time (ms)"
-                }, undefined, false, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
-                  type: "number",
-                  min: 0,
-                  max: 1e4,
-                  step: 250,
-                  id: "api-timeout",
-                  value: mockApi.timeout,
-                  onChange: (e) => mockApi.setResponseTime(parseInt(e.target.value, 10)),
-                  "aria-describedby": "helper-text-explanation",
-                  className: "border text-gray-800 text-right text-sm font-semibold bg-transparent focus:outline-none pr-6 block",
-                  placeholder: "90210",
-                  required: true
-                }, undefined, false, undefined, this)
-              ]
-            }, undefined, true, undefined, this)
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("li", {
-            children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("button", {
-              onClick: mockApi.sync,
-              className: "bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm w-full text-center py-2 px-4 rounded",
-              children: "Sync API"
-            }, undefined, false, undefined, this)
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
+            className: "flex items-center justify-between cursor-pointer",
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+                className: "text-xs text-gray-400",
+                children: "Online"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+                className: "relative",
+                children: [
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
+                    type: "checkbox",
+                    className: "sr-only peer",
+                    checked: mockApi.online,
+                    onChange: mockApi.toggleOnline
+                  }, undefined, false, undefined, this),
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+                    className: "w-9 h-5 rounded-full bg-surface-3 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"
+                  }, undefined, false, undefined, this)
+                ]
+              }, undefined, true, undefined, this)
+            ]
+          }, undefined, true, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
+            className: "flex items-center justify-between",
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+                className: "text-xs text-gray-400",
+                children: "Latency"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+                className: "flex items-center gap-1",
+                children: [
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
+                    type: "number",
+                    min: 0,
+                    max: 1e4,
+                    step: 250,
+                    value: mockApi.timeout,
+                    onChange: (e) => mockApi.setResponseTime(parseInt(e.target.value, 10)),
+                    className: "w-16 text-right text-xs font-mono text-gray-300 bg-surface-3 border border-border-subtle rounded px-1.5 py-0.5 focus:outline-none focus:border-gray-500"
+                  }, undefined, false, undefined, this),
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+                    className: "text-[10px] text-gray-600",
+                    children: "ms"
+                  }, undefined, false, undefined, this)
+                ]
+              }, undefined, true, undefined, this)
+            ]
+          }, undefined, true, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("button", {
+            onClick: mockApi.sync,
+            className: "w-full text-xs text-gray-400 bg-surface-3 hover:bg-surface-2 border border-border-subtle rounded py-1.5 transition-colors",
+            children: "Sync API"
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this)
@@ -32579,10 +32851,72 @@ var import_react8 = __toESM(require_react(), 1);
 
 // usecases/sagas/App.tsx
 var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
-var description2 = `
-This usecase handles async operations using redux sagas :
-each staging transition is observed and triggers the appropriate
-transition sequence.`;
+var O2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("code", {
+  className: "text-blue-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var F2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("code", {
+  className: "text-amber-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var description2 = {
+  subtitle: "Redux sagas — the most decoupled approach.",
+  howItWorks: [
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: [
+        "Component only dispatches ",
+        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " — that's it."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: [
+        "Saga observes ",
+        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " and drives the full transition lifecycle."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: "Max separation: UI fires intent, saga handles orchestration."
+    }, undefined, false, undefined, this)
+  ],
+  tryIt: [
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: [
+        "Add a todo — component dispatches a single ",
+        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " action."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: [
+        "Toggle offline, add a todo — saga catches the ",
+        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(F2, {
+          children: "failure"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: [
+        "Toggle back online — ",
+        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(F2, {
+          children: "failed"
+        }, undefined, false, undefined, this),
+        " todos auto-retry via saga."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+      children: "Compare to Basic and Thunks — most decoupled pattern."
+    }, undefined, false, undefined, this)
+  ]
+};
 var App2 = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => {
@@ -32790,7 +33124,82 @@ var deleteTodoTunk = (id) => {
 
 // usecases/thunks/App.tsx
 var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
-var description3 = `This usecase handles async operations using async thunks.`;
+var C2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
+  className: "text-emerald-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var O3 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
+  className: "text-blue-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var F3 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
+  className: "text-amber-400 font-mono text-[11px]",
+  children
+}, undefined, false, undefined, this);
+var description3 = {
+  subtitle: "Redux thunks — same lifecycle, cleaner components.",
+  howItWorks: [
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: "Component dispatches a thunk — no direct transition management."
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: [
+        "Thunk handles ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " → API → ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+          children: "amend"
+        }, undefined, false, undefined, this),
+        "/",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(C2, {
+          children: "commit"
+        }, undefined, false, undefined, this),
+        " or ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+          children: "fail"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: "Same optimistic behavior — components are thinner."
+    }, undefined, false, undefined, this)
+  ],
+  tryIt: [
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: [
+        "Add a todo online — same instant ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+          children: "opt"
+        }, undefined, false, undefined, this),
+        ", simpler component code."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: [
+        "Toggle offline, add a todo — thunk catches and dispatches ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+          children: "fail"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: [
+        "Toggle back online — ",
+        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+          children: "failed"
+        }, undefined, false, undefined, this),
+        " todos auto-retry."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+      children: "Compare to Basic — note how much cleaner the component is."
+    }, undefined, false, undefined, this)
+  ]
+};
 var App3 = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => dispatch(createTodoThunk(todo));
@@ -32826,65 +33235,138 @@ var thunks_default = Usecase3;
 // usecases/index.tsx
 var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
 var usecases = [
-  { key: "Home", path: "/", component: import_react10.Fragment },
-  { key: "Basic", path: "/basic", component: basic_default },
-  { key: "Sagas", path: "/sagas", component: sagas_default },
-  { key: "Thunks", path: "/thunks", component: thunks_default }
+  { key: "Basic", path: "/basic", component: basic_default, desc: "Component-level async" },
+  { key: "Thunks", path: "/thunks", component: thunks_default, desc: "Thunk orchestration" },
+  { key: "Sagas", path: "/sagas", component: sagas_default, desc: "Saga-driven lifecycle" }
 ];
-var App4 = () => {
-  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiProvider, {
-    children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(HashRouter, {
-      children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "flex w-full h-screen overflow-hidden",
+var Home = () => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+  className: "flex items-center justify-center h-full",
+  children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+    className: "max-w-sm text-center px-6",
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("h1", {
+        className: "text-2xl font-bold text-white mb-1",
+        children: "Optimistron"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
+        className: "text-xs text-gray-500 uppercase tracking-widest mb-8",
+        children: "Optimistic state for Redux"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-            className: "w-72 h-full overflow-hidden",
-            children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-              className: "relative h-full bg-gray-200",
-              children: [
-                /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-                  className: "absolute top-0 bottom-44 w-full overflow-y-auto p-4",
-                  children: [
-                    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("h2", {
-                      className: "text-lg font-bold mb-4",
-                      children: "Usecases"
-                    }, undefined, false, undefined, this),
-                    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("ul", {
-                      className: "grow mb-4",
-                      children: usecases.map(({ key, path }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("li", {
-                        className: "cursor-pointer",
-                        children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(NavLink, {
-                          to: path,
-                          className: (props) => props.isActive ? "font-bold" : "",
-                          children: key
-                        }, undefined, false, undefined, this)
-                      }, key, false, undefined, this))
-                    }, undefined, false, undefined, this)
-                  ]
-                }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-                  className: "absolute bottom-0 w-full h-44 p-4",
-                  children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
-                }, undefined, false, undefined, this)
-              ]
-            }, undefined, true, undefined, this)
+          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
+            children: [
+              "Optimistic state is ",
+              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                className: "text-gray-200",
+                children: "computed, not stored"
+              }, undefined, false, undefined, this),
+              ". Only ",
+              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
+                className: "text-xs text-emerald-400/80 bg-surface-3 px-1 py-0.5 rounded",
+                children: "commit"
+              }, undefined, false, undefined, this),
+              " mutates reducer state. All other operations modify the transitions list."
+            ]
+          }, undefined, true, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
+            children: [
+              "Think ",
+              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
+                className: "text-xs text-emerald-400/80 bg-surface-3 px-1 py-0.5 rounded",
+                children: "git rebase"
+              }, undefined, false, undefined, this),
+              " — committed state is your main branch, transitions are replayed on top at read-time."
+            ]
+          }, undefined, true, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "p-3 rounded-lg bg-surface-2 border border-border-subtle text-xs text-gray-500 text-left leading-relaxed",
+        children: [
+          "Pick a usecase from the sidebar. Use the ",
+          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+            className: "text-gray-300",
+            children: "Mock API"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-            className: "flex flex-col grow h-full overflow-hidden",
-            children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Routes, {
-              children: usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Route, {
+          " controls to simulate network conditions."
+        ]
+      }, undefined, true, undefined, this)
+    ]
+  }, undefined, true, undefined, this)
+}, undefined, false, undefined, this);
+var App4 = () => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiProvider, {
+  children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(HashRouter, {
+    children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+      className: "flex w-full h-screen overflow-hidden",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+          className: "w-64 flex-shrink-0 h-full flex flex-col bg-surface-1 border-r border-border-subtle",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+              className: "p-4 pb-2",
+              children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(NavLink, {
+                to: "/",
+                className: "block",
+                children: [
+                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("h2", {
+                    className: "text-sm font-bold text-white tracking-tight",
+                    children: "Optimistron"
+                  }, undefined, false, undefined, this),
+                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                    className: "text-[10px] text-gray-600 uppercase tracking-widest",
+                    children: "demos"
+                  }, undefined, false, undefined, this)
+                ]
+              }, undefined, true, undefined, this)
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("nav", {
+              className: "flex-1 px-2 py-2 space-y-0.5 overflow-y-auto",
+              children: usecases.map(({ key, path, desc }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(NavLink, {
+                to: path,
+                className: ({ isActive }) => `block px-3 py-2 rounded-md text-sm transition-colors ${isActive ? "bg-surface-3 text-white" : "text-gray-400 hover:text-gray-200 hover:bg-surface-2"}`,
+                children: [
+                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                    className: "block font-medium",
+                    children: key
+                  }, undefined, false, undefined, this),
+                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                    className: "block text-[11px] text-gray-600",
+                    children: desc
+                  }, undefined, false, undefined, this)
+                ]
+              }, key, true, undefined, this))
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+              className: "p-4 border-t border-border-subtle",
+              children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+          className: "flex flex-col grow h-full overflow-hidden bg-surface-0",
+          children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Routes, {
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Route, {
+                path: "/",
+                Component: Home
+              }, undefined, false, undefined, this),
+              usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Route, {
                 path,
                 Component: component
               }, key, false, undefined, this))
-            }, undefined, false, undefined, this)
-          }, undefined, false, undefined, this)
-        ]
-      }, undefined, true, undefined, this)
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
-};
-var root = import_client.createRoot(document.getElementById("root"));
+            ]
+          }, undefined, true, undefined, this)
+        }, undefined, false, undefined, this)
+      ]
+    }, undefined, true, undefined, this)
+  }, undefined, false, undefined, this)
+}, undefined, false, undefined, this);
+var el = document.getElementById("root");
+var root = import_client.createRoot(el);
 root.render(/* @__PURE__ */ jsx_dev_runtime15.jsxDEV(App4, {}, undefined, false, undefined, this));
+requestAnimationFrame(() => el.classList.add("ready"));
 export {
   App4 as App
 };

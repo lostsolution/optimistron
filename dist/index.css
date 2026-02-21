@@ -1,14 +1,10 @@
 /* usecases/styles.css */
 .todo-item {
-  transition: opacity .25s ease-in-out, background-color .25s ease-in-out;
+  transition: opacity .2s, background-color .2s;
 }
 
 .loading {
-  opacity: .5;
-}
-
-span.item-failed {
-  color: orange;
+  opacity: .4;
 }
 
 @keyframes jiggle {
@@ -17,20 +13,20 @@ span.item-failed {
   }
 
   25% {
-    transform: translateX(-4px);
+    transform: translateX(-3px);
   }
 
   50% {
-    transform: translateX(4px);
+    transform: translateX(3px);
   }
 
   75% {
-    transform: translateX(-4px);
+    transform: translateX(-3px);
   }
 }
 
 .jiggle {
-  animation: jiggle .33s ease-in-out;
+  animation: jiggle .3s ease-in-out;
 }
 
 input[type="number"]::-webkit-outer-spin-button {
@@ -47,4 +43,53 @@ input[type="number"]::-webkit-inner-spin-button {
   height: 100%;
   top: 0;
   right: 0;
+}
+
+.status-badge {
+  letter-spacing: .02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.status-badge--optimistic {
+  color: #60a5fa;
+}
+
+.status-badge--failed {
+  color: #fbbf24;
+}
+
+.status-badge--conflict {
+  color: #f87171;
+}
+
+.status-badge--stashed {
+  color: #c084fc;
+}
+
+.legend-dot {
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+}
+
+pre svg .branch-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+}
+
+pre svg .tag-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+}
+
+pre svg .commit-label {
+  font-size: 9px !important;
 }

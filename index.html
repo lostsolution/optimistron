@@ -3,12 +3,26 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>html,body{background:#0f1117;color:#e5e7eb}*{border-color:#2a2d3a}#root{opacity:0}#root.ready{opacity:1;transition:opacity .1s ease}</style>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            surface: { 0: '#0f1117', 1: '#161820', 2: '#1c1f2b', 3: '#252836' },
+                            border: { subtle: '#2a2d3a', DEFAULT: '#353849' },
+                        },
+                    },
+                },
+            };
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
         <title>Optimistron usecases</title>
         <link rel="stylesheet" href="./dist/styles.css" />
     </head>
-    <body class="h-screen bg-gradient-to-b from-gray-100 to-gray-300">
+    <body class="h-screen bg-surface-0 text-gray-200">
         <div id="root" class="flex items-center justify-center w-screen h-screen font-medium"></div>
         <script src="./dist/index.js" type="module"></script>
     </body>

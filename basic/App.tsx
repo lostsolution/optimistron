@@ -1,16 +1,31 @@
 import { type FC } from 'react';
 import { useDispatch } from 'react-redux';
-import { Layout } from '~usecases/lib/components/todo/Layout';
+import { Layout, type UsecaseDescription } from '~usecases/lib/components/todo/Layout';
 
 import { TodoApp } from '~usecases/lib/components/todo/TodoApp';
 import { createTodo, deleteTodo, editTodo } from '~usecases/lib/store/actions';
 import type { Todo } from '~usecases/lib/store/types';
 import { generateId, simulateAPIRequest } from '~usecases/lib/utils/mock-api';
 
-const description = `
-This usecase handles async operations at the component level.
-In the real world you would use some kind of redux async middleware
-to orchestrate your optimistic transitions.`;
+const C = ({ children }: { children: string }) => <code className="text-emerald-400 font-mono text-[11px]">{children}</code>;
+const O = ({ children }: { children: string }) => <code className="text-blue-400 font-mono text-[11px]">{children}</code>;
+const F = ({ children }: { children: string }) => <code className="text-amber-400 font-mono text-[11px]">{children}</code>;
+const X = ({ children }: { children: string }) => <code className="text-red-400 font-mono text-[11px]">{children}</code>;
+
+const description: UsecaseDescription = {
+    subtitle: 'Component-level async — the simplest optimistic pattern.',
+    howItWorks: [
+        <>Component dispatches <O>stage</O>, then awaits the API call.</>,
+        <>On success: <O>amend</O> (server ID) → <C>commit</C>. On failure: <F>fail</F>.</>,
+        <>Optimistic state is computed at the selector level — no state copies.</>,
+    ],
+    tryIt: [
+        <>Add a todo online — appears instantly (<O>opt</O>), then <C>commits</C>.</>,
+        <>Toggle offline, add a todo — it <F>fails</F> with a jiggle.</>,
+        <>Toggle back online — <F>failed</F> todos auto-retry.</>,
+        <>Click "Sync API" — observe <X>conflict</X> detection.</>,
+    ],
+};
 
 export const App: FC = () => {
     const dispatch = useDispatch();

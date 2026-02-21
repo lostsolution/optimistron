@@ -22,8 +22,8 @@ const TodoConflict: FC<{ id: string }> = ({ id }) => {
     const Tag: keyof JSX.IntrinsicElements = todo.done ? 's' : 'em';
 
     return (
-        <div className="text-[9px] text-red-300">
-            Conflict : "<Tag>{todo.value}</Tag>"
+        <div className="text-[9px] font-mono text-red-400/60 leading-tight">
+            <span className="text-red-400/80">conflict</span> "<Tag>{todo.value}</Tag>"
         </div>
     );
 };
@@ -64,61 +64,70 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
             <label
                 htmlFor={id}
                 className={clsx(
-                    'todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-gray-200',
+                    'todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-surface-3',
                     loading && 'loading pointer-events-none',
                 )}
             >
                 <span
                     onClick={() => handleMutation({ done: !todo.done })}
                     className={clsx(
-                        'todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-300 text-transparent rounded-full',
+                        'todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full',
                         error && '!border-amber-500 text-amber-500',
                         todo.done && '!text-white !bg-emerald-500 !border-emerald-500',
                         todo.done && error && '!bg-amber-500',
-                        loading && '!border-gray-300 !text-gray-500 !bg-transparent',
+                        loading && '!border-gray-600 !text-gray-500 !bg-transparent',
                     )}
                 >
                     {icon}
                 </span>
 
                 <div className="flex-1 mx-4 flex flex-col">
-                    {editable ? (
-                        <input
-                            type="text"
-                            className="text-sm"
-                            defaultValue={todo.value}
-                            autoFocus
-                            onBlur={({ currentTarget }) => {
-                                const value = currentTarget.value;
-                                if (value !== todo.value) handleMutation({ value });
-
-                                setEditable(false);
-                            }}
-                            onKeyDown={({ currentTarget, key }) => {
-                                if (key === 'Enter') {
+                    <div className="flex items-center gap-2">
+                        {editable ? (
+                            <input
+                                type="text"
+                                className="text-sm flex-1 text-gray-200 bg-transparent focus:outline-none"
+                                defaultValue={todo.value}
+                                autoFocus
+                                onBlur={({ currentTarget }) => {
                                     const value = currentTarget.value;
-                                    handleMutation({ value });
+                                    if (value !== todo.value) handleMutation({ value });
+
                                     setEditable(false);
-                                }
-                            }}
-                        />
-                    ) : (
-                        <span
-                            onClick={() => setEditable(true)}
-                            className={clsx(
-                                'todo--value hoverable flex-1 text-sm truncate text-nowrap',
-                                todo.done && 'line-through text-gray-500',
-                                (failed || stashed) && 'jiggle',
-                            )}
-                        >
-                            {todo.value}
-                        </span>
-                    )}
+                                }}
+                                onKeyDown={({ currentTarget, key }) => {
+                                    if (key === 'Enter') {
+                                        const value = currentTarget.value;
+                                        handleMutation({ value });
+                                        setEditable(false);
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <span
+                                onClick={() => setEditable(true)}
+                                className={clsx(
+                                    'todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300',
+                                    todo.done && 'line-through !text-gray-600',
+                                    loading && '!text-blue-400/70',
+                                    failed && !conflict && '!text-amber-400 jiggle',
+                                    conflict && '!text-red-400 jiggle',
+                                    stashed && !failed && '!text-purple-400 jiggle',
+                                )}
+                            >
+                                {todo.value}
+                            </span>
+                        )}
+                        {loading && <code className="text-[8px] font-mono text-blue-400/70">opt</code>}
+                        {failed && !conflict && <code className="text-[8px] font-mono text-amber-400">fail</code>}
+                        {conflict && <code className="text-[8px] font-mono text-red-400">conflict</code>}
+                        {stashed && <code className="text-[8px] font-mono text-purple-400">stash</code>}
+                    </div>
                     {conflict && <TodoConflict id={todo.id} />}
                 </div>
 
                 <button
-                    className="self-center font-light text-xs text-red-400 hover:opacity-80"
+                    className="self-center font-light text-xs text-gray-600 hover:text-red-400 transition-colors"
                     onClick={() => onDelete(todo)}
                 >
                     <Cross />

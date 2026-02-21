@@ -1,37 +1,36 @@
+/** Transitions */
 .todo-item {
     transition:
-        opacity 0.25s ease-in-out,
-        background-color 0.25s ease-in-out;
+        opacity 0.2s ease,
+        background-color 0.2s ease;
 }
 
 .loading {
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
-span.item-failed {
-    color: orange;
-}
-
+/** Jiggle animation for failed/stashed */
 @keyframes jiggle {
     0%,
     100% {
         transform: translateX(0);
     }
     25% {
-        transform: translateX(-4px);
+        transform: translateX(-3px);
     }
     50% {
-        transform: translateX(4px);
+        transform: translateX(3px);
     }
     75% {
-        transform: translateX(-4px);
+        transform: translateX(-3px);
     }
 }
 
 .jiggle {
-    animation: jiggle 0.33s ease-in-out;
+    animation: jiggle 0.3s ease-in-out;
 }
 
+/** Number input spinners */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
     position: absolute;
@@ -39,4 +38,45 @@ input[type='number']::-webkit-inner-spin-button {
     top: 0;
     right: 0;
     height: 100%;
+}
+
+/** Status badges — tiny mono color-coded labels */
+.status-badge {
+    font-size: 8px;
+    font-weight: 500;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.status-badge--optimistic { color: #60a5fa; }
+.status-badge--failed { color: #fbbf24; }
+.status-badge--conflict { color: #f87171; }
+.status-badge--stashed { color: #c084fc; }
+
+/** Graph legend dots */
+.legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/** Mermaid SVG overrides — tighter, smaller labels */
+pre svg .branch-label {
+    font-size: 10px !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+    font-weight: 500 !important;
+}
+
+pre svg .tag-label {
+    font-size: 9px !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+    font-weight: 500 !important;
+}
+
+pre svg .commit-label {
+    font-size: 9px !important;
 }
