@@ -30237,6 +30237,8 @@ var selectOptimistic = (selector) => (state) => {
   const boundReducer = ReducerMap.get(state[REDUCER_KEY]);
   if (!boundReducer)
     return selector(state);
+  if (!state.transitions.length)
+    return selector(state);
   const optimisticState = state.transitions.reduce((acc, transition) => {
     acc.state = boundReducer(acc, toCommit(transition));
     return acc;
