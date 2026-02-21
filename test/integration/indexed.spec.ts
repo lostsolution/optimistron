@@ -5,7 +5,7 @@ import { ReducerMap } from '~reducer';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic, selectOptimistic } from '~selectors';
 import { buildTransitionState } from '~state';
 import type { TestIndexedState } from '~test/utils';
-import { create, createItem, edit, indexedState, reducer, selectState, throwAction } from '~test/utils';
+import { create, createItem, edit, indexedState, reducer, remove, selectState, sync, throwAction } from '~test/utils';
 import { toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
@@ -152,6 +152,75 @@ describe('optimistron', () => {
         expect(state.transitions).toStrictEqual([]);
         expect(warn).toHaveBeenCalledTimes(1);
         warn.mockRestore();
+    });
+
+    describe('delete', () => {
+        const item = createItem();
+        const updatedItem = { ...item, revision: 2, value: 'server-updated' };
+
+        const stage = remove.stage(item.id, item.id);
+        const fail = remove.fail(item.id, new Error());
+        const stash = remove.stash(item.id);
+        const commit = remove.commit(item.id);
+
+        const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, [], 'test');
+        const state = optimisticReducer(initial, stage);
+
+        describe('stage', () => {
+            test('should stage transition without modifying state', () => {
+                expect(state.state).toStrictEqual(initial.state);
+                expect(state.transitions).toStrictEqual([stage]);
+                expect(selectOptimistic(selectState)(state)).toEqual({});
+                expect(selectIsOptimistic(item.id)(state)).toBe(true);
+                expect(selectIsFailed(item.id)(state)).toBe(false);
+                expect(selectIsConflicting(item.id)(state)).toBe(false);
+            });
+
+            test('commit', () => {
+                const next = optimisticReducer(state, commit);
+
+                expect(next.state).toStrictEqual({});
+                expect(next.transitions).toStrictEqual([]);
+                expect(selectOptimistic(selectState)(next)).toEqual({});
+                expect(selectIsOptimistic(item.id)(next)).toBe(false);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('stash', () => {
+                const next = optimisticReducer(state, stash);
+
+                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.transitions).toStrictEqual([]);
+                expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: item });
+                expect(selectIsOptimistic(item.id)(next)).toBe(false);
+                expect(selectIsFailed(item.id)(next)).toBe(false);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('fail', () => {
+                const next = optimisticReducer(state, fail);
+
+                expect(next.state).toStrictEqual(initial.state);
+                expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
+                expect(selectOptimistic(selectState)(next)).toEqual({});
+                expect(selectIsOptimistic(item.id)(next)).toBe(true);
+                expect(selectIsFailed(item.id)(next)).toBe(true);
+                expect(selectIsConflicting(item.id)(next)).toBe(false);
+            });
+
+            test('noop: delete item already deleted server-side', () => {
+                /** Simulate server deleting the item via a non-transition action
+                 * (e.g., websocket sync) while a delete is staged. The pending
+                 * delete replays as a noop (item gone) and gets discarded. */
+                const next = optimisticReducer(state, sync({}));
+
+                expect(next.state).toStrictEqual({});
+                expect(next.transitions).toStrictEqual([]);
+                expect(selectOptimistic(selectState)(next)).toEqual({});
+                expect(selectIsOptimistic(item.id)(next)).toBe(false);
+            });
+        });
     });
 
     describe('update', () => {

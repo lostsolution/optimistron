@@ -17,6 +17,8 @@ export const createItem = (data?: Partial<TestItem>): TestItem => ({
 /** testing actions */
 export const create = createTransitions('test::add')((item: TestItem) => ({ payload: { item } }));
 export const edit = createTransitions('test::edit')((item: TestItem) => ({ payload: { item } }));
+export const remove = createTransitions('test::remove')((itemId: string) => ({ payload: { itemId } }));
+export const sync = (items: TestIndexedState) => ({ type: 'sync', payload: { items } });
 export const throwAction = { type: 'throw ' };
 
 export const selectState = ({ state }: TransitionState<TestIndexedState>) => state;
@@ -31,13 +33,15 @@ export const indexedState = indexedStateFactory<TestItem>({
     eq: (a: TestItem) => (b: TestItem) => a.id === b.id && a.value === b.value,
 });
 
-export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: string, item: TestItem], never> = (
+export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: string, item: TestItem], [itemId: string]> = (
     handler,
     action,
 ) => {
     if (action.type === throwAction.type) throw new Error('test error');
+    if (action.type === 'sync') return (action as ReturnType<typeof sync>).payload.items;
     if (create.match(action)) return handler.create(action.payload.item);
     if (edit.match(action)) return handler.update(action.payload.item.id, action.payload.item);
+    if (remove.match(action)) return handler.remove(action.payload.itemId);
 
     return handler.getState();
 };
