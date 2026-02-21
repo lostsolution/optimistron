@@ -97,20 +97,20 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
             if (matchIdx === -1 && operation === Operation.AMEND) return transitions;
 
             const stage = toStaged(transition, operation === Operation.AMEND ? getTransitionMeta(existing) : {});
+
+            /** New transition: append without intermediate copy */
+            if (matchIdx === -1) return [...transitions, stage];
+
+            /** Existing transition: copy and replace in-place */
             const nextTransitions = [...transitions];
+            const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
 
-            if (matchIdx !== -1) {
-                const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
-
-                /* When dedupe mode is set to `TRAILING`, store the previous transition as a
-                 * trailing transition. This helps in handling reversion to the previous
-                 * transition when stashing the current one. */
-                if (dedupe === DedupeMode.TRAILING) {
-                    nextTransitions[matchIdx] = updateTransition(stage, { trailing });
-                } else nextTransitions[matchIdx] = stage;
-
-                /* new transition */
-            } else nextTransitions.push(stage);
+            /* When dedupe mode is set to `TRAILING`, store the previous transition as a
+             * trailing transition. This helps in handling reversion to the previous
+             * transition when stashing the current one. */
+            if (dedupe === DedupeMode.TRAILING) {
+                nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+            } else nextTransitions[matchIdx] = stage;
 
             return nextTransitions;
         }
