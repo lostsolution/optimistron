@@ -20,6 +20,8 @@ export const optimistron = <S, C extends any[], U extends any[], D extends any[]
     reducer: HandlerReducer<S, C, U, D>,
     options?: { sanitizeAction: <T extends Action>(action: T) => T },
 ): Reducer<TransitionState<S>> => {
+    if (!namespace) throw new Error('optimistron: namespace cannot be empty');
+
     const bindState = bindStateFactory<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
 
