@@ -1,8 +1,16 @@
-import type { FC } from 'react';
+import { type FC, useCallback, useState } from 'react';
 import { useMockApi } from '~usecases/lib/components/mocks/MockApiProvider';
 
 export const MockApiControls: FC = () => {
     const mockApi = useMockApi();
+    const [syncing, setSyncing] = useState(false);
+
+    const handleSync = useCallback(() => {
+        if (syncing) return;
+        setSyncing(true);
+        mockApi.sync();
+        setTimeout(() => setSyncing(false), mockApi.timeout);
+    }, [syncing, mockApi]);
 
     return (
         <div>
@@ -17,7 +25,7 @@ export const MockApiControls: FC = () => {
                             checked={mockApi.online}
                             onChange={mockApi.toggleOnline}
                         />
-                        <div className="w-9 h-5 rounded-full bg-surface-3 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
+                        <div className="w-9 h-5 rounded-full bg-surface-3 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white peer-checked:after:translate-x-full after:rounded-full after:h-4 after:w-4 after:transition-all" />
                     </div>
                 </label>
 
@@ -38,10 +46,11 @@ export const MockApiControls: FC = () => {
                 </label>
 
                 <button
-                    onClick={mockApi.sync}
-                    className="w-full text-xs text-gray-400 bg-surface-3 hover:bg-surface-2 border border-border-subtle rounded py-1.5 transition-colors"
+                    onClick={handleSync}
+                    disabled={syncing}
+                    className="w-full text-xs text-gray-400 bg-surface-3 hover:bg-surface-2 disabled:opacity-50 disabled:pointer-events-none border border-border-subtle rounded py-1.5 transition-colors"
                 >
-                    Sync API
+                    {syncing ? 'Syncing…' : 'Sync API'}
                 </button>
             </div>
         </div>

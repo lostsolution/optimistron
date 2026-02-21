@@ -49,12 +49,12 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
                     </ul>
                 </section>
 
-                <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-gray-600">
-                    <span className="flex items-center gap-1"><code className="text-blue-400">opt</code> pending</span>
-                    <span className="flex items-center gap-1"><code className="text-amber-400">fail</code> error</span>
-                    <span className="flex items-center gap-1"><code className="text-purple-400">stash</code> reverted</span>
-                    <span className="flex items-center gap-1"><code className="text-red-400">conflict</code> diverged</span>
-                </div>
+                <ul className="text-[10px] font-mono text-gray-600 space-y-0.5">
+                    <li className="flex items-center gap-1"><code className="text-blue-400">optimistic</code> pending</li>
+                    <li className="flex items-center gap-1"><code className="text-amber-400">fail</code> error</li>
+                    <li className="flex items-center gap-1"><code className="text-purple-400">stash</code> reverted</li>
+                    <li className="flex items-center gap-1"><code className="text-red-400">conflict</code> diverged</li>
+                </ul>
             </div>
         </div>
 
