@@ -30219,6 +30219,12 @@ var removeListener = Object.assign(createAction(`${alm}/remove`), {
 });
 var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
 
+// src/logger.ts
+var warn = (...args) => {
+  if (true)
+    console.warn(...args);
+};
+
 // src/reducer.ts
 var ReducerMap = new Map;
 var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
@@ -30237,7 +30243,7 @@ var selectOptimistic = (selector) => (state) => {
     }, Object.assign({}, state));
     return selector(optimisticState);
   } catch (error) {
-    console.warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
+    warn(`selectOptimistic: error replaying transitions for "${state[REDUCER_KEY]}"`, error);
     return selector(state);
   }
 };
@@ -31178,7 +31184,7 @@ var optimistron = (namespace, initialState, handler, reducer, options) => {
         }
         return next(boundReducer(transitionState, action), transitions);
       } catch (error) {
-        console.warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+        warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
         return next(state, transitions);
       }
     })();
