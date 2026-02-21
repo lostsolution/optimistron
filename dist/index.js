@@ -27604,15 +27604,14 @@ var processTransition = (transition, transitions) => {
       if (matchIdx === -1 && operation === "amend" /* AMEND */)
         return transitions;
       const stage = toStaged(transition, operation === "amend" /* AMEND */ ? getTransitionMeta(existing) : {});
+      if (matchIdx === -1)
+        return [...transitions, stage];
       const nextTransitions = [...transitions];
-      if (matchIdx !== -1) {
-        const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
-        if (dedupe === 1 /* TRAILING */) {
-          nextTransitions[matchIdx] = updateTransition(stage, { trailing });
-        } else
-          nextTransitions[matchIdx] = stage;
+      const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
+      if (dedupe === 1 /* TRAILING */) {
+        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
       } else
-        nextTransitions.push(stage);
+        nextTransitions[matchIdx] = stage;
       return nextTransitions;
     }
     case "fail" /* FAIL */: {
