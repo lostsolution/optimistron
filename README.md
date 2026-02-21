@@ -1,142 +1,254 @@
-# 🧙‍♂️ Optimistron
+# Optimistron
 
-Optimistron is a _(very)_ opinionated library designed to simplify optimistic state management in _(certain)_ Redux applications. It enables you to _(almost seamlessly)_ handle optimistic actions within your reducers without the need for creating separate copies of your state. _Spoiler alert: it may not fit your needs.._
+Opinionated optimistic state management for Redux. Transitions are tracked alongside reducer state and applied through selectors — like a `git rebase` — avoiding separate state copies entirely.
 
-## 🧐 How does it work ?
+## How it works
 
-Optimistron introduces the concept of _"transitions"_ to manage optimistic actions (essentially transitions are just actions with extra metadata). These transitions are tracked alongside your reducer's state. Until these transitions are _"committed"_, they are applied to your reducer only through selectors. This eliminates the need to keep a separate copy of the state as a checkpoint, which is a common practice in other optimistic state management libraries.
+Instead of cloning your state for rollback, Optimistron wraps your reducer to track **transitions** — actions with metadata that describe pending optimistic operations. Committed state is your source of truth; optimistic state is **derived** at read-time by replaying transitions on top of it.
 
-Transitions are comprised of five operations:
+```
+                    ┌─────────────────────────────┐
+                    │         Redux Store         │
+                    │                             │
+                    │     state: { a: 1, b: 2 }   │
+                    │     transitions: [T1, T2]   │
+                    │                             │
+                    └─────────────┬───────────────┘
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+        dispatch()          dispatch()         selectOptimistic()
+        stage/amend         commit/stash         ┌───────────┐
+             │                    │              │  replay   │
+             │                    │              │  T1, T2   │
+             ▼                    ▼              │  on state │
+      ┌──────────────┐   ┌───────────────┐       └─────┬─────┘
+      │  transitions │   │    state      │             │
+      │  list updated│   │    updated    │             ▼
+      │  (no state   │   │  + transition │     optimistic view
+      │   mutation)  │   │    removed    │      (never stored)
+      └──────────────┘   └───────────────┘
+```
 
--   `STAGE`: The action is added to the transition list.
--   `AMEND`: The action is amended from the transition list.
--   `STASH`: The action is removed from the transition list.
--   `FAIL`: The action is marked as having encountered some failure or error.
--   `COMMIT`: The action is removed from the transition list and applied to the wrapped reducer.
+### Transition lifecycle
 
-**Optimistic state is inferred through selectors**, where transitions are played on the current state, much like a _git rebase_. This means that actions are constantly _"rebased"_ on top of the latest state, which can lead to conflicts and noops.
+A transition moves through operations that mirror async request states:
 
-Depending on how you structure your state, applying an action on top of a particular state may result in a no-op or an error (ie: editing or deleting a non-existing item). To mitigate this, state changes are controlled by a custom **state handler** that restrains these updates to the most granular operations possible _(more on this later)_. This requires the implementation of a "merging" function on the handler, which is used to detect potential issues. As a result, the library ensures that your optimistic transitions are _nearly_ conflict-free. Transitions that result in errors or no-ops are simply **discarded**. That being said, in certain cases, you may also want to let the user resolve conflicts.
+```
+  STAGE ──→ COMMIT     (happy path: stage optimistically, commit on success)
+    │
+    ├─────→ AMEND      (update the staged transition before committing)
+    │
+    ├─────→ FAIL       (flag as failed — keep in list for retry/UI feedback)
+    │
+    └─────→ STASH      (remove from list — revert to trailing if TRAILING dedupe)
+```
 
-## ❓ When to use it
+| Operation | Effect on state    | Effect on transitions            |
+| --------- | ------------------ | -------------------------------- |
+| `STAGE`   | None               | Adds to list                     |
+| `AMEND`   | None               | Replaces in list                 |
+| `COMMIT`  | Applies to reducer | Removes from list                |
+| `FAIL`    | None               | Flags as failed                  |
+| `STASH`   | None               | Removes (or reverts to trailing) |
 
--   When you are using sagas, thunks, or any kind of async redux middleware in which you compose actions around async operations
--   When you need to optimistically show the result of an asynchronous operation in your UI.
--   When this async operation may fail and you would like to give your user the ability to retry.
--   When you want to support some kind of _offline mode_ by leveraging optimistic failures
--   When your state updates can be modelled around a simple _CRUD interface_.
+Key insight: **only `COMMIT` mutates state**. All other operations only modify the transitions list. The optimistic view is always computed, never stored.
 
-## 🪖 Rules of transitions
+### Sanitization
 
--   Transitions should have unique identifiers that you can use to map back to your entities. (In most cases, just use your entity's identifier as a the transition id).
--   One entity should never have multiple transitions at the same time. This is already enforced in the internal `processTransition` function but depending on how you model your transition identifiers, we may not be able to enforce this rule. This essentially means that before starting a new transition on one of your entities, ensure there are no ongoing ones.
--   Keep transition effects on state as granular as possible.
+After every state mutation, transitions are **replayed** against the new state to detect:
 
-## 🏗️ Getting Started
+- **No-ops**: a transition whose effect is already reflected in state (e.g., editing an item that was deleted server-side) — **discarded**
+- **Conflicts**: a transition that conflicts with the current state (e.g., editing an item whose revision moved ahead) — **flagged**
 
-> to see full examples, checkout the `usecases/` folder of the repository. It includes usages with common async redux middlewares.
+This runs on every reducer call, gated by referential equality (`===`) to skip when state hasn't changed.
 
-### 1️⃣ Define Transitions
+```
+  State mutated?
+       │
+       ├─ No  → skip sanitization
+       │
+       └─ Yes → for each transition:
+                   │
+                   ├─ apply as-if-committed
+                   │     │
+                   │     ├─ no effect?  → discard (no-op)
+                   │     │
+                   │     ├─ merge OK?   → keep
+                   │     │
+                   │     └─ merge throws?
+                   │           │
+                   │           ├─ SKIP     → discard
+                   │           └─ CONFLICT → keep + flag
+                   │
+                   └─ return sanitized transitions
+```
 
-> ❗️ Each transition has a _unique identifier_ : for most use cases, you should use your entity's identifier as the transition id. This effectively allows coupling a transition to a specific item in order to derive optimistic state.
+## Concepts
 
-To get started with Optimistron, you need to define transitions for your actions. Make sure to namespace them correctly :
+### TransitionState\<T\>
+
+Wraps your state `T` with a `transitions` list and a namespace key. Both internal fields are **non-enumerable** — your state spreads cleanly and serializers ignore them.
 
 ```typescript
+type TransitionState<T> = {
+    state: T;
+    transitions: StagedAction[]; // non-enumerable
+    [REDUCER_KEY]: string; // non-enumerable
+};
+```
+
+### StateHandler
+
+Defines granular CRUD + merge operations for your state shape. The `merge` function is the core of conflict detection — it compares "as-if-committed" state against current state and throws `OptimisticMergeResult.SKIP` or `CONFLICT` when appropriate.
+
+```typescript
+interface StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
+    create: (state: State, ...args: CreateParams) => State;
+    update: (state: State, ...args: UpdateParams) => State;
+    remove: (state: State, ...args: DeleteParams) => State;
+    merge: (current: State, incoming: State) => State;
+}
+```
+
+The reducer never touches state directly — it operates through a **bound state handler** that closes over the current state:
+
+```typescript
+({ getState, create, update, remove }, action) => {
+    if (addItem.match(action)) return create(action.payload.item);
+    return getState();
+};
+```
+
+### IndexedState
+
+Built-in `StateHandler` for `Record<string, T>` — the most common shape for entity collections. Handles create/update/delete with automatic no-op detection and merge conflict resolution via curried `compare` and `eq` functions:
+
+```typescript
+const handler = indexedStateFactory<Todo>({
+    itemIdKey: 'id',
+    compare: (a) => (b) => (a.revision > b.revision ? 1 : a.revision < b.revision ? -1 : 0),
+    eq: (a) => (b) => a.value === b.value && a.done === b.done,
+});
+```
+
+- `compare` determines ordering — if incoming < existing, it's a **conflict** (stale update)
+- `eq` determines equality — if items compare equal but aren't `eq`, it's a **conflict** (concurrent edit)
+- If incoming > existing, it's a valid update
+- If the transition has no effect, it's a **no-op** and gets discarded
+
+### Dedupe modes
+
+When staging a transition with the same ID as an existing one:
+
+- `OVERWRITE` (default): replaces the existing transition
+- `TRAILING`: replaces but stores the previous transition as a fallback — on `STASH`, reverts to the trailing transition instead of removing entirely
+
+## Usage
+
+### 1. Define transitions
+
+```typescript
+import { createTransitions, DedupeMode } from '@lostsolution/optimistron';
+
 const createTodo = createTransitions('todos::add')((todo: Todo) => ({ payload: { todo } }));
-const editTodo = createTransitions('todos::edit')((id: string, update: Todo) => ({ payload: { id, update } }));
-
-const deleteTodo = createTransitions(
-    'todos::delete',
-    TransitionDedupeMode.TRAILING,
-)((id: string) => ({ payload: { id } }));
+const editTodo = createTransitions('todos::edit')((id: string, todo: Todo) => ({ payload: { id, todo } }));
+const deleteTodo = createTransitions('todos::delete', DedupeMode.TRAILING)((id: string) => ({ payload: { id } }));
 ```
 
-This will essentially give you a set of transitions for you to dispatch.
+Each returns `{ stage, amend, commit, fail, stash, match }` — action creators for each operation plus a matcher that matches only `COMMIT` actions (for use in your reducer).
+
+### 2. Create an optimistic reducer
 
 ```typescript
-const transitionId = 'some-entity-id';
-createTodo.stage(transitionId, todo);
-createTodo.amend(transitionId);
-createTodo.commit(transitionId);
-createTodo.stash(transitionId);
-createTodo.fail(transitionId);
-```
+import { optimistron, indexedStateFactory } from '@lostsolution/optimistron';
 
-> ❗️ If you need to customize the underlying transition action preparators, you can pass a configuration object to `createTransitions`.
-
-### 2️⃣ Create an Optimistic Reducer
-
-Next, create an optimistic reducer :
-
--   Define which transition namespace this reducer will react to (this does not mean your reducer cannot react to other types of actions)
--   Use one of the provided state handler factories (or create your own) to wrap your state
--   Leverage the transition's matching function to update your state
-
-```typescript
-export const todosReducer = optimistron(
-    'todos',
-    initial,
-    indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }) // see section about state handlers
+const todos = optimistron(
+    'todos', // namespace
+    initialState, // initial state
+    indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }), // state handler
     ({ getState, create, update, remove }, action) => {
+        // reducer
         if (createTodo.match(action)) return create(action.payload.todo);
-        if (editTodo.match(action)) return update(action.payload.id, action.payload.update);
+        if (editTodo.match(action)) return update(action.payload.id, action.payload.todo);
         if (deleteTodo.match(action)) return remove(action.payload.id);
         return getState();
     },
 );
 ```
 
-### 3️⃣ Dispatch Optimistic Transitions
+The reducer receives a **bound state handler** — not the raw state. This ensures all mutations go through the handler's CRUD operations, keeping them granular and mergeable.
 
-Now you can dispatch optimistic transitions like this:
-
-```typescript
-/* here we are creating an optimisticId that will be both
- * used as the transitionId and the todo's temporary id */
-const optimisticId = 'e29b-41d4-a716';
-
-dispatch(
-    createTodo.stage(optimisticId, {
-        id: optimisticId,
-        value: 'Do groceries',
-        done: false,
-        revision: 0,
-    }),
-);
-```
-
-Now, depending on how you orchestrate your async operations (thunks, sagas etc..), you can resolve the staged transition. Essentially, state will only be updated once a transition is committed.
+### 3. Dispatch transitions
 
 ```typescript
-/* resolve the transitionId or just read
- * `action.payload.todo.id` in this case */
-const transitionId = getTransitionMeta(action).id;
+// Stage optimistically (UI updates immediately via selectors)
+dispatch(createTodo.stage(transitionId, newTodo));
 
 try {
-    const result = await createTodoAPICall(action.payload.todo);
-    dispatch(createTodo.commit(transitionId, result));
-} catch (_) {
-    dispatch(createTodo.fail(transitionId));
-    /* `dispatch(createTodo.stash(transitionId));` */
+    const result = await api.createTodo(newTodo);
+    // Amend with server response (e.g., real ID), then commit
+    dispatch(createTodo.amend(transitionId, { ...newTodo, id: result.id }));
+    dispatch(createTodo.commit(transitionId));
+} catch (error) {
+    dispatch(createTodo.fail(transitionId, error));
+    // or: dispatch(createTodo.stash(transitionId)); to silently revert
 }
 ```
 
-### 4️⃣ Access Optimistic State
-
-Access optimistic state using selectors :
+### 4. Read optimistic state
 
 ```typescript
-export const selectOptimisticTodos = createSelector(
-    (state: State) => state.todos,
+import { createSelector } from '@reduxjs/toolkit';
+import { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } from '@lostsolution/optimistron';
+
+// Derive the optimistic view — transitions replayed on committed state
+const selectTodos = createSelector(
+    (state: RootState) => state.todos,
     selectOptimistic((todos) => Object.values(todos.state)),
 );
+
+// Per-entity optimistic status (uses transitionId === entityId pattern)
+const selectTodoStatus = (id: string) =>
+    createSelector(
+        (state: RootState) => state.todos,
+        (todos) => ({
+            optimistic: selectIsOptimistic(id)(todos),
+            failed: selectIsFailed(id)(todos),
+            conflicting: selectIsConflicting(id)(todos),
+        }),
+    );
 ```
 
-Available selectors :
+`selectOptimistic` replays transitions on every call — wrap with `createSelector` for memoization.
 
--   `selectOptimistic` : given a selector function acting on an _optimistron_ state, will return its result over the state as if transitions were committed
--   `selectIsOptimistic` : given a _transitionId_, checks wether it is in our state's transition list. By coupling the _transitionId_ to your _entity's identifier_, you can essentially derive optimistic state at the entity level.
--   `selectIsFailed` : similar to _selectIsOptimistic_ but checks if the transition has failed
--   `selectIsConflicting` : similar to _selectIsOptimistic_ but checks if the transition is conflicting
--   `selectFailedAction` : given a _transitionId_, spits back the original failed action if any
+## Rules of transitions
+
+1. **Unique IDs**: transition IDs should map 1:1 to your entities — typically just the entity ID
+2. **One transition per entity**: don't stage a new transition while one is pending for the same ID
+3. **Granular effects**: keep transition actions as fine-grained as possible — one create, one update, one delete
+
+## When to use
+
+- Async Redux middleware (sagas, thunks) with optimistic UI
+- Retry-able operations with failure states
+- Offline-first patterns leveraging optimistic failures
+- State that maps to CRUD operations on indexed collections
+
+## Install
+
+```
+npm install @lostsolution/optimistron
+```
+
+Peer dependencies: `@reduxjs/toolkit ^2.1.0`, `redux ^5.0.1`
+
+## Development
+
+```bash
+bun test              # run tests (coverage threshold 90%)
+bun run build:esm     # build to lib/
+```
+
+See `usecases/` for full examples with thunks and sagas.
