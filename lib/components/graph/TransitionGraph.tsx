@@ -64,11 +64,11 @@ export const TransitionGraph: FC = () => {
                     primaryTextColor: '#e5e7eb',
                     primaryBorderColor: '#2a2d3a',
                     lineColor: '#353849',
-                    /** state branch = committed green */
+                    /** state branch = committed green, highlight = also green (merge point) */
                     git0: GRAPH_COLORS.committed,
                     gitBranchLabel0: '#ffffff',
-                    gitInv0: GRAPH_COLORS.failed,
-                    /** optimistic branch = blue */
+                    gitInv0: GRAPH_COLORS.committed,
+                    /** optimistic branch = blue, inverse = red (only used for REVERSE = actual failures) */
                     git1: GRAPH_COLORS.optimistic,
                     gitBranchLabel1: '#ffffff',
                     gitInv1: GRAPH_COLORS.failed,

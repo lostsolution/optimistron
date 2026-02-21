@@ -30387,7 +30387,7 @@ var TransitionGraph = () => {
           lineColor: "#353849",
           git0: GRAPH_COLORS.committed,
           gitBranchLabel0: "#ffffff",
-          gitInv0: GRAPH_COLORS.failed,
+          gitInv0: GRAPH_COLORS.committed,
           git1: GRAPH_COLORS.optimistic,
           gitBranchLabel1: "#ffffff",
           gitInv1: GRAPH_COLORS.failed,
