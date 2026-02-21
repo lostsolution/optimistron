@@ -14,6 +14,13 @@ declare global {
     }
 }
 
+/** Palette shared with Layout legend */
+export const GRAPH_COLORS = {
+    committed: '#34d399',
+    optimistic: '#60a5fa',
+    failed: '#f87171',
+} as const;
+
 const getCommit = (options: { tag?: string; type?: 'HIGHLIGHT' | 'NORMAL' | 'REVERSE' }) => {
     let commit = `\tcommit  type: ${options.type ?? 'NORMAL'}`;
     if (options.tag) commit += ` tag: "${options.tag}"`;
@@ -49,7 +56,30 @@ export const TransitionGraph: FC = () => {
         const el = ref.current!;
         if (el && mermaid) {
             mermaid.initialize({
-                theme: 'neutral',
+                theme: 'base',
+                themeVariables: {
+                    darkMode: true,
+                    background: 'transparent',
+                    primaryColor: '#1c1f2b',
+                    primaryTextColor: '#e5e7eb',
+                    primaryBorderColor: '#2a2d3a',
+                    lineColor: '#353849',
+                    /** state branch = committed green */
+                    git0: GRAPH_COLORS.committed,
+                    gitBranchLabel0: '#ffffff',
+                    gitInv0: GRAPH_COLORS.failed,
+                    /** optimistic branch = blue */
+                    git1: GRAPH_COLORS.optimistic,
+                    gitBranchLabel1: '#ffffff',
+                    gitInv1: GRAPH_COLORS.failed,
+                    /** tag pills — subtle, tight */
+                    tagLabelColor: '#9ca3af',
+                    tagLabelBackground: 'transparent',
+                    tagLabelBorder: '#353849',
+                    /** commit labels */
+                    commitLabelColor: '#6b7280',
+                    commitLabelBackground: 'transparent',
+                },
                 gitGraph: {
                     mainBranchName: 'state',
                     rotateCommitLabel: false,
@@ -72,10 +102,11 @@ export const TransitionGraph: FC = () => {
                 .then(() => el.scrollIntoView({ block: 'end', inline: 'end', behavior: 'instant' }));
         }
     }, [reflow]);
+
     return (
         <div className="max-w-full overflow-hidden">
             <div id="transition-graph" />
-            <pre ref={ref} className="min-h-28 flex items-center" />
+            <pre ref={ref} className="min-h-24 flex items-center" />
         </div>
     );
 };
