@@ -38,7 +38,14 @@
         "watch:usecases": "bun build:usecases --watch"
     },
     "version": "0.0.1",
-    "main": "index.js",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/index.d.ts",
+            "import": "./lib/index.js"
+        }
+    },
     "author": "Edvin CANDON <edvin.candon@proton.ch>",
     "license": "MIT"
 }
