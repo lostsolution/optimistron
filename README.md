@@ -1,8 +1,52 @@
 # Optimistron
 
+> ⚠️ **Work in progress** — API is not yet stable. Expect breaking changes.
+
 Opinionated optimistic state management for Redux. Transitions are tracked alongside reducer state and applied through selectors — like a `git rebase` — avoiding separate state copies entirely.
 
-## How it works
+## 📦 When to use
+
+- Async Redux middleware (sagas, thunks) with optimistic UI
+- Retry-able operations with failure states
+- Offline-first patterns leveraging optimistic failures
+- State that maps to CRUD operations via a custom `StateHandler`
+
+## 📥 Install
+
+```
+npm install @lostsolution/optimistron
+```
+
+Peer dependencies: `@reduxjs/toolkit ^2.1.0`, `redux ^5.0.1`
+
+## 🛠️ Development
+
+```bash
+bun test              # run tests (coverage threshold 90%)
+bun run build:esm     # build to lib/
+```
+
+See `usecases/` for full examples with thunks and sagas.
+
+## 🪖 Rules of transitions
+
+1. 🪖 **Unique IDs** — transition IDs should map 1:1 to your entities. Typically just use the entity ID.
+2. 🪖 **One transition per entity** — never stage a new transition while one is already pending for the same ID.
+3. 🪖 **Granular effects** — keep transition actions fine-grained: one create, one update, one delete. No batch mutations.
+
+## 💡 Why
+
+Existing optimistic Redux libraries store full state checkpoints to enable rollback:
+
+- **redux-optimist**: saves a complete state snapshot at transaction open, replays all subsequent actions from it on revert
+- **redux-optimistic-ui**: wraps state in `{ beforeState, current, history }` — `beforeState` is a full copy of the state tree before any optimistic transaction began
+- **Hand-rolled thunk patterns**: `const previous = getState().slice` in a closure, restore on error
+
+This means memory scales with **state size x number of in-flight operations**. For large normalized stores, each pending action carries a shadow copy. Reverts replay the entire reducer chain — O(actions x reducer cost).
+
+Optimistron takes a different approach: **no state copies, no checkpoints**. Optimistic state is derived at the selector level — which is already memoized by `reselect` in most Redux apps. You get optimistic UI for free on the read path, with zero write-path overhead.
+
+## 🔧 How it works
 
 Instead of cloning your state for rollback, Optimistron wraps your reducer to track **transitions** — actions with metadata that describe pending optimistic operations. Committed state is your source of truth; optimistic state is **derived** at read-time by replaying transitions on top of it.
 
@@ -85,7 +129,7 @@ This runs on every reducer call, gated by referential equality (`===`) to skip w
                    └─ return sanitized transitions
 ```
 
-## Concepts
+## 📐 Concepts
 
 ### TransitionState\<T\>
 
@@ -101,7 +145,7 @@ type TransitionState<T> = {
 
 ### StateHandler
 
-Defines granular CRUD + merge operations for your state shape. The `merge` function is the core of conflict detection — it compares "as-if-committed" state against current state and throws `OptimisticMergeResult.SKIP` or `CONFLICT` when appropriate.
+The `StateHandler` interface defines how Optimistron interacts with your state shape. You can implement it for **any** state structure — flat objects, nested trees, arrays, or anything else. The `merge` function is the core of conflict detection: it compares "as-if-committed" state against current state and throws `OptimisticMergeResult.SKIP` or `CONFLICT` when appropriate.
 
 ```typescript
 interface StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
@@ -121,9 +165,11 @@ The reducer never touches state directly — it operates through a **bound state
 };
 ```
 
-### IndexedState
+### IndexedState (built-in example)
 
-Built-in `StateHandler` for `Record<string, T>` — the most common shape for entity collections. Handles create/update/delete with automatic no-op detection and merge conflict resolution via curried `compare` and `eq` functions:
+`indexedStateFactory` is a **reference implementation** of `StateHandler` for `Record<string, T>` — the most common shape for entity collections. It's provided as a starting point; you can write your own handler for any state shape.
+
+Handles create/update/delete with automatic no-op detection and merge conflict resolution via curried `compare` and `eq` functions:
 
 ```typescript
 const handler = indexedStateFactory<Todo>({
@@ -145,7 +191,7 @@ When staging a transition with the same ID as an existing one:
 - `OVERWRITE` (default): replaces the existing transition
 - `TRAILING`: replaces but stores the previous transition as a fallback — on `STASH`, reverts to the trailing transition instead of removing entirely
 
-## Usage
+## 🚀 Usage
 
 ### 1. Define transitions
 
@@ -222,33 +268,3 @@ const selectTodoStatus = (id: string) =>
 ```
 
 `selectOptimistic` replays transitions on every call — wrap with `createSelector` for memoization.
-
-## Rules of transitions
-
-1. **Unique IDs**: transition IDs should map 1:1 to your entities — typically just the entity ID
-2. **One transition per entity**: don't stage a new transition while one is pending for the same ID
-3. **Granular effects**: keep transition actions as fine-grained as possible — one create, one update, one delete
-
-## When to use
-
-- Async Redux middleware (sagas, thunks) with optimistic UI
-- Retry-able operations with failure states
-- Offline-first patterns leveraging optimistic failures
-- State that maps to CRUD operations on indexed collections
-
-## Install
-
-```
-npm install @lostsolution/optimistron
-```
-
-Peer dependencies: `@reduxjs/toolkit ^2.1.0`, `redux ^5.0.1`
-
-## Development
-
-```bash
-bun test              # run tests (coverage threshold 90%)
-bun run build:esm     # build to lib/
-```
-
-See `usecases/` for full examples with thunks and sagas.
