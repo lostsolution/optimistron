@@ -5,7 +5,9 @@
     "license": "MIT",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
-    "files": ["lib"],
+    "files": [
+        "lib"
+    ],
     "exports": {
         ".": {
             "types": "./lib/index.d.ts",
@@ -13,7 +15,7 @@
         }
     },
     "peerDependencies": {
-        "@reduxjs/toolkit": "^2.1.0",
+        "@reduxjs/toolkit": "^2.11.2",
         "redux": "^5.0.1"
     },
     "devDependencies": {

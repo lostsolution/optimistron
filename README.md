@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://redux.js.org/"><img src="https://img.shields.io/badge/redux-%5E5.0.1-764ABC?logo=redux&logoColor=white" alt="Redux ^5.0.1"/></a>
-  <a href="https://redux-toolkit.js.org/"><img src="https://img.shields.io/badge/RTK-%5E2.1.0-764ABC?logo=redux&logoColor=white" alt="Redux Toolkit ^2.1.0"/></a>
+  <a href="https://redux-toolkit.js.org/"><img src="https://img.shields.io/badge/RTK-%5E2.11.2-764ABC?logo=redux&logoColor=white" alt="Redux Toolkit ^2.11.2"/></a>
 </p>
 
 > Opinionated optimistic state management for Redux. Tracks transitions alongside reducer state and derives the optimistic view at the selector level — like `git rebase`. No state copies. No checkpoints.
@@ -68,7 +68,7 @@ const selectTodos = createSelector(
 );
 
 dispatch(createTodo.stage(todo.id, todo)); // UI updates instantly
-dispatch(createTodo.commit(todo.id));      // persist on success
+dispatch(createTodo.commit(todo.id)); // persist on success
 dispatch(createTodo.fail(todo.id, error)); // flag on error
 ```
 
