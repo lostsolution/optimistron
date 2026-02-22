@@ -9,6 +9,20 @@
 
 > Opinionated optimistic state management for Redux. Tracks transitions alongside reducer state and derives the optimistic view at the selector level — like `git rebase`. No state copies. No checkpoints.
 
+## Why
+
+Existing optimistic Redux libraries store full state checkpoints to enable rollback:
+
+- **redux-optimist**: saves a complete state snapshot at transaction open, replays all subsequent actions from it on revert
+- **redux-optimistic-ui**: wraps state in `{ beforeState, current, history }` — `beforeState` is a full copy of the state tree before any optimistic transaction began
+- **Hand-rolled thunk patterns**: `const previous = getState().slice` in a closure, restore on error
+
+This means memory scales with **state size x number of in-flight operations**. For large normalized stores, each pending action carries a shadow copy. Reverts replay the entire reducer chain — O(actions x reducer cost).
+
+Optimistron takes a different approach: **no state copies, no checkpoints**. Optimistic state is derived at the selector level — which is already memoized by `reselect` in most Redux apps. You get optimistic UI for free on the read path, with zero write-path overhead.
+
+---
+
 ## The Mental Model
 
 Think of your Redux store like a git repository:
@@ -90,8 +104,6 @@ Entities need a **monotonically increasing version** — `revision`, `updatedAt`
 2. **One at a time** — don't stage while one is already pending for the same ID.
 3. **Granular** — one create, one update, or one delete per transition.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanics.
-
 ---
 
 ## Development
@@ -102,9 +114,3 @@ bun run build:esm     # build to lib/
 ```
 
 See `usecases/` for working examples with async, thunks, and sagas.
-
----
-
-## Architecture
-
-API reference, custom state handlers, async patterns, and internals — see [ARCHITECTURE.md](./ARCHITECTURE.md).
