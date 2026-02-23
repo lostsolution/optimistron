@@ -115,13 +115,18 @@ const Home: FC = () => (
 
             <div className="text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8">
                 <p>
-                    Optimistic state is <span className="text-gray-200">computed, not stored</span>.
-                    Only <code className="text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded">commit</code> mutates
-                    reducer state. All other operations modify the transitions list.
+                    This demo is a <span className="text-gray-200">project management app</span> built to showcase Optimistron's
+                    four state handlers — each section uses a different state shape with full optimistic CRUD.
                 </p>
                 <p>
-                    Think <code className="text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded">git rebase</code> —
-                    committed state is your main branch, transitions are replayed on top at read-time.
+                    <code className="text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded">singularState</code>{' '}
+                    powers the user profile,{' '}
+                    <code className="text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded">nestedRecordState</code>{' '}
+                    drives project-grouped tasks,{' '}
+                    <code className="text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded">recordState</code>{' '}
+                    backs the flat epic list, and{' '}
+                    <code className="text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded">listState</code>{' '}
+                    powers the activity log.
                 </p>
             </div>
 
@@ -129,9 +134,15 @@ const Home: FC = () => (
                 <LifecycleSvg />
             </div>
 
-            <div className="p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed grad-wrap">
-                Pick a usecase from the sidebar. Use the <span className="text-gray-300">Mock API</span> controls
-                to simulate network conditions.
+            <div className="p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed space-y-2 grad-wrap">
+                <p>
+                    Pick a usecase from the sidebar. Each one implements the <span className="text-gray-300">same store</span> with
+                    a different async pattern — component-level, thunks, or sagas.
+                </p>
+                <p>
+                    Use the <span className="text-gray-300">Mock API</span> controls to toggle offline mode, adjust latency,
+                    and trigger a sync to see how Optimistron handles failures, retries, and conflict detection in real-time.
+                </p>
             </div>
         </div>
     </div>
@@ -172,7 +183,7 @@ export const App: FC = () => (
                         ))}
                     </nav>
 
-                    <div className="h-48 flex-shrink-0 flex flex-col">
+                    <div className="h-36 flex-shrink-0 flex flex-col">
                         <div className="grad-h" />
                         <div className="px-5 pt-2.5 pb-4 flex-1">
                             <MockApiControls />
