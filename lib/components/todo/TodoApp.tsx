@@ -33,15 +33,15 @@ export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTo
     };
 
     const handleRetry = (action: TransitionAction) => {
-        if (createTodo.stage.match(action)) return onCreateTodo(action.payload.todo);
-        if (editTodo.stage.match(action)) return onEditTodo(action.payload.todo);
+        if (createTodo.stage.match(action)) return onCreateTodo(action.payload.item);
+        if (editTodo.stage.match(action)) return onEditTodo(action.payload.item as Todo);
     };
 
     useEffect(() => {
         if (mockApi.online) {
             failedTransitions.forEach((action) => {
-                if (createTodo.stage.match(action)) return onCreateTodo(action.payload.todo);
-                if (editTodo.stage.match(action)) return onEditTodo(action.payload.todo);
+                if (createTodo.stage.match(action)) return onCreateTodo(action.payload.item);
+                if (editTodo.stage.match(action)) return onEditTodo(action.payload.item as Todo);
             });
         }
     }, [mockApi.online, failedTransitions]);

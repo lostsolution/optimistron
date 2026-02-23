@@ -1,4 +1,20 @@
 /* usecases/styles.css */
+:root {
+  --color-stage: #4ade80;
+  --color-commit: #38bdf8;
+  --color-amend: #c4b5fd;
+  --color-fail: #f472b6;
+  --color-stash: #facc15;
+  --color-conflict: #fb923c;
+  --color-muted: #484f58;
+  --color-cyan: #06b6d4;
+  --color-purple: #8b5cf6;
+  --color-pink: #d946ef;
+  --color-rose: #f43f5e;
+  --color-light-cyan: #67e8f9;
+  --color-light-lavender: #c4b5fd;
+}
+
 .todo-item {
   transition: opacity .2s, background-color .2s;
 }
@@ -30,19 +46,17 @@
 }
 
 input[type="number"]::-webkit-outer-spin-button {
-  position: absolute;
-  opacity: 1;
-  height: 100%;
-  top: 0;
-  right: 0;
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input[type="number"]::-webkit-inner-spin-button {
-  position: absolute;
-  opacity: 1;
-  height: 100%;
-  top: 0;
-  right: 0;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .status-badge {
@@ -56,19 +70,19 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .status-badge--optimistic {
-  color: #60a5fa;
+  color: var(--color-commit);
 }
 
 .status-badge--failed {
-  color: #fbbf24;
+  color: var(--color-fail);
 }
 
 .status-badge--conflict {
-  color: #f87171;
+  color: var(--color-conflict);
 }
 
 .status-badge--stashed {
-  color: #c084fc;
+  color: var(--color-stash);
 }
 
 .legend-dot {
@@ -78,18 +92,35 @@ input[type="number"]::-webkit-inner-spin-button {
   height: 6px;
 }
 
-pre svg .branch-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
-  font-size: 10px !important;
-  font-weight: 500 !important;
+.grad-h, .grad-v {
+  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple), var(--color-pink), var(--color-rose));
+  opacity: .4;
+  background-attachment: fixed;
+  flex-shrink: 0;
 }
 
-pre svg .tag-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
-  font-size: 9px !important;
-  font-weight: 500 !important;
+.grad-h {
+  height: 1px;
 }
 
-pre svg .commit-label {
-  font-size: 9px !important;
+.grad-v {
+  width: 1px;
+}
+
+.grad-wrap {
+  position: relative;
+}
+
+.grad-wrap:before {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple), var(--color-rose));
+  opacity: .4;
+  -webkit-mask: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  padding: 1px;
+  inset: 0;
 }

@@ -13,14 +13,23 @@
                         colors: {
                             surface: { 0: '#0f1117', 1: '#161820', 2: '#1c1f2b', 3: '#252836' },
                             border: { subtle: '#2a2d3a', DEFAULT: '#353849' },
+                            /** Semantic optimistron palette — single source for Tailwind classes */
+                            oc: {
+                                stage: '#4ade80',
+                                commit: '#38bdf8',
+                                amend: '#c4b5fd',
+                                fail: '#f472b6',
+                                stash: '#facc15',
+                                conflict: '#fb923c',
+                                muted: '#484f58',
+                            },
                         },
                     },
                 },
             };
         </script>
-        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
         <title>Optimistron usecases</title>
-        <link rel="stylesheet" href="./dist/styles.css" />
+        <link rel="stylesheet" href="./dist/index.css" />
     </head>
     <body class="h-screen bg-surface-0 text-gray-200">
         <div id="root" class="flex items-center justify-center w-screen h-screen font-medium"></div>

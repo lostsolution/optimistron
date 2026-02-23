@@ -24916,9 +24916,9 @@ var require__getTag = __commonJS((exports, module) => {
   var promiseCtorString = toSource(Promise2);
   var setCtorString = toSource(Set2);
   var weakMapCtorString = toSource(WeakMap2);
-  var getTag = baseGetTag;
-  if (DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2) != setTag || WeakMap2 && getTag(new WeakMap2) != weakMapTag) {
-    getTag = function(value) {
+  var getTag2 = baseGetTag;
+  if (DataView && getTag2(new DataView(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag2(new Map2) != mapTag || Promise2 && getTag2(Promise2.resolve()) != promiseTag || Set2 && getTag2(new Set2) != setTag || WeakMap2 && getTag2(new WeakMap2) != weakMapTag) {
+    getTag2 = function(value) {
       var result = baseGetTag(value), Ctor = result == objectTag ? value.constructor : undefined, ctorString = Ctor ? toSource(Ctor) : "";
       if (ctorString) {
         switch (ctorString) {
@@ -24937,7 +24937,7 @@ var require__getTag = __commonJS((exports, module) => {
       return result;
     };
   }
-  module.exports = getTag;
+  module.exports = getTag2;
 });
 
 // node_modules/lodash/_initCloneArray.js
@@ -25112,11 +25112,11 @@ var require__initCloneObject = __commonJS((exports, module) => {
 
 // node_modules/lodash/_baseIsMap.js
 var require__baseIsMap = __commonJS((exports, module) => {
-  var getTag = require__getTag();
+  var getTag2 = require__getTag();
   var isObjectLike = require_isObjectLike();
   var mapTag = "[object Map]";
   function baseIsMap(value) {
-    return isObjectLike(value) && getTag(value) == mapTag;
+    return isObjectLike(value) && getTag2(value) == mapTag;
   }
   module.exports = baseIsMap;
 });
@@ -25133,11 +25133,11 @@ var require_isMap = __commonJS((exports, module) => {
 
 // node_modules/lodash/_baseIsSet.js
 var require__baseIsSet = __commonJS((exports, module) => {
-  var getTag = require__getTag();
+  var getTag2 = require__getTag();
   var isObjectLike = require_isObjectLike();
   var setTag = "[object Set]";
   function baseIsSet(value) {
-    return isObjectLike(value) && getTag(value) == setTag;
+    return isObjectLike(value) && getTag2(value) == setTag;
   }
   module.exports = baseIsSet;
 });
@@ -25165,7 +25165,7 @@ var require__baseClone = __commonJS((exports, module) => {
   var copySymbolsIn = require__copySymbolsIn();
   var getAllKeys = require__getAllKeys();
   var getAllKeysIn = require__getAllKeysIn();
-  var getTag = require__getTag();
+  var getTag2 = require__getTag();
   var initCloneArray = require__initCloneArray();
   var initCloneByTag = require__initCloneByTag();
   var initCloneObject = require__initCloneObject();
@@ -25226,7 +25226,7 @@ var require__baseClone = __commonJS((exports, module) => {
         return copyArray(value, result);
       }
     } else {
-      var tag = getTag(value), isFunc = tag == funcTag || tag == genTag;
+      var tag = getTag2(value), isFunc = tag == funcTag || tag == genTag;
       if (isBuffer(value)) {
         return cloneBuffer(value, isDeep);
       }
@@ -30218,6 +30218,57 @@ var removeListener = Object.assign(createAction(`${alm}/remove`), {
 });
 var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
 
+// src/actions.ts
+var emptyPA = () => ({ payload: {} });
+var errorPA = (error) => ({ error: error instanceof Error ? error.message : error, payload: {} });
+var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === "commit" /* COMMIT */;
+var prepareTransition = (action, options) => ({
+  ...action,
+  meta: {
+    ..."meta" in action ? action.meta : {},
+    [META_KEY]: options
+  }
+});
+var resolveTransition = (operation, dedupe) => (prepare) => (...args) => {
+  if (operation === "stage" /* STAGE */) {
+    const result = prepare(...args);
+    if (result && "transitionId" in result) {
+      const id = String(result.transitionId);
+      return prepareTransition(result, { id, operation, dedupe });
+    }
+  }
+  const [transitionId, ...rest] = args;
+  return prepareTransition(prepare(...rest), { id: transitionId, operation, dedupe });
+};
+var createTransition = (type, operation, dedupe = 0 /* OVERWRITE */) => (prepare) => createAction(type, resolveTransition(operation, dedupe)(prepare));
+var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
+  const noOptions = typeof options === "function";
+  const stagePA = noOptions ? options : options.stage;
+  const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
+  const failPA = noOptions ? errorPA : options.fail ?? errorPA;
+  const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
+  return {
+    amend: createTransition(`${type}::amend`, "amend" /* AMEND */, dedupe)(stagePA),
+    stage: createTransition(`${type}::stage`, "stage" /* STAGE */, dedupe)(stagePA),
+    commit: createTransition(`${type}::commit`, "commit" /* COMMIT */, dedupe)(commitPA),
+    fail: createTransition(`${type}::fail`, "fail" /* FAIL */, dedupe)(failPA),
+    stash: createTransition(`${type}::stash`, "stash" /* STASH */, dedupe)(stashPA),
+    match: createCommitMatcher(type)
+  };
+};
+var crudPrepare = (itemIdKey) => ({
+  create: (item) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
+  update: (id, item) => ({ payload: { id, item }, transitionId: id }),
+  remove: (id) => ({ payload: { id }, transitionId: id })
+});
+
+// usecases/lib/store/actions.ts
+var crud = crudPrepare("id");
+var createTodo = createTransitions("todos::add")(crud.create);
+var editTodo = createTransitions("todos::edit")(crud.update);
+var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(crud.remove);
+var sync = createAction("todos::sync");
+
 // src/logger.ts
 var warn = (...args) => {
   if (true)
@@ -30373,57 +30424,6 @@ var indexedStateFactory = ({
   };
 };
 
-// src/actions.ts
-var emptyPA = () => ({ payload: {} });
-var errorPA = (error) => ({ error: error instanceof Error ? error.message : error, payload: {} });
-var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === "commit" /* COMMIT */;
-var prepareTransition = (action, options) => ({
-  ...action,
-  meta: {
-    ..."meta" in action ? action.meta : {},
-    [META_KEY]: options
-  }
-});
-var resolveTransition = (operation, dedupe) => (prepare) => (...args) => {
-  if (operation === "stage" /* STAGE */) {
-    const result = prepare(...args);
-    if (result && "transitionId" in result) {
-      const id = String(result.transitionId);
-      return prepareTransition(result, { id, operation, dedupe });
-    }
-  }
-  const [transitionId, ...rest] = args;
-  return prepareTransition(prepare(...rest), { id: transitionId, operation, dedupe });
-};
-var createTransition = (type, operation, dedupe = 0 /* OVERWRITE */) => (prepare) => createAction(type, resolveTransition(operation, dedupe)(prepare));
-var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
-  const noOptions = typeof options === "function";
-  const stagePA = noOptions ? options : options.stage;
-  const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
-  const failPA = noOptions ? errorPA : options.fail ?? errorPA;
-  const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
-  return {
-    amend: createTransition(`${type}::amend`, "amend" /* AMEND */, dedupe)(stagePA),
-    stage: createTransition(`${type}::stage`, "stage" /* STAGE */, dedupe)(stagePA),
-    commit: createTransition(`${type}::commit`, "commit" /* COMMIT */, dedupe)(commitPA),
-    fail: createTransition(`${type}::fail`, "fail" /* FAIL */, dedupe)(failPA),
-    stash: createTransition(`${type}::stash`, "stash" /* STASH */, dedupe)(stashPA),
-    match: createCommitMatcher(type)
-  };
-};
-var crudPrepare = (itemIdKey) => ({
-  create: (item) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
-  update: (id, item) => ({ payload: { id, item }, transitionId: id }),
-  remove: (id) => ({ payload: { id }, transitionId: id })
-});
-
-// usecases/lib/store/actions.ts
-var crud = crudPrepare("id");
-var createTodo = createTransitions("todos::add")(crud.create);
-var editTodo = createTransitions("todos::edit")(crud.update);
-var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(crud.remove);
-var sync = createAction("todos::sync");
-
 // usecases/lib/utils/mock-api.ts
 var getMockApiOnline = () => window.__mock_api_online ?? true;
 var setMockApiOnline = (value) => window.__mock_api_online = value;
@@ -30497,11 +30497,15 @@ var TransitionHistoryContext = import_react.createContext({ committed: [], stage
 var TransitionHistoryProvider = ({ children, eventBus }) => {
   const [committed, setCommitted] = import_react.useState([]);
   const staged = useSelector(selectTransitions);
-  import_react.useEffect(() => eventBus.subscribe((transition) => {
+  import_react.useEffect(() => eventBus.subscribe((action) => {
     setCommitted((history) => {
-      const meta = getTransitionMeta(transition);
-      if (meta.operation === "commit" /* COMMIT */)
-        return [...history, transition];
+      if (isTransition(action)) {
+        const meta = getTransitionMeta(action);
+        if (meta.operation === "commit" /* COMMIT */)
+          return [...history, action];
+      }
+      if (sync.match(action))
+        return [...history, action];
       return history;
     });
   }), []);
@@ -30515,100 +30519,209 @@ var useTransitionHistory = () => import_react.useContext(TransitionHistoryContex
 
 // usecases/lib/components/graph/TransitionGraph.tsx
 var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
-var GRAPH_COLORS = {
-  committed: "#34d399",
-  optimistic: "#60a5fa",
-  failed: "#f87171"
+var MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+var COLORS = {
+  state: "#4ade80",
+  optimistic: "#38bdf8",
+  failed: "#f472b6",
+  conflict: "#fb923c",
+  tag: "#6e7681",
+  muted: "#484f58",
+  faint: "#2d333b"
 };
-var getCommit = (options) => {
-  let commit = `	commit  type: ${options.type ?? "NORMAL"}`;
-  if (options.tag)
-    commit += ` tag: "${options.tag}"`;
-  commit += `
-`;
-  return commit;
+var BRANCH_Y = { state: 28, optimistic: 68 };
+var COMMIT_GAP = 60;
+var START_X = 110;
+var DOT_R = 4;
+var LABEL_X = 10;
+var TRAIL_PAD = 1;
+var MAX_VISIBLE = 5;
+var getTag = (action) => {
+  if (sync.match(action))
+    return "sync";
+  if (createTodo.stage.match(action) || createTodo.commit.match(action))
+    return "create";
+  if (editTodo.stage.match(action) || editTodo.commit.match(action))
+    return "update";
+  if (deleteTodo.stage.match(action) || deleteTodo.commit.match(action))
+    return "delete";
 };
-var getTransitionCommit = (action) => {
-  const meta = getTransitionMeta(action);
-  const type = meta.failed || meta.conflict ? "REVERSE" : "NORMAL";
-  const tag = (() => {
-    if (createTodo.stage.match(action) || createTodo.commit.match(action))
-      return "create";
-    if (editTodo.stage.match(action) || editTodo.commit.match(action))
-      return "update";
-    if (deleteTodo.stage.match(action) || deleteTodo.commit.match(action))
-      return "delete";
-  })();
-  return tag ? getCommit({ tag, type }) : "";
-};
-var getGraph = () => {
-  let graph = `gitGraph LR:
-`;
-  graph += getCommit({ tag: "initial" });
-  return graph;
+var getDotColor = (action, branch) => {
+  if (isTransition(action)) {
+    const meta = getTransitionMeta(action);
+    if (meta.failed)
+      return COLORS.failed;
+    if (meta.conflict)
+      return COLORS.conflict;
+  }
+  return COLORS[branch];
 };
 var TransitionGraph = () => {
   const { committed, staged } = useTransitionHistory();
-  const reflow = import_react2.useMemo(() => Math.random(), [committed, staged]);
-  const ref = import_react2.useRef(null);
-  import_react2.useEffect(() => {
-    const { mermaid } = window;
-    const el = ref.current;
-    if (el && mermaid) {
-      mermaid.initialize({
-        theme: "base",
-        themeVariables: {
-          darkMode: true,
-          background: "transparent",
-          primaryColor: "#1c1f2b",
-          primaryTextColor: "#e5e7eb",
-          primaryBorderColor: "#2a2d3a",
-          lineColor: "#353849",
-          git0: GRAPH_COLORS.committed,
-          gitBranchLabel0: "#ffffff",
-          gitInv0: GRAPH_COLORS.committed,
-          git1: GRAPH_COLORS.optimistic,
-          gitBranchLabel1: "#ffffff",
-          gitInv1: GRAPH_COLORS.failed,
-          tagLabelColor: "#9ca3af",
-          tagLabelBackground: "transparent",
-          tagLabelBorder: "#353849",
-          commitLabelColor: "#6b7280",
-          commitLabelBackground: "transparent"
-        },
-        gitGraph: {
-          mainBranchName: "state",
-          rotateCommitLabel: false,
-          showCommitLabel: false,
-          showBranches: true
-        }
+  const graph = import_react2.useMemo(() => {
+    const committedHasOverflow = committed.length > MAX_VISIBLE - 1;
+    const committedSlots = committedHasOverflow ? MAX_VISIBLE - 1 : committed.length;
+    const committedOverflow = committed.length - committedSlots;
+    const visibleCommitted = committed.slice(-committedSlots);
+    const stagedHasOverflow = staged.length > MAX_VISIBLE;
+    const stagedSlots = stagedHasOverflow ? MAX_VISIBLE - 1 : staged.length;
+    const stagedOverflow = staged.length - stagedSlots;
+    const visibleStaged = staged.slice(-stagedSlots);
+    const stateCount = 1 + visibleCommitted.length;
+    const optCount = visibleStaged.length + (stagedHasOverflow ? 1 : 0);
+    const lastStateX = START_X + (stateCount - 1) * COMMIT_GAP;
+    const firstOptX = lastStateX + COMMIT_GAP;
+    const lastOptX = optCount > 0 ? firstOptX + (optCount - 1) * COMMIT_GAP : firstOptX;
+    const mergeX = Math.max(lastStateX, lastOptX) + COMMIT_GAP * TRAIL_PAD;
+    const midY = (BRANCH_Y.optimistic + BRANCH_Y.state) / 2;
+    const trailEndX = optCount > 0 ? mergeX : lastStateX + COMMIT_GAP;
+    const width = (optCount > 0 ? mergeX : trailEndX) + 40;
+    const mergePath = `M ${lastOptX} ${BRANCH_Y.optimistic} ` + `C ${lastOptX + 40} ${BRANCH_Y.optimistic}, ${mergeX - 40} ${midY}, ${mergeX} ${BRANCH_Y.state}`;
+    const dots = [];
+    dots.push({
+      x: START_X,
+      y: BRANCH_Y.state,
+      color: committedHasOverflow ? COLORS.muted : COLORS.state,
+      tag: committedHasOverflow ? `..${committedOverflow} prior` : "initial"
+    });
+    visibleCommitted.forEach((action, i) => {
+      dots.push({
+        x: START_X + (i + 1) * COMMIT_GAP,
+        y: BRANCH_Y.state,
+        color: getDotColor(action, "state"),
+        tag: getTag(action)
       });
-      let graph = getGraph();
-      committed.forEach((transition) => graph += getTransitionCommit(transition));
-      graph += `	branch optimistic
-`;
-      staged.forEach((transition) => graph += getTransitionCommit(transition));
-      if (staged.length > 0) {
-        graph += `checkout state
-`;
-        graph += `merge optimistic type: HIGHLIGHT
-`;
-      }
-      mermaid.render("transition-graph", graph).then(({ svg }) => el.innerHTML = svg).then(() => el.scrollIntoView({ block: "end", inline: "end", behavior: "instant" }));
+    });
+    if (stagedHasOverflow) {
+      dots.push({
+        x: firstOptX,
+        y: BRANCH_Y.optimistic,
+        color: COLORS.muted,
+        tag: `..${stagedOverflow} prior`
+      });
     }
-  }, [reflow]);
+    visibleStaged.forEach((action, i) => {
+      const offset = stagedHasOverflow ? 1 : 0;
+      dots.push({
+        x: firstOptX + (i + offset) * COMMIT_GAP,
+        y: BRANCH_Y.optimistic,
+        color: getDotColor(action, "optimistic"),
+        tag: getTag(action)
+      });
+    });
+    return {
+      width,
+      lastStateX,
+      firstOptX,
+      lastOptX,
+      mergeX,
+      trailEndX,
+      mergePath,
+      dots,
+      hasStaged: optCount > 0
+    };
+  }, [committed, staged]);
   return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
-    className: "max-w-full overflow-hidden",
-    children: [
-      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
-        id: "transition-graph"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("pre", {
-        ref,
-        className: "min-h-24 flex items-center"
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+    className: "max-w-full overflow-x-auto",
+    children: /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("svg", {
+      viewBox: `0 0 ${graph.width} 90`,
+      width: graph.width,
+      height: 90,
+      xmlns: "http://www.w3.org/2000/svg",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+          x: LABEL_X,
+          y: BRANCH_Y.state + 4,
+          fill: COLORS.state,
+          fontSize: 11,
+          fontFamily: MONO,
+          fontWeight: 600,
+          children: "state"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+          x: LABEL_X,
+          y: BRANCH_Y.optimistic + 4,
+          fill: COLORS.optimistic,
+          fontSize: 11,
+          fontFamily: MONO,
+          fontWeight: 600,
+          children: "optimistic"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: `M ${START_X} ${BRANCH_Y.state} L ${graph.trailEndX} ${BRANCH_Y.state}`,
+          stroke: COLORS.muted,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          strokeDasharray: "4 3",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: `M ${START_X} ${BRANCH_Y.optimistic} L ${graph.trailEndX} ${BRANCH_Y.optimistic}`,
+          stroke: COLORS.faint,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          strokeDasharray: "4 3",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: `M ${START_X} ${BRANCH_Y.state} L ${graph.lastStateX} ${BRANCH_Y.state}`,
+          stroke: COLORS.state,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: `M ${graph.lastStateX} ${BRANCH_Y.state} L ${graph.mergeX} ${BRANCH_Y.state}`,
+          stroke: COLORS.muted,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          strokeDasharray: "4 3",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: `M ${graph.firstOptX} ${BRANCH_Y.optimistic} L ${graph.lastOptX} ${BRANCH_Y.optimistic}`,
+          stroke: COLORS.optimistic,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+          d: graph.mergePath,
+          stroke: COLORS.muted,
+          strokeWidth: 1.5,
+          strokeLinecap: "round",
+          strokeDasharray: "4 3",
+          fill: "none"
+        }, undefined, false, undefined, this),
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("circle", {
+          cx: graph.mergeX,
+          cy: BRANCH_Y.state,
+          r: DOT_R,
+          fill: COLORS.optimistic
+        }, undefined, false, undefined, this),
+        graph.dots.map((dot, i) => /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("g", {
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("circle", {
+              cx: dot.x,
+              cy: dot.y,
+              r: DOT_R,
+              fill: dot.color
+            }, undefined, false, undefined, this),
+            dot.tag && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+              x: dot.x,
+              y: dot.y - 10,
+              fill: COLORS.tag,
+              fontSize: 7,
+              fontFamily: MONO,
+              fontWeight: 500,
+              textAnchor: "middle",
+              children: dot.tag
+            }, undefined, false, undefined, this)
+          ]
+        }, i, true, undefined, this))
+      ]
+    }, undefined, true, undefined, this)
+  }, undefined, false, undefined, this);
 };
 
 // usecases/lib/components/todo/Layout.tsx
@@ -30620,8 +30733,11 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
       className: "flex absolute inset-0 bottom-48 overflow-hidden",
       children: [
         /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "w-1/2 h-full overflow-y-auto bg-surface-1 border-r border-border-subtle",
+          className: "w-1/2 h-full overflow-y-auto bg-surface-0",
           children
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+          className: "grad-v self-stretch"
         }, undefined, false, undefined, this),
         /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
           className: "w-1/2 h-full overflow-y-auto p-5 bg-surface-0",
@@ -30689,7 +30805,7 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                   className: "flex items-center gap-1",
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-blue-400",
+                      className: "text-oc-commit/80",
                       children: "optimistic"
                     }, undefined, false, undefined, this),
                     " pending"
@@ -30699,7 +30815,7 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                   className: "flex items-center gap-1",
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-amber-400",
+                      className: "text-oc-fail/80",
                       children: "fail"
                     }, undefined, false, undefined, this),
                     " error"
@@ -30709,7 +30825,7 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                   className: "flex items-center gap-1",
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-purple-400",
+                      className: "text-oc-stash/80",
                       children: "stash"
                     }, undefined, false, undefined, this),
                     " reverted"
@@ -30719,7 +30835,7 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                   className: "flex items-center gap-1",
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-red-400",
+                      className: "text-oc-conflict/80",
                       children: "conflict"
                     }, undefined, false, undefined, this),
                     " diverged"
@@ -30732,13 +30848,16 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-      className: "absolute bottom-0 inset-x-0 h-48 bg-surface-1 border-t border-border-subtle",
+      className: "absolute bottom-0 inset-x-0 h-48 bg-surface-0 flex flex-col",
       children: [
         /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "flex items-center justify-between px-4 pt-2.5 pb-1",
+          className: "grad-h"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+          className: "flex items-center justify-between px-5 pt-2.5 pb-1",
           children: [
             /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
-              className: "text-[10px] font-medium uppercase tracking-widest text-gray-600",
+              className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600",
               children: "Transitions"
             }, undefined, false, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
@@ -30746,33 +30865,33 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
               children: [
                 /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                   className: "flex items-center gap-1",
-                  style: { color: GRAPH_COLORS.committed },
+                  style: { color: COLORS.state },
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                       className: "legend-dot",
-                      style: { background: GRAPH_COLORS.committed }
+                      style: { background: COLORS.state }
                     }, undefined, false, undefined, this),
                     "state"
                   ]
                 }, undefined, true, undefined, this),
                 /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                   className: "flex items-center gap-1",
-                  style: { color: GRAPH_COLORS.optimistic },
+                  style: { color: COLORS.optimistic },
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                       className: "legend-dot",
-                      style: { background: GRAPH_COLORS.optimistic }
+                      style: { background: COLORS.optimistic }
                     }, undefined, false, undefined, this),
                     "optimistic"
                   ]
                 }, undefined, true, undefined, this),
                 /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                   className: "flex items-center gap-1",
-                  style: { color: GRAPH_COLORS.failed },
+                  style: { color: COLORS.failed },
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
                       className: "legend-dot",
-                      style: { background: GRAPH_COLORS.failed }
+                      style: { background: COLORS.failed }
                     }, undefined, false, undefined, this),
                     "failed"
                   ]
@@ -30782,7 +30901,7 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
           ]
         }, undefined, true, undefined, this),
         /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "px-4",
+          className: "px-5 flex-1 flex items-center",
           children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
         }, undefined, false, undefined, this)
       ]
@@ -30848,6 +30967,56 @@ var import_cloneDeep = __toESM(require_cloneDeep(), 1);
 
 // usecases/lib/components/todo/Icons.tsx
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var Logo = ({ className }) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
+  viewBox: "0 0 24 14",
+  className,
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("defs", {
+      children: /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("linearGradient", {
+        id: "logo-grad",
+        x1: "0%",
+        y1: "0%",
+        x2: "100%",
+        y2: "0%",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("stop", {
+            offset: "0%",
+            stopColor: "#67e8f9"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("stop", {
+            offset: "100%",
+            stopColor: "#c4b5fd"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this)
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("text", {
+      x: "0",
+      y: "12",
+      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+      fontSize: "13",
+      fill: "url(#logo-grad)",
+      children: "λς"
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var STARS = [
+  { x: "8%", y: "15%", size: 10, color: "#38bdf8", opacity: 0.45 },
+  { x: "88%", y: "20%", size: 14, color: "#38bdf8", opacity: 0.5 },
+  { x: "92%", y: "55%", size: 8, color: "#8b5cf6", opacity: 0.3 },
+  { x: "5%", y: "70%", size: 6, color: "#d946ef", opacity: 0.2 },
+  { x: "85%", y: "80%", size: 10, color: "#06b6d4", opacity: 0.28 },
+  { x: "15%", y: "90%", size: 5, color: "#c4b5fd", opacity: 0.18 },
+  { x: "95%", y: "90%", size: 7, color: "#f43f5e", opacity: 0.16 },
+  { x: "50%", y: "5%", size: 5, color: "#67e8f9", opacity: 0.18 }
+];
+var Stars = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(jsx_dev_runtime5.Fragment, {
+  children: STARS.map(({ x, y, size, color, opacity }, i) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("span", {
+    className: "absolute pointer-events-none select-none",
+    style: { left: x, top: y, fontSize: size, color, opacity, fontFamily: "monospace" },
+    children: "✦"
+  }, i, false, undefined, this))
+}, undefined, false, undefined, this);
 var Spinner = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
   className: "w-4 h-4",
   xmlns: "http://www.w3.org/2000/svg",
@@ -30927,10 +31096,10 @@ var TodoConflict = ({ id }) => {
   const todo = useSelector(selectTodo(id));
   const Tag = todo.done ? "s" : "em";
   return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
-    className: "text-[9px] font-mono text-red-400/60 leading-tight",
+    className: "text-[9px] font-mono text-oc-conflict/60 leading-tight",
     children: [
       /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-        className: "text-red-400/80",
+        className: "text-oc-conflict/80",
         children: "conflict"
       }, undefined, false, undefined, this),
       ' "',
@@ -30952,12 +31121,12 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
     if (failedAction) {
       if (createTodo.stage.match(failedAction)) {
         const create = import_cloneDeep.default(failedAction);
-        create.payload.todo = { ...create.payload.todo, ...mutation };
+        create.payload.item = { ...create.payload.item, ...mutation };
         onRetry(create);
       }
       if (editTodo.stage.match(failedAction)) {
         const edit = import_cloneDeep.default(failedAction);
-        edit.payload.todo = { ...edit.payload.todo, ...mutation };
+        edit.payload.item = { ...edit.payload.item, ...mutation };
         onRetry(edit);
       }
     } else
@@ -30989,7 +31158,7 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
         children: [
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
             onClick: () => handleMutation({ done: !todo.done }),
-            className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full", failed && !conflict && "!border-amber-500 text-amber-500", conflict && "!border-red-500 text-red-500", todo.done && "!text-white !bg-emerald-500 !border-emerald-500", todo.done && failed && !conflict && "!bg-amber-500", todo.done && conflict && "!bg-red-500", loading && "!border-gray-600 !text-gray-500 !bg-transparent"),
+            className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full", failed && !conflict && "!border-oc-fail/80 text-oc-fail/80", conflict && "!border-oc-conflict/80 text-oc-conflict/80", todo.done && "!text-white !bg-oc-stage/90 !border-oc-stage/90", todo.done && failed && !conflict && "!bg-oc-fail/80", todo.done && conflict && "!bg-oc-conflict/80", loading && "!border-gray-600 !text-gray-500 !bg-transparent"),
             children: icon
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
@@ -31020,7 +31189,7 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
                       }
                     }, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
                       onClick: () => setEditable(true),
-                      className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300", todo.done && "line-through !text-gray-600", loading && "!text-blue-400/70", failed && !conflict && "!text-amber-400 jiggle", conflict && "!text-red-400 jiggle", stashed && !failed && "!text-purple-400 jiggle"),
+                      className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300", todo.done && "line-through !text-gray-600", loading && "!text-oc-commit/60", failed && !conflict && "!text-oc-fail/80 jiggle", conflict && "!text-oc-conflict/80 jiggle", stashed && !failed && "!text-oc-stash/80 jiggle"),
                       children: todo.value
                     }, undefined, false, undefined, this)
                   }, undefined, false, undefined, this),
@@ -31033,19 +31202,19 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
                 className: "flex-shrink-0 self-center text-[8px] font-mono leading-none text-left",
                 children: [
                   loading && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-                    className: "text-blue-400/70",
+                    className: "text-oc-commit/60",
                     children: "optimistic"
                   }, undefined, false, undefined, this),
                   failed && !conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-                    className: "text-amber-400",
+                    className: "text-oc-fail/80",
                     children: "fail"
                   }, undefined, false, undefined, this),
                   conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-                    className: "text-red-400",
+                    className: "text-oc-conflict/80",
                     children: "conflict"
                   }, undefined, false, undefined, this),
                   stashed && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
-                    className: "text-purple-400",
+                    className: "text-oc-stash/80",
                     children: "stash"
                   }, undefined, false, undefined, this)
                 ]
@@ -31053,7 +31222,7 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
             ]
           }, undefined, true, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("button", {
-            className: "self-center font-light text-xs text-gray-600 hover:text-red-400 transition-colors",
+            className: "self-center font-light text-xs text-gray-600 hover:text-oc-fail transition-colors",
             onClick: () => onDelete(todo),
             children: /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Cross, {}, undefined, false, undefined, this)
           }, undefined, false, undefined, this)
@@ -31079,17 +31248,17 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
   };
   const handleRetry = (action) => {
     if (createTodo.stage.match(action))
-      return onCreateTodo(action.payload.todo);
+      return onCreateTodo(action.payload.item);
     if (editTodo.stage.match(action))
-      return onEditTodo(action.payload.todo);
+      return onEditTodo(action.payload.item);
   };
   import_react6.useEffect(() => {
     if (mockApi.online) {
       failedTransitions.forEach((action) => {
         if (createTodo.stage.match(action))
-          return onCreateTodo(action.payload.todo);
+          return onCreateTodo(action.payload.item);
         if (editTodo.stage.match(action))
-          return onEditTodo(action.payload.todo);
+          return onEditTodo(action.payload.item);
       });
     }
   }, [mockApi.online, failedTransitions]);
@@ -31131,93 +31300,88 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
   }, undefined, true, undefined, this);
 };
 
-// usecases/basic/App.tsx
+// usecases/lib/components/todo/CodeTags.tsx
 var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
-var C = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
-  className: "text-emerald-400 font-mono text-[11px]",
+var tag = (color) => ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+  className: `${color} font-mono text-[11px]`,
   children
 }, undefined, false, undefined, this);
-var O = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
-  className: "text-blue-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
-var F = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
-  className: "text-amber-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
-var X = ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
-  className: "text-red-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
+var C = tag("text-oc-stage");
+var O = tag("text-oc-commit");
+var F = tag("text-oc-fail");
+var X = tag("text-oc-conflict");
+
+// usecases/basic/App.tsx
+var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
 var description = {
   subtitle: "Component-level async — the simplest optimistic pattern.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         "Component dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         ", then awaits the API call."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         "On success: ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
           children: "amend"
         }, undefined, false, undefined, this),
         " (server ID) → ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(C, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(C, {
           children: "commit"
         }, undefined, false, undefined, this),
         ". On failure: ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: "Optimistic state is computed at the selector level — no state copies."
     }, undefined, false, undefined, this)
   ],
   tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         "Add a todo online — appears instantly (",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
           children: "opt"
         }, undefined, false, undefined, this),
         "), then ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(C, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(C, {
           children: "commits"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         "Toggle offline, add a todo — it ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
           children: "fails"
         }, undefined, false, undefined, this),
         " with a jiggle."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
           children: "failed"
         }, undefined, false, undefined, this),
         " todos auto-retry."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
       children: [
         'Click "Sync API" — observe ',
-        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(X, {
+        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(X, {
           children: "conflict"
         }, undefined, false, undefined, this),
         " detection."
@@ -31258,10 +31422,10 @@ var App = () => {
       dispatch(deleteTodo.stash(transitionId));
     }
   };
-  return /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Layout, {
+  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Layout, {
     title: "Basic",
     description,
-    children: /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(TodoApp, {
+    children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TodoApp, {
       onCreateTodo: handleCreate,
       onEditTodo: handleEdit,
       onDeleteTodo: handleDelete
@@ -31274,8 +31438,8 @@ var createEventBus = () => {
   const bus = document.createElement("div");
   const eventName = "__OPTIMISTRON_TRANSITION_EVENT__";
   return {
-    publish: (transition) => {
-      const event = new CustomEvent(eventName, { detail: transition });
+    publish: (action) => {
+      const event = new CustomEvent(eventName, { detail: action });
       bus.dispatchEvent(event);
     },
     subscribe: (subscriber) => {
@@ -31289,7 +31453,7 @@ var createOptimistronMiddlware = () => {
   const eventBus = createEventBus();
   return [
     () => (next) => (action) => {
-      if (isAction(action) && isTransition(action))
+      if (isAction(action))
         eventBus.publish(action);
       next(action);
     },
@@ -31308,16 +31472,16 @@ var createDebugStore = (middleware) => {
 };
 
 // usecases/basic/index.tsx
-var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
 var { store, eventBus } = createDebugStore();
 var Usecase = () => {
   const mockApi = useMockApi();
   import_react7.useEffect(() => mockApi.setStore(store), []);
-  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Provider_default, {
+  return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Provider_default, {
     store,
-    children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TransitionHistoryProvider, {
       eventBus,
-      children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(App, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(App, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
@@ -31325,7 +31489,7 @@ var basic_default = Usecase;
 
 // usecases/lib/components/mocks/MockApiControls.tsx
 var import_react8 = __toESM(require_react(), 1);
-var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
 var MockApiControls = () => {
   const mockApi = useMockApi();
   const [syncing, setSyncing] = import_react8.useState(false);
@@ -31336,49 +31500,49 @@ var MockApiControls = () => {
     mockApi.sync();
     setTimeout(() => setSyncing(false), mockApi.timeout);
   }, [syncing, mockApi]);
-  return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+  return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
     children: [
-      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("h3", {
-        className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-3",
+      /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("h3", {
+        className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-2.5",
         children: "Mock API"
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+      /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
         className: "space-y-2.5",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
+          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("label", {
             className: "flex items-center justify-between cursor-pointer",
             children: [
-              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
                 className: "text-xs text-gray-400",
                 children: "Online"
               }, undefined, false, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
                 className: "relative",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
+                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("input", {
                     type: "checkbox",
                     className: "sr-only peer",
                     checked: mockApi.online,
                     onChange: mockApi.toggleOnline
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
                     className: "w-9 h-5 rounded-full bg-surface-3 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white peer-checked:after:translate-x-full after:rounded-full after:h-4 after:w-4 after:transition-all"
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("label", {
+          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("label", {
             className: "flex items-center justify-between",
             children: [
-              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
                 className: "text-xs text-gray-400",
                 children: "Latency"
               }, undefined, false, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
                 className: "flex items-center gap-1",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
+                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("input", {
                     type: "number",
                     min: 0,
                     max: 1e4,
@@ -31387,7 +31551,7 @@ var MockApiControls = () => {
                     onChange: (e) => mockApi.setResponseTime(parseInt(e.target.value, 10)),
                     className: "w-16 text-right text-xs font-mono text-gray-300 bg-surface-3 border border-border-subtle rounded px-1.5 py-0.5 focus:outline-none focus:border-gray-500"
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
                     className: "text-[10px] text-gray-600",
                     children: "ms"
                   }, undefined, false, undefined, this)
@@ -31395,7 +31559,7 @@ var MockApiControls = () => {
               }, undefined, true, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("button", {
+          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("button", {
             onClick: handleSync,
             disabled: syncing,
             className: "w-full text-xs text-gray-400 bg-surface-3 hover:bg-surface-2 disabled:opacity-50 disabled:pointer-events-none border border-border-subtle rounded py-1.5 transition-colors",
@@ -32880,69 +33044,61 @@ function sagaMiddlewareFactory(_temp) {
 var import_react9 = __toESM(require_react(), 1);
 
 // usecases/sagas/App.tsx
-var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
-var O2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("code", {
-  className: "text-blue-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
-var F2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("code", {
-  className: "text-amber-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
+var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
 var description2 = {
   subtitle: "Redux sagas — the most decoupled approach.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Component only dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         " — that's it."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Saga observes ",
-        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         " and drives the full transition lifecycle."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: "Max separation: UI fires intent, saga handles orchestration."
     }, undefined, false, undefined, this)
   ],
   tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Add a todo — component dispatches a single ",
-        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(O2, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         " action."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Toggle offline, add a todo — saga catches the ",
-        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(F2, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
           children: "failure"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(F2, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
           children: "failed"
         }, undefined, false, undefined, this),
         " todos auto-retry via saga."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(jsx_dev_runtime11.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: "Compare to Basic and Thunks — most decoupled pattern."
     }, undefined, false, undefined, this)
   ]
@@ -32958,10 +33114,10 @@ var App2 = () => {
   const handleDelete = async (todo) => {
     dispatch(deleteTodo.stage(todo.id));
   };
-  return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(Layout, {
+  return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
     title: "Sagas",
     description: description2,
-    children: /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(TodoApp, {
+    children: /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(TodoApp, {
       onCreateTodo: handleCreate,
       onEditTodo: handleEdit,
       onDeleteTodo: handleDelete
@@ -33090,18 +33246,18 @@ function* rootSaga() {
 }
 
 // usecases/sagas/index.tsx
-var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
 var sagaMiddleware = sagaMiddlewareFactory();
 var { store: store2, eventBus: eventBus2 } = createDebugStore(sagaMiddleware);
 sagaMiddleware.run(rootSaga);
 var Usecase2 = () => {
   const mockApi = useMockApi();
   import_react9.useEffect(() => mockApi.setStore(store2), []);
-  return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Provider_default, {
+  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Provider_default, {
     store: store2,
-    children: /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus2,
-      children: /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(App2, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(App2, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
@@ -33150,79 +33306,67 @@ var deleteTodoTunk = (id) => {
 };
 
 // usecases/thunks/App.tsx
-var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
-var C2 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
-  className: "text-emerald-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
-var O3 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
-  className: "text-blue-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
-var F3 = ({ children }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("code", {
-  className: "text-amber-400 font-mono text-[11px]",
-  children
-}, undefined, false, undefined, this);
+var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
 var description3 = {
   subtitle: "Redux thunks — same lifecycle, cleaner components.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: "Component dispatches a thunk — no direct transition management."
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: [
         "Thunk handles ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         " → API → ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
           children: "amend"
         }, undefined, false, undefined, this),
         "/",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(C2, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(C, {
           children: "commit"
         }, undefined, false, undefined, this),
         " or ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: "Same optimistic behavior — components are thinner."
     }, undefined, false, undefined, this)
   ],
   tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: [
         "Add a todo online — same instant ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(O3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
           children: "opt"
         }, undefined, false, undefined, this),
         ", simpler component code."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: [
         "Toggle offline, add a todo — thunk catches and dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: [
         "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(F3, {
+        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
           children: "failed"
         }, undefined, false, undefined, this),
         " todos auto-retry."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
       children: "Compare to Basic — note how much cleaner the component is."
     }, undefined, false, undefined, this)
   ]
@@ -33232,10 +33376,10 @@ var App3 = () => {
   const handleCreate = async (todo) => dispatch(createTodoThunk(todo));
   const handleEdit = async (update) => dispatch(editTodoThunk(update.id, update));
   const handleDelete = async ({ id }) => dispatch(deleteTodoTunk(id));
-  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Layout, {
+  return /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(Layout, {
     title: "Thunks",
     description: description3,
-    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TodoApp, {
+    children: /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(TodoApp, {
       onCreateTodo: handleCreate,
       onEditTodo: handleEdit,
       onDeleteTodo: handleDelete
@@ -33244,142 +33388,674 @@ var App3 = () => {
 };
 
 // usecases/thunks/index.tsx
-var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
 var { store: store3, eventBus: eventBus3 } = createDebugStore(thunk);
 var Usecase3 = () => {
   const mockApi = useMockApi();
   import_react10.useEffect(() => mockApi.setStore(store3), []);
-  return /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(Provider_default, {
+  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Provider_default, {
     store: store3,
-    children: /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus3,
-      children: /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(App3, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(App3, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var thunks_default = Usecase3;
 
 // usecases/index.tsx
-var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime16 = __toESM(require_jsx_dev_runtime(), 1);
 var usecases = [
   { key: "Basic", path: "/basic", component: basic_default, desc: "Component-level async" },
   { key: "Thunks", path: "/thunks", component: thunks_default, desc: "Thunk orchestration" },
   { key: "Sagas", path: "/sagas", component: sagas_default, desc: "Saga-driven lifecycle" }
 ];
-var Home = () => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-  className: "flex items-center justify-center h-full",
-  children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-    className: "max-w-sm text-center px-6",
-    children: [
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("h1", {
-        className: "text-2xl font-bold text-white mb-1",
-        children: "Optimistron"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
-        className: "text-xs text-gray-500 uppercase tracking-widest mb-8",
-        children: "Optimistic state for Redux"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8",
+var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 850 160",
+  className: "w-full rounded-lg",
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("defs", {
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+          id: "bn-title-grad",
+          x1: "0%",
+          y1: "0%",
+          x2: "100%",
+          y2: "0%",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "0%",
+              stopColor: "#06b6d4"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "30%",
+              stopColor: "#8b5cf6"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "60%",
+              stopColor: "#d946ef"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "100%",
+              stopColor: "#f43f5e"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+          id: "bn-border-grad",
+          x1: "0%",
+          y1: "0%",
+          x2: "100%",
+          y2: "100%",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "0%",
+              stopColor: "#06b6d4",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "50%",
+              stopColor: "#8b5cf6",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "100%",
+              stopColor: "#f43f5e",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+          id: "bn-tagline-grad",
+          x1: "0%",
+          y1: "0%",
+          x2: "100%",
+          y2: "0%",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "0%",
+              stopColor: "#67e8f9"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "100%",
+              stopColor: "#c4b5fd"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this)
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+      width: "850",
+      height: "160",
+      rx: "12",
+      fill: "#0d1117"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+      x: "1",
+      y: "1",
+      width: "848",
+      height: "158",
+      rx: "11",
+      fill: "none",
+      stroke: "url(#bn-border-grad)",
+      strokeWidth: "1.5"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+      cx: "28",
+      cy: "20",
+      r: "5.5",
+      fill: "#ff5f57"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+      cx: "46",
+      cy: "20",
+      r: "5.5",
+      fill: "#febc2e"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+      cx: "64",
+      cy: "20",
+      r: "5.5",
+      fill: "#28c840"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("g", {
+      fill: "url(#bn-title-grad)",
+      children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+        fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+        fontSize: "12.5",
+        xmlSpace: "preserve",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
-            children: [
-              "Optimistic state is ",
-              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
-                className: "text-gray-200",
-                children: "computed, not stored"
-              }, undefined, false, undefined, this),
-              ". Only ",
-              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
-                className: "text-xs text-emerald-400/80 bg-surface-3 px-1 py-0.5 rounded",
-                children: "commit"
-              }, undefined, false, undefined, this),
-              " mutates reducer state. All other operations modify the transitions list."
-            ]
-          }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("p", {
-            children: [
-              "Think ",
-              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
-                className: "text-xs text-emerald-400/80 bg-surface-3 px-1 py-0.5 rounded",
-                children: "git rebase"
-              }, undefined, false, undefined, this),
-              " — committed state is your main branch, transitions are replayed on top at read-time."
-            ]
-          }, undefined, true, undefined, this)
-        ]
-      }, undefined, true, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "p-3 rounded-lg bg-surface-2 border border-border-subtle text-xs text-gray-500 text-left leading-relaxed",
-        children: [
-          "Pick a usecase from the sidebar. Use the ",
-          /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
-            className: "text-gray-300",
-            children: "Mock API"
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "62",
+            children: " ██████╗ ██████╗ ████████╗██╗███╗   ███╗██╗███████╗████████╗██████╗  ██████╗ ███╗   ██╗"
           }, undefined, false, undefined, this),
-          " controls to simulate network conditions."
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "76",
+            children: "██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "90",
+            children: "██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║███████╗   ██║   ██████╔╝██║   ██║██╔██╗ ██║"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "104",
+            children: "██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║╚════██║   ██║   ██╔══██╗██║   ██║██║╚██╗██║"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "118",
+            children: "╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████║   ██║   ██║  ██║╚██████╔╝██║ ╚████║"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+            x: "85",
+            y: "132",
+            children: " ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝"
+          }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this)
-    ]
-  }, undefined, true, undefined, this)
-}, undefined, false, undefined, this);
-var App4 = () => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiProvider, {
-  children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(HashRouter, {
-    children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "22",
+      y: "55",
+      fontFamily: "monospace",
+      fontSize: "12",
+      fill: "#38bdf8",
+      opacity: "0.45",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "40",
+      y: "80",
+      fontFamily: "monospace",
+      fontSize: "7",
+      fill: "#8b5cf6",
+      opacity: "0.3",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "15",
+      y: "105",
+      fontFamily: "monospace",
+      fontSize: "5",
+      fill: "#d946ef",
+      opacity: "0.2",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "55",
+      y: "120",
+      fontFamily: "monospace",
+      fontSize: "9",
+      fill: "#06b6d4",
+      opacity: "0.25",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "30",
+      y: "145",
+      fontFamily: "monospace",
+      fontSize: "4",
+      fill: "#c4b5fd",
+      opacity: "0.18",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "68",
+      y: "48",
+      fontFamily: "monospace",
+      fontSize: "6",
+      fill: "#67e8f9",
+      opacity: "0.2",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "795",
+      y: "55",
+      fontFamily: "monospace",
+      fontSize: "14",
+      fill: "#38bdf8",
+      opacity: "0.55",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "825",
+      y: "80",
+      fontFamily: "monospace",
+      fontSize: "9",
+      fill: "#8b5cf6",
+      opacity: "0.35",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "778",
+      y: "100",
+      fontFamily: "monospace",
+      fontSize: "7",
+      fill: "#d946ef",
+      opacity: "0.25",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "830",
+      y: "120",
+      fontFamily: "monospace",
+      fontSize: "11",
+      fill: "#06b6d4",
+      opacity: "0.3",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "805",
+      y: "148",
+      fontFamily: "monospace",
+      fontSize: "6",
+      fill: "#c4b5fd",
+      opacity: "0.2",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "770",
+      y: "42",
+      fontFamily: "monospace",
+      fontSize: "5",
+      fill: "#67e8f9",
+      opacity: "0.18",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "815",
+      y: "45",
+      fontFamily: "monospace",
+      fontSize: "7",
+      fill: "#c4b5fd",
+      opacity: "0.2",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "838",
+      y: "150",
+      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+      fontSize: "11",
+      fill: "url(#bn-tagline-grad)",
+      opacity: "0.5",
+      textAnchor: "end",
+      children: "λς"
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 850 150",
+  className: "w-full rounded grad-wrap",
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("defs", {
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+          id: "lc-border-grad",
+          x1: "0%",
+          y1: "0%",
+          x2: "100%",
+          y2: "100%",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "0%",
+              stopColor: "#06b6d4",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "50%",
+              stopColor: "#8b5cf6",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "100%",
+              stopColor: "#f43f5e",
+              stopOpacity: "0.4"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+          id: "lc-tagline-grad",
+          x1: "0%",
+          y1: "0%",
+          x2: "100%",
+          y2: "0%",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "0%",
+              stopColor: "#67e8f9"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+              offset: "100%",
+              stopColor: "#c4b5fd"
+            }, undefined, false, undefined, this)
+          ]
+        }, undefined, true, undefined, this)
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+      width: "850",
+      height: "150",
+      rx: "12",
+      fill: "#0d1117"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+      x: "1",
+      y: "1",
+      width: "848",
+      height: "148",
+      rx: "11",
+      fill: "none",
+      stroke: "url(#lc-border-grad)",
+      strokeWidth: "1.5"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+      fontSize: "13",
+      xmlSpace: "preserve",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          x: "30",
+          y: "40",
+          fill: "#4ade80",
+          children: "  stage"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#484f58",
+          children: " ───▶ "
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#38bdf8",
+          children: "commit"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#484f58",
+          children: "   ✓  stage optimistically, commit on success"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          x: "30",
+          y: "65",
+          fill: "#484f58",
+          children: "    ├──────▶ "
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#c4b5fd",
+          children: "amend"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#484f58",
+          children: "    ↻  update staged transition before committing"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          x: "30",
+          y: "90",
+          fill: "#484f58",
+          children: "    ├──────▶ "
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#f472b6",
+          children: "fail"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#484f58",
+          children: "     ✗  flag as failed — keep for retry/UI feedback"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          x: "30",
+          y: "115",
+          fill: "#484f58",
+          children: "    └──────▶ "
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#facc15",
+          children: "stash"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          fill: "#484f58",
+          children: "    ↩  revert — restore trailing if TRAILING dedupe"
+        }, undefined, false, undefined, this)
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "15",
+      y: "68",
+      fontFamily: "monospace",
+      fontSize: "5",
+      fill: "#d946ef",
+      opacity: "0.18",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "8",
+      y: "100",
+      fontFamily: "monospace",
+      fontSize: "4",
+      fill: "#06b6d4",
+      opacity: "0.15",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "795",
+      y: "32",
+      fontFamily: "monospace",
+      fontSize: "12",
+      fill: "#38bdf8",
+      opacity: "0.5",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "825",
+      y: "58",
+      fontFamily: "monospace",
+      fontSize: "8",
+      fill: "#8b5cf6",
+      opacity: "0.3",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "778",
+      y: "80",
+      fontFamily: "monospace",
+      fontSize: "6",
+      fill: "#d946ef",
+      opacity: "0.22",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "830",
+      y: "100",
+      fontFamily: "monospace",
+      fontSize: "10",
+      fill: "#06b6d4",
+      opacity: "0.28",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "805",
+      y: "130",
+      fontFamily: "monospace",
+      fontSize: "5",
+      fill: "#c4b5fd",
+      opacity: "0.18",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "770",
+      y: "115",
+      fontFamily: "monospace",
+      fontSize: "4",
+      fill: "#67e8f9",
+      opacity: "0.15",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "815",
+      y: "140",
+      fontFamily: "monospace",
+      fontSize: "7",
+      fill: "#f43f5e",
+      opacity: "0.16",
+      children: "✦"
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      x: "838",
+      y: "142",
+      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+      fontSize: "11",
+      fill: "url(#lc-tagline-grad)",
+      opacity: "0.5",
+      textAnchor: "end",
+      children: "λς"
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var Home = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+  className: "flex items-center justify-center h-full relative overflow-hidden",
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Stars, {}, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+      className: "max-w-2xl text-center px-6 relative z-10",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "mb-6",
+          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(BannerSvg, {}, undefined, false, undefined, this)
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+          className: "text-xs text-gray-500 uppercase tracking-widest mb-8",
+          children: "Optimistic state for Redux"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8",
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+              children: [
+                "Optimistic state is ",
+                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                  className: "text-gray-200",
+                  children: "computed, not stored"
+                }, undefined, false, undefined, this),
+                ". Only ",
+                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("code", {
+                  className: "text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "commit"
+                }, undefined, false, undefined, this),
+                " mutates reducer state. All other operations modify the transitions list."
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+              children: [
+                "Think ",
+                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("code", {
+                  className: "text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "git rebase"
+                }, undefined, false, undefined, this),
+                " — committed state is your main branch, transitions are replayed on top at read-time."
+              ]
+            }, undefined, true, undefined, this)
+          ]
+        }, undefined, true, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "mb-8",
+          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(LifecycleSvg, {}, undefined, false, undefined, this)
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed grad-wrap",
+          children: [
+            "Pick a usecase from the sidebar. Use the ",
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+              className: "text-gray-300",
+              children: "Mock API"
+            }, undefined, false, undefined, this),
+            " controls to simulate network conditions."
+          ]
+        }, undefined, true, undefined, this)
+      ]
+    }, undefined, true, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var App4 = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(MockApiProvider, {
+  children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(HashRouter, {
+    children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
       className: "flex w-full h-screen overflow-hidden",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-          className: "w-64 flex-shrink-0 h-full flex flex-col bg-surface-1 border-r border-border-subtle",
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "w-64 flex-shrink-0 h-full flex flex-col bg-surface-1",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
               className: "p-4 pb-2",
-              children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(NavLink, {
+              children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(NavLink, {
                 to: "/",
-                className: "block",
+                className: "flex items-center gap-1.5",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("h2", {
-                    className: "text-sm font-bold text-white tracking-tight",
-                    children: "Optimistron"
-                  }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
-                    className: "text-[10px] text-gray-600 uppercase tracking-widest",
-                    children: "demos"
+                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                    children: [
+                      /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("h2", {
+                        className: "text-sm font-bold text-white tracking-tight",
+                        children: "Optimistron"
+                      }, undefined, false, undefined, this),
+                      /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                        className: "text-[10px] text-gray-600 uppercase tracking-widest",
+                        children: "demos"
+                      }, undefined, false, undefined, this)
+                    ]
+                  }, undefined, true, undefined, this),
+                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Logo, {
+                    className: "w-5 h-3.5 opacity-50 ml-auto"
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this)
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("nav", {
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+              className: "grad-h"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("nav", {
               className: "flex-1 px-2 py-2 space-y-0.5 overflow-y-auto",
-              children: usecases.map(({ key, path, desc }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(NavLink, {
+              children: usecases.map(({ key, path, desc }) => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(NavLink, {
                 to: path,
                 className: ({ isActive }) => `block px-3 py-2 rounded-md text-sm transition-colors ${isActive ? "bg-surface-3 text-white" : "text-gray-400 hover:text-gray-200 hover:bg-surface-2"}`,
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
                     className: "block font-medium",
                     children: key
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
                     className: "block text-[11px] text-gray-600",
                     children: desc
                   }, undefined, false, undefined, this)
                 ]
               }, key, true, undefined, this))
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-              className: "p-4 border-t border-border-subtle",
-              children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
-            }, undefined, false, undefined, this)
+            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+              className: "h-48 flex-shrink-0 flex flex-col",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                  className: "grad-h"
+                }, undefined, false, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                  className: "px-5 pt-2.5 pb-4 flex-1",
+                  children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
+                }, undefined, false, undefined, this)
+              ]
+            }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+          className: "grad-v self-stretch"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
           className: "flex flex-col grow h-full overflow-hidden bg-surface-0",
-          children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Routes, {
+          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Routes, {
             children: [
-              /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Route, {
+              /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Route, {
                 path: "/",
                 Component: Home
               }, undefined, false, undefined, this),
-              usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Route, {
+              usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Route, {
                 path,
                 Component: component
               }, key, false, undefined, this))
@@ -33392,7 +34068,7 @@ var App4 = () => /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(MockApiProvider, {
 }, undefined, false, undefined, this);
 var el = document.getElementById("root");
 var root = import_client.createRoot(el);
-root.render(/* @__PURE__ */ jsx_dev_runtime15.jsxDEV(App4, {}, undefined, false, undefined, this));
+root.render(/* @__PURE__ */ jsx_dev_runtime16.jsxDEV(App4, {}, undefined, false, undefined, this));
 requestAnimationFrame(() => el.classList.add("ready"));
 export {
   App4 as App

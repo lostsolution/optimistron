@@ -1,5 +1,44 @@
 import type { FC } from 'react';
 
+/** Brand mark — λς with cyan→lavender gradient, matching SVG tagline-grad */
+export const Logo: FC<{ className?: string }> = ({ className }) => (
+    <svg viewBox="0 0 24 14" className={className}>
+        <defs>
+            <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#67e8f9" />
+                <stop offset="100%" stopColor="#c4b5fd" />
+            </linearGradient>
+        </defs>
+        <text x="0" y="12" fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" fontSize="13" fill="url(#logo-grad)">λς</text>
+    </svg>
+);
+
+/** Scattered ✦ stars — positioned absolute inside a relative parent */
+const STARS: { x: string; y: string; size: number; color: string; opacity: number }[] = [
+    { x: '8%', y: '15%', size: 10, color: '#38bdf8', opacity: 0.45 },
+    { x: '88%', y: '20%', size: 14, color: '#38bdf8', opacity: 0.5 },
+    { x: '92%', y: '55%', size: 8, color: '#8b5cf6', opacity: 0.3 },
+    { x: '5%', y: '70%', size: 6, color: '#d946ef', opacity: 0.2 },
+    { x: '85%', y: '80%', size: 10, color: '#06b6d4', opacity: 0.28 },
+    { x: '15%', y: '90%', size: 5, color: '#c4b5fd', opacity: 0.18 },
+    { x: '95%', y: '90%', size: 7, color: '#f43f5e', opacity: 0.16 },
+    { x: '50%', y: '5%', size: 5, color: '#67e8f9', opacity: 0.18 },
+];
+
+export const Stars: FC = () => (
+    <>
+        {STARS.map(({ x, y, size, color, opacity }, i) => (
+            <span
+                key={i}
+                className="absolute pointer-events-none select-none"
+                style={{ left: x, top: y, fontSize: size, color, opacity, fontFamily: 'monospace' }}
+            >
+                ✦
+            </span>
+        ))}
+    </>
+);
+
 export const Spinner: FC = () => (
     <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="currentColor">
         <path

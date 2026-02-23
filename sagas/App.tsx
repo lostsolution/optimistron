@@ -6,8 +6,7 @@ import { TodoApp } from '~usecases/lib/components/todo/TodoApp';
 import { createTodo, deleteTodo, editTodo } from '~usecases/lib/store/actions';
 import type { Todo } from '~usecases/lib/store/types';
 
-const O = ({ children }: { children: string }) => <code className="text-blue-400 font-mono text-[11px]">{children}</code>;
-const F = ({ children }: { children: string }) => <code className="text-amber-400 font-mono text-[11px]">{children}</code>;
+import { F, O } from '~usecases/lib/components/todo/CodeTags';
 
 const description: UsecaseDescription = {
     subtitle: 'Redux sagas — the most decoupled approach.',
