@@ -50,7 +50,7 @@ No `isLoading`, `error`, `isOptimistic` flags. A pending transition means loadin
 
 ```typescript
 import { configureStore, createSelector } from '@reduxjs/toolkit';
-import { optimistron, createTransitions, crudPrepare, indexedStateFactory } from '@lostsolution/optimistron';
+import { optimistron, createTransitions, crudPrepare, recordState } from '@lostsolution/optimistron';
 
 type Todo = { id: string; value: string; done: boolean; revision: number };
 
@@ -62,17 +62,12 @@ const deleteTodo = createTransitions('todos::delete')(crud.remove);
 const { reducer: todos, selectOptimistic } = optimistron(
     'todos',
     {} as Record<string, Todo>,
-    indexedStateFactory<Todo>({
-        itemIdKey: 'id',
+    recordState<Todo>({
+        key: 'id',
         compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
         eq: (a) => (b) => a.done === b.done && a.value === b.value,
     }),
-    ({ getState, create, update, remove }, action) => {
-        if (createTodo.match(action)) return create(action.payload.item);
-        if (editTodo.match(action)) return update(action.payload.id, action.payload.item);
-        if (deleteTodo.match(action)) return remove(action.payload.id);
-        return getState();
-    },
+    { create: createTodo, update: editTodo, remove: deleteTodo },
 );
 
 const store = configureStore({ reducer: { todos } });
@@ -111,10 +106,128 @@ Entities need a **monotonically increasing version** — `revision`, `updatedAt`
 
 ---
 
+## State Handlers
+
+Optimistron ships four built-in `StateHandler` implementations. Each one defines `create`, `update`, `remove`, and `merge` for a different state shape.
+
+### `recordState` — flat key-value map
+
+`Record<string, T>` indexed by a single key on `T`. The most common shape for entity collections.
+
+```typescript
+import { recordState, crudPrepare } from '@lostsolution/optimistron';
+
+const handler = recordState<Todo>({
+    key: 'id',
+    compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+    eq: (a) => (b) => a.done === b.done && a.value === b.value,
+});
+const crud = crudPrepare<Todo>('id');
+```
+
+### `singularState` — single object
+
+`T | null` for singleton entities like a user profile or app settings. CRUD operates on the whole object; `merge` uses `compare`/`eq` on non-null values.
+
+```typescript
+import { singularState } from '@lostsolution/optimistron';
+
+type Profile = { displayName: string; avatarUrl: string; revision: number };
+
+const handler = singularState<Profile>({
+    compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+    eq: (a) => (b) => a.displayName === b.displayName && a.avatarUrl === b.avatarUrl,
+});
+```
+
+### `nestedRecordState` — nested records
+
+`Record<string, Record<string, ... T>>` for multi-level grouping. Curried to fix `T` and infer the keys tuple. `crudPrepare` multi-key overload derives `transitionId` by joining path IDs with `/`.
+
+```typescript
+import { nestedRecordState, crudPrepare } from '@lostsolution/optimistron';
+
+type ProjectTodo = { id: string; projectId: string; value: string; revision: number };
+
+const handler = nestedRecordState<ProjectTodo>()({
+    keys: ['projectId', 'id'],
+    compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+    eq: (a) => (b) => a.value === b.value,
+});
+const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
+```
+
+### `listState` — ordered list
+
+`T[]` for collections where insertion order matters or consumers need array semantics. Items identified by a single key on `T`, like `recordState`.
+
+```typescript
+import { listState, crudPrepare } from '@lostsolution/optimistron';
+
+const handler = listState<Todo>({
+    key: 'id',
+    compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+    eq: (a) => (b) => a.done === b.done && a.value === b.value,
+});
+const crud = crudPrepare<Todo>('id');
+```
+
+You can implement the `StateHandler` interface for any state shape — the built-in handlers are just the common cases.
+
+---
+
+## Reducer Config
+
+The 4th argument to `optimistron()` accepts three modes:
+
+### Auto-wired (zero boilerplate)
+
+Pass a CRUD action map — the handler's built-in `wire` method routes `crudPrepare` payloads automatically:
+
+```typescript
+optimistron('todos', initial, handler, {
+    create: createTodo,
+    update: editTodo,
+    remove: deleteTodo,
+});
+```
+
+### Hybrid (auto-wired + fallback)
+
+Auto-wire CRUD and handle custom actions in a fallback reducer:
+
+```typescript
+optimistron('todos', initial, handler, {
+    create: createTodo,
+    update: editTodo,
+    remove: deleteTodo,
+    reducer: ({ getState }, action) => {
+        if (sync.match(action)) return /* custom logic */;
+        return getState();
+    },
+});
+```
+
+### Manual (full control)
+
+Pass a function — the current behavior, nothing changes:
+
+```typescript
+optimistron('todos', initial, handler, ({ getState, create, update, remove }, action) => {
+    if (createTodo.match(action)) return create(action.payload.item);
+    if (editTodo.match(action)) return update(action.payload.id, action.payload.item);
+    if (deleteTodo.match(action)) return remove(action.payload.id);
+    return getState();
+});
+```
+
+All three modes are fully backwards compatible. The CRUD map only requires `{ match }` — an `ActionMatcher<P>` type guard — from each action creator. `optimistron()` uses function overloads to infer the expected payload types from the handler, so mismatched action creators are caught at compile time.
+
+---
+
 ## Roadmap
 
 - **Batch transitions** — stage multiple entities under a single correlation ID. Commit/fail/stash the batch atomically.
-- **More state factories** — `singleEntityFactory` for scalar state, `normalizedStateFactory` for relational stores with foreign key handling.
 - **Retry strategies** — configurable retry policies for failed transitions (exponential backoff, max attempts) built into the transition lifecycle.
 - **Devtools integration** — Redux DevTools timeline visualization for transitions, sanitization events, and conflict detection.
 - **Persistence adapters** — serialize/rehydrate pending transitions across page reloads (localStorage, IndexedDB).
@@ -129,4 +242,4 @@ bun test              # run tests (coverage threshold 90%)
 bun run build:esm     # build to lib/
 ```
 
-See `usecases/` for working examples with async, thunks, and sagas.
+See `usecases/` for working examples demonstrating state handlers (`recordState`, `singularState`, `nestedRecordState`, `listState`) with basic async, thunks, and sagas.

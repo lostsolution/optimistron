@@ -78,7 +78,35 @@ interface StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
 
 **Key invariant:** `update`/`remove` return the **same reference** on no-op. Sanitization uses `===` to detect effect.
 
-Your reducer receives a `BoundStateHandler` — the handler closed over current state:
+### Auto-wired CRUD
+
+Built-in handlers (`recordState`, `nestedRecordState`, `singularState`) expose a typed `wire` method as a structural extension — it is **not on the `StateHandler` interface** because each handler needs specifically typed `CrudActionMap<CP, UP, RP>` payloads. The `wire` method uses `ActionMatcher<P>` type guards to narrow action payloads without `as any` casts. When the consumer passes a CRUD action map instead of a function, `wire` handles the dispatch:
+
+```typescript
+// Zero boilerplate — handler.wire does the routing
+optimistron('todos', initial, handler, {
+    create: createTodo, update: editTodo, remove: deleteTodo,
+});
+
+// Hybrid — auto-wire CRUD + fallback for custom actions
+optimistron('todos', initial, handler, {
+    create: createTodo, update: editTodo, remove: deleteTodo,
+    reducer: ({ getState }, action) => { /* custom logic */ },
+});
+```
+
+The `wire` method is handler-specific because each handler needs typed payload shapes. `optimistron()` uses function overloads — the auto-wire overload infers the CRUD map type `A` from `WireMethod<A>` on the handler, enforcing that each action matcher produces the right payload shape at compile time:
+
+| Handler | `wire` unpacks payload as |
+|---------|--------------------------|
+| `recordState` | `create(item)`, `update(id, item)`, `remove(id)` |
+| `nestedRecordState` | `create(item)`, `update(...path, item)`, `remove(...path)` |
+| `singularState` | `create(item)`, `update(item)`, `remove()` |
+| `listState` | `create(item)`, `update(id, item)`, `remove(id)` |
+
+### Manual mode
+
+Pass a function for full control — the `BoundStateHandler` is the handler closed over current state:
 
 ```typescript
 ({ getState, create, update, remove }, action) => {
@@ -111,39 +139,52 @@ For each transition: apply as-if-committed, check if state mutated, then `merge`
 
 ---
 
-## Custom Handlers
+## Built-in State Handlers
 
-`indexedStateFactory` covers `Record<string, T>`. For other shapes, implement `StateHandler`:
+Four built-in handlers cover the common state shapes:
 
-<details>
-<summary><b>Example: single-entity state</b></summary>
+### `recordState<T>` — flat key-value map
+
+`Record<string, T>` indexed by a single key. Depth-1 specialization of `nestedRecordState`.
 
 ```typescript
-import type { StateHandler } from '@lostsolution/optimistron';
-import { OptimisticMergeResult } from '@lostsolution/optimistron';
-
-type Profile = { name: string; bio: string; revision: number };
-
-const profileHandler: StateHandler<
-    Profile | null, [profile: Profile], [partial: Partial<Profile>], []
-> = {
-    create: (_state, profile) => profile,
-    update: (state, partial) => state ? { ...state, ...partial } : state,
-    remove: () => null,
-    merge: (current, incoming) => {
-        if (current === null && incoming === null) throw OptimisticMergeResult.SKIP;
-        if (current === null || incoming === null) return incoming;
-        if (incoming.revision < current.revision) throw OptimisticMergeResult.CONFLICT;
-        if (incoming.revision === current.revision) {
-            if (incoming.name === current.name && incoming.bio === current.bio) throw OptimisticMergeResult.SKIP;
-            throw OptimisticMergeResult.CONFLICT;
-        }
-        return incoming;
-    },
-};
+import { recordState, crudPrepare } from '@lostsolution/optimistron';
+const handler = recordState<Todo>({ key: 'id', compare, eq });
+const crud = crudPrepare<Todo>('id');
 ```
 
-</details>
+### `singularState<T>` — single object
+
+`T | null` for singletons (profile, settings). CRUD operates on the whole object.
+
+```typescript
+import { singularState } from '@lostsolution/optimistron';
+const handler = singularState<Profile>({ compare, eq });
+```
+
+### `nestedRecordState<T>()` — nested records
+
+`Record<string, Record<string, ... T>>` for multi-level grouping. Curried: fix `T`, infer keys. Multi-key `crudPrepare` joins path IDs with `/` for the transitionId.
+
+```typescript
+import { nestedRecordState, crudPrepare } from '@lostsolution/optimistron';
+const handler = nestedRecordState<ProjectTodo>()({ keys: ['projectId', 'id'], compare, eq });
+const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
+```
+
+### `listState<T>` — ordered list
+
+`T[]` for collections where insertion order matters. Items identified by a single key on `T`.
+
+```typescript
+import { listState, crudPrepare } from '@lostsolution/optimistron';
+const handler = listState<Todo>({ key: 'id', compare, eq });
+const crud = crudPrepare<Todo>('id');
+```
+
+## Custom Handlers
+
+For shapes not covered by the built-ins, implement `StateHandler` directly.
 
 **The contract:**
 1. `update`/`remove` → same reference on no-op
@@ -233,7 +274,7 @@ function* createTodoSaga(action: ReturnType<typeof createTodo.stage>) {
 
 ## API Reference
 
-### `optimistron(namespace, initialState, handler, reducer, options?)`
+### `optimistron(namespace, initialState, handler, config, options?)`
 
 Returns `{ reducer, selectOptimistic }`.
 
@@ -242,7 +283,7 @@ Returns `{ reducer, selectOptimistic }`.
 | `namespace` | `string` | Action type prefix |
 | `initialState` | `S` | Initial state |
 | `handler` | `StateHandler` | State handler implementation |
-| `reducer` | `HandlerReducer` | Receives `BoundStateHandler` + action |
+| `config` | `ReducerConfig` | CRUD action map (auto-wired) or function (manual) |
 | `options.sanitizeAction` | `(action) => action` | Optional action transform |
 
 ### `selectOptimistic(selector)`
@@ -253,15 +294,22 @@ Returned from `optimistron()`. Replays transitions before selecting. Memoize wit
 selectOptimistic((todos) => Object.values(todos.state))
 ```
 
-### `crudPrepare(itemIdKey)`
+### `crudPrepare<T>(key)` / `crudPrepare<T>()(keys)`
 
-Factory for CRUD prepare functions that couple `transitionId === entityId`. Recommended default for indexed state.
+Factory for CRUD prepare functions that couple `transitionId === entityId`.
 
 ```typescript
+// Single-key (recordState):
 const crud = crudPrepare<Todo>('id');
 // crud.create(item) → { payload: { item }, transitionId: item.id }
 // crud.update(id, partial) → { payload: { id, item: partial }, transitionId: id }
 // crud.remove(id) → { payload: { id }, transitionId: id }
+
+// Multi-key (nestedRecordState) — curried for key inference:
+const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
+// crud.create(item) → { payload: { item }, transitionId: "projectId/id" }
+// crud.update(projectId, id, partial) → { payload: { path, item }, transitionId: "projectId/id" }
+// crud.remove(projectId, id) → { payload: { path }, transitionId: "projectId/id" }
 ```
 
 ### `createTransitions(type, dedupe?)(prepare)`
@@ -288,13 +336,14 @@ createTransitions('todos::add')({
 | `selectConflictingTransition(id)` | `StagedAction \| undefined` |
 | `selectFailedTransitions` | `StagedAction[]` |
 
-### `indexedStateFactory(options)`
+### State Handler Factories
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `itemIdKey` | `keyof T` | Record key field |
-| `compare` | `(a: T) => (b: T) => 0 \| 1 \| -1` | Version ordering |
-| `eq` | `(a: T) => (b: T) => boolean` | Content equality |
+| Factory | Options | State shape |
+|---------|---------|-------------|
+| `recordState<T>` | `{ key, compare, eq }` | `Record<string, T>` |
+| `singularState<T>` | `{ compare, eq }` | `T \| null` |
+| `nestedRecordState<T>()(opts)` | `{ keys, compare, eq }` | Nested records |
+| `listState<T>` | `{ key, compare, eq }` | `T[]` |
 
 ### Enums
 
