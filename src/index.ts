@@ -8,6 +8,7 @@ export {
     selectIsFailed,
     selectIsOptimistic,
 } from './selectors/selectors';
+export { listState } from './state/list';
 export { recordState, nestedRecordState } from './state/record';
 export { singularState } from './state/singular';
 export { DedupeMode, Operation, OptimisticMergeResult, isTransition } from './transitions';
@@ -17,6 +18,7 @@ export type {
     ActionMatcher,
     BoundStateHandler,
     CrudActionMap,
+    ListStateOptions,
     NestedRecordStateOptions,
     RecordStateOptions,
     SingularStateOptions,

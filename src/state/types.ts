@@ -24,6 +24,7 @@ export type VersioningOptions<T> = {
 
 export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 export type SingularStateOptions<T> = VersioningOptions<T>;
+export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
 
 /** Type-narrowing action matcher — `.match()` narrows the action's payload.
