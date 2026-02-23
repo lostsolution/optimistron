@@ -18,20 +18,26 @@ Internals, API, and advanced patterns. For quick start, see [README.md](./README
 
 ## Entity Identity
 
-Every transition carries a string ID. This ID is the **stable link between a transition and its entity in state**. `createTodo.stage(todo.id, todo)` — the first argument becomes the transition ID, used by every subsequent operation to locate the right entry.
-
-Any derivation works. What matters: one ID, one entity. Because:
+Every transition carries a string ID — the **stable link between a transition and its entity in state**. One ID, one entity. Because:
 
 - **Sanitization** replays by ID — shared IDs cause shadowing
 - **Selectors** look up by ID — ambiguous IDs break lookups
 - **Dedupe** matches on ID
 
-For `Record<string, T>`, the simplest approach is using the entity key directly:
+**The recommended default is `transitionId === entityId`.** Use `crudPrepare` to couple them:
 
 ```typescript
-indexedStateFactory<Todo>({ itemIdKey: 'id', /* ... */ });
-// stage('abc', entity) → state['abc'] = entity
+const crud = crudPrepare<Todo>('id');
+const createTodo = createTransitions('todos::add')(crud.create);
+
+dispatch(createTodo.stage(todo));           // transitionId auto-detected from todo.id
+dispatch(createTodo.amend(tid, amended));   // explicit — targets original transition
+dispatch(createTodo.commit(tid));           // explicit
 ```
+
+**Why STAGE-only auto-detection:** `stage` initiates a new transition — the entity *is* the transition. But `amend`/`commit`/`fail`/`stash` target an *existing* transition the consumer already holds a reference to. Auto-detecting on `amend` is a pitfall: it shares `stagePA`, so an amended entity with a server-assigned ID would target the wrong transition.
+
+For edge-cases where `transitionId !== entityId` (batch ops, correlation IDs, server-assigned IDs with temp tokens), write custom prepare functions and pass transitionId as the first argument — the explicit path works for all operations including `stage`.
 
 ---
 
@@ -150,12 +156,11 @@ const profileHandler: StateHandler<
 `DedupeMode.TRAILING` — undo-on-failure for destructive ops:
 
 ```typescript
-const deleteTodo = createTransitions('todos::delete', DedupeMode.TRAILING)(
-  (id: string) => ({ payload: { id } })
-);
+const crud = crudPrepare<Todo>('id');
+const deleteTodo = createTransitions('todos::delete', DedupeMode.TRAILING)(crud.remove);
 
-dispatch(deleteTodo.stage(id, id));  // gone from UI
-dispatch(deleteTodo.stash(id));      // back — restored from trailing
+dispatch(deleteTodo.stage(id));   // gone from UI (transitionId auto-detected)
+dispatch(deleteTodo.stash(id));   // back — restored from trailing
 ```
 
 Replaced transitions are stored as fallback. `stash` restores instead of dropping.
@@ -171,12 +176,14 @@ Transport-agnostic. Works with anything:
 
 ```typescript
 const handleCreate = async (todo: Todo) => {
-  dispatch(createTodo.stage(todo.id, todo));
+  const transitionId = todo.id;
+  dispatch(createTodo.stage(todo));                             // auto-detect transitionId
   try {
     await api.create(todo);
-    dispatch(createTodo.commit(todo.id));
+    dispatch(createTodo.amend(transitionId, { ...todo, id: serverId })); // explicit
+    dispatch(createTodo.commit(transitionId));
   } catch (e) {
-    dispatch(createTodo.fail(todo.id, e));
+    dispatch(createTodo.fail(transitionId, e));
   }
 };
 ```
@@ -190,12 +197,14 @@ const handleCreate = async (todo: Todo) => {
 const createTodoThunk =
   (todo: Todo): ThunkAction<void, RootState, void, Action> =>
   async (dispatch) => {
-    dispatch(createTodo.stage(todo.id, todo));
+    const transitionId = todo.id;
+    dispatch(createTodo.stage(todo));
     try {
       await api.create(todo);
-      dispatch(createTodo.commit(todo.id));
+      dispatch(createTodo.amend(transitionId, { ...todo, id: serverId }));
+      dispatch(createTodo.commit(transitionId));
     } catch (e) {
-      dispatch(createTodo.fail(todo.id, e));
+      dispatch(createTodo.fail(transitionId, e));
     }
   };
 ```
@@ -207,12 +216,13 @@ const createTodoThunk =
 
 ```typescript
 function* createTodoSaga(action: ReturnType<typeof createTodo.stage>) {
-  const { id } = getTransitionMeta(action);
+  const transitionId = getTransitionMeta(action).id;
   try {
-    yield call(api.create, action.payload.todo);
-    yield put(createTodo.commit(id));
+    yield call(api.create, action.payload.item);
+    yield put(createTodo.amend(transitionId, { ...action.payload.item, id: serverId }));
+    yield put(createTodo.commit(transitionId));
   } catch (e) {
-    yield put(createTodo.fail(id, e));
+    yield put(createTodo.fail(transitionId, e));
   }
 }
 ```
@@ -243,14 +253,27 @@ Returned from `optimistron()`. Replays transitions before selecting. Memoize wit
 selectOptimistic((todos) => Object.values(todos.state))
 ```
 
+### `crudPrepare(itemIdKey)`
+
+Factory for CRUD prepare functions that couple `transitionId === entityId`. Recommended default for indexed state.
+
+```typescript
+const crud = crudPrepare<Todo>('id');
+// crud.create(item) → { payload: { item }, transitionId: item.id }
+// crud.update(id, partial) → { payload: { id, item: partial }, transitionId: id }
+// crud.remove(id) → { payload: { id }, transitionId: id }
+```
+
 ### `createTransitions(type, dedupe?)(prepare)`
 
-Creates `.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`. Per-operation preparators supported:
+Creates `.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`.
+
+`stage` auto-detects `transitionId` when prepare returns it (e.g. via `crudPrepare`). All other operations require explicit `transitionId` as first argument. Per-operation preparators supported:
 
 ```typescript
 createTransitions('todos::add')({
-  stage: (item: Todo) => ({ payload: { item } }),
-  commit: (serverItem: Todo) => ({ payload: { item: serverItem } }),
+  stage: (item: Todo) => ({ payload: { item }, transitionId: item.id }),
+  commit: () => ({ payload: {} }),
 });
 ```
 
