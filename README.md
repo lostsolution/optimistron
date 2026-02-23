@@ -50,13 +50,14 @@ No `isLoading`, `error`, `isOptimistic` flags. A pending transition means loadin
 
 ```typescript
 import { configureStore, createSelector } from '@reduxjs/toolkit';
-import { optimistron, createTransitions, indexedStateFactory } from '@lostsolution/optimistron';
+import { optimistron, createTransitions, crudPrepare, indexedStateFactory } from '@lostsolution/optimistron';
 
 type Todo = { id: string; value: string; done: boolean; revision: number };
 
-const createTodo = createTransitions('todos::add')((todo: Todo) => ({ payload: { todo } }));
-const editTodo = createTransitions('todos::edit')((id: string, todo: Todo) => ({ payload: { id, todo } }));
-const deleteTodo = createTransitions('todos::delete')((id: string) => ({ payload: { id } }));
+const crud = crudPrepare<Todo>('id');
+const createTodo = createTransitions('todos::add')(crud.create);
+const editTodo = createTransitions('todos::edit')(crud.update);
+const deleteTodo = createTransitions('todos::delete')(crud.remove);
 
 const { reducer: todos, selectOptimistic } = optimistron(
     'todos',
@@ -67,8 +68,8 @@ const { reducer: todos, selectOptimistic } = optimistron(
         eq: (a) => (b) => a.done === b.done && a.value === b.value,
     }),
     ({ getState, create, update, remove }, action) => {
-        if (createTodo.match(action)) return create(action.payload.todo);
-        if (editTodo.match(action)) return update(action.payload.id, action.payload.todo);
+        if (createTodo.match(action)) return create(action.payload.item);
+        if (editTodo.match(action)) return update(action.payload.id, action.payload.item);
         if (deleteTodo.match(action)) return remove(action.payload.id);
         return getState();
     },
@@ -81,8 +82,8 @@ const selectTodos = createSelector(
     selectOptimistic((todos) => Object.values(todos.state)),
 );
 
-dispatch(createTodo.stage(todo.id, todo)); // UI updates instantly
-dispatch(createTodo.commit(todo.id)); // persist on success
+dispatch(createTodo.stage(todo));          // transitionId auto-detected from entity ID
+dispatch(createTodo.commit(todo.id));      // persist on success
 dispatch(createTodo.fail(todo.id, error)); // flag on error
 ```
 
@@ -92,7 +93,11 @@ dispatch(createTodo.fail(todo.id, error)); // flag on error
 
 ### Transition IDs
 
-Every transition is tracked by a string ID — the first argument to `.stage()`, `.commit()`, etc. This ID is the **consistent key** between a transition and the entity it describes. It's how `selectIsFailed(id)` and `selectIsOptimistic(id)` infer per-entity status. Any stable derivation works, but each ID should resolve to exactly one entity.
+Every transition is tracked by a string ID — the **stable link** between a transition and the entity it describes. It's how `selectIsFailed(id)` and `selectIsOptimistic(id)` infer per-entity status.
+
+**The recommended default is `transitionId === entityId`.** Use `crudPrepare` to couple them — `stage(entity)` automatically derives the transition ID from the entity's own key. For `amend`/`commit`/`fail`/`stash`, pass the transition ID explicitly (you already have it from the initial `stage`).
+
+For edge-cases where transitionId must differ from entityId (batch ops, correlation IDs, server-assigned IDs with temp tokens), write custom prepare functions and pass transitionId as the first argument.
 
 ### Versioning
 
@@ -103,6 +108,17 @@ Entities need a **monotonically increasing version** — `revision`, `updatedAt`
 1. **One ID, one entity** — each transition ID resolves to a single entity.
 2. **One at a time** — don't stage while one is already pending for the same ID.
 3. **Granular** — one create, one update, or one delete per transition.
+
+---
+
+## Roadmap
+
+- **Batch transitions** — stage multiple entities under a single correlation ID. Commit/fail/stash the batch atomically.
+- **More state factories** — `singleEntityFactory` for scalar state, `normalizedStateFactory` for relational stores with foreign key handling.
+- **Retry strategies** — configurable retry policies for failed transitions (exponential backoff, max attempts) built into the transition lifecycle.
+- **Devtools integration** — Redux DevTools timeline visualization for transitions, sanitization events, and conflict detection.
+- **Persistence adapters** — serialize/rehydrate pending transitions across page reloads (localStorage, IndexedDB).
+- **Middleware hooks** — `onConflict`, `onStale`, `onSanitize` callbacks for custom side-effects without reducer coupling.
 
 ---
 
