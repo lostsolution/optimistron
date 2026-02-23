@@ -13,7 +13,7 @@ export const createTodoThunk = (todo: Todo): ThunkAction<void, State, undefined,
         try {
             dispatch(createTodo.stage(todo));
             await simulateAPIRequest();
-            dispatch(createTodo.amend({ ...todo, id: generateId() }));
+            dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
             dispatch(createTodo.commit(transitionId));
         } catch (error) {
             dispatch(createTodo.fail(transitionId, error));
