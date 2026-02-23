@@ -122,14 +122,14 @@ export const nestedRecordState =
         };
 
         return {
-            create: (state, item) => setAt(state, extractPath(item), item) as State,
+            create: (state, item) => setAt(state, extractPath(item), item),
 
             update: (state, ...args) => {
                 const ids = (args as unknown[]).slice(0, keys.length) as string[];
                 const partial = args[keys.length] as Partial<T>;
                 const existing = getAt(state, ids) as Maybe<T>;
                 if (!existing) return state;
-                return setAt(state, ids, { ...existing, ...partial }) as State;
+                return setAt(state, ids, { ...existing, ...partial });
             },
 
             remove: (state, ...args) => {
