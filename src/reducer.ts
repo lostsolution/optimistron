@@ -1,5 +1,5 @@
 import type { Action } from 'redux';
-import type { BoundStateHandler, TransitionState } from './state';
+import type { BoundStateHandler, TransitionState } from './state.types';
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 

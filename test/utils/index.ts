@@ -1,7 +1,7 @@
 import { createTransitions } from '~actions';
 import type { HandlerReducer } from '~reducer';
-import type { TransitionState } from '~state';
-import { indexedStateFactory } from '~state/indexed';
+import type { TransitionState } from '~state.types';
+import { recordState } from '~state/record';
 import type { StagedAction } from '~transitions';
 
 export type TestItem = { id: string; revision: number; value: string };
@@ -22,8 +22,8 @@ export const throwAction = { type: 'throw ' };
 
 export const selectState = ({ state }: TransitionState<TestIndexedState>) => state;
 
-export const indexedState = indexedStateFactory<TestItem>({
-    itemIdKey: 'id',
+export const indexedState = recordState<TestItem>({
+    key: 'id',
     compare: (a: TestItem) => (b: TestItem) => {
         if (a.revision > b.revision) return 1;
         if (a.revision === b.revision) return 0;

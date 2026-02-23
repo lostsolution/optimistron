@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
-import type { StateHandler } from '~state';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from '~state';
+import type { StateHandler } from '~state.types';
 import { create, createIndexedState, createItem } from '~test/utils';
 
 describe('state', () => {

@@ -150,55 +150,104 @@ describe('createTransitions', () => {
 });
 
 describe('crudPrepare', () => {
-    type Item = { id: string; name: string; revision: number };
-    const crud = crudPrepare<Item>('id');
+    describe('single-key', () => {
+        type Item = { id: string; name: string; revision: number };
+        const crud = crudPrepare<Item>('id');
 
-    test('create returns payload with item and transitionId', () => {
-        const item: Item = { id: 'i1', name: 'test', revision: 0 };
-        const result = crud.create(item);
+        test('create returns payload with item and transitionId', () => {
+            const item: Item = { id: 'i1', name: 'test', revision: 0 };
+            const result = crud.create(item);
 
-        expect(result.payload).toEqual({ item });
-        expect(result.transitionId).toBe('i1');
+            expect(result.payload).toEqual({ item });
+            expect(result.transitionId).toBe('i1');
+        });
+
+        test('update returns payload with id and partial item and transitionId', () => {
+            const result = crud.update('i1', { name: 'updated' });
+
+            expect(result.payload).toEqual({ id: 'i1', item: { name: 'updated' } });
+            expect(result.transitionId).toBe('i1');
+        });
+
+        test('remove returns payload with id and transitionId', () => {
+            const result = crud.remove('i1');
+
+            expect(result.payload).toEqual({ id: 'i1' });
+            expect(result.transitionId).toBe('i1');
+        });
+
+        test('composes with createTransitions', () => {
+            const actions = createTransitions('items::add')(crud.create);
+            const item: Item = { id: 'i1', name: 'test', revision: 0 };
+            const result = actions.stage(item);
+
+            expect(result.payload).toEqual({ item });
+            expect(result.meta[META_KEY].id).toBe('i1');
+            expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
+        });
+
+        test('composes with createTransitions using TRAILING dedupe', () => {
+            const actions = createTransitions('items::del', DedupeMode.TRAILING)(crud.remove);
+            const result = actions.stage('i1');
+
+            expect(result.payload).toEqual({ id: 'i1' });
+            expect(result.meta[META_KEY].id).toBe('i1');
+            expect(result.meta[META_KEY].dedupe).toBe(DedupeMode.TRAILING);
+        });
+
+        test('uses numeric id key converted to string', () => {
+            type NumItem = { code: number; label: string };
+            const numCrud = crudPrepare<NumItem>('code');
+            const result = numCrud.create({ code: 42, label: 'test' });
+
+            expect(result.transitionId).toBe('42');
+        });
     });
 
-    test('update returns payload with id and partial item and transitionId', () => {
-        const result = crud.update('i1', { name: 'updated' });
+    describe('multi-key', () => {
+        type Item = { groupId: string; itemId: string; value: string };
+        const crud = crudPrepare<Item>()(['groupId', 'itemId']);
 
-        expect(result.payload).toEqual({ id: 'i1', item: { name: 'updated' } });
-        expect(result.transitionId).toBe('i1');
-    });
+        test('create derives transitionId by joining path IDs with /', () => {
+            const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test' };
+            const result = crud.create(item);
 
-    test('remove returns payload with id and transitionId', () => {
-        const result = crud.remove('i1');
+            expect(result.payload).toEqual({ item });
+            expect(result.transitionId).toBe('g1/i1');
+        });
 
-        expect(result.payload).toEqual({ id: 'i1' });
-        expect(result.transitionId).toBe('i1');
-    });
+        test('update returns payload with path and partial item', () => {
+            const result = crud.update('g1', 'i1', { value: 'updated' });
 
-    test('composes with createTransitions', () => {
-        const actions = createTransitions('items::add')(crud.create);
-        const item: Item = { id: 'i1', name: 'test', revision: 0 };
-        const result = actions.stage(item);
+            expect(result.payload).toEqual({ path: ['g1', 'i1'], item: { value: 'updated' } });
+            expect(result.transitionId).toBe('g1/i1');
+        });
 
-        expect(result.payload).toEqual({ item });
-        expect(result.meta[META_KEY].id).toBe('i1');
-        expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
-    });
+        test('remove returns payload with path', () => {
+            const result = crud.remove('g1', 'i1');
 
-    test('composes with createTransitions using TRAILING dedupe', () => {
-        const actions = createTransitions('items::del', DedupeMode.TRAILING)(crud.remove);
-        const result = actions.stage('i1');
+            expect(result.payload).toEqual({ path: ['g1', 'i1'] });
+            expect(result.transitionId).toBe('g1/i1');
+        });
 
-        expect(result.payload).toEqual({ id: 'i1' });
-        expect(result.meta[META_KEY].id).toBe('i1');
-        expect(result.meta[META_KEY].dedupe).toBe(DedupeMode.TRAILING);
-    });
+        test('composes with createTransitions', () => {
+            const actions = createTransitions('nested::add')(crud.create);
+            const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test' };
+            const result = actions.stage(item);
 
-    test('uses numeric id key converted to string', () => {
-        type NumItem = { code: number; label: string };
-        const numCrud = crudPrepare<NumItem>('code');
-        const result = numCrud.create({ code: 42, label: 'test' });
+            expect(result.payload).toEqual({ item });
+            expect(result.meta[META_KEY].id).toBe('g1/i1');
+            expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
+        });
 
-        expect(result.transitionId).toBe('42');
+        test('works with 3-level nesting', () => {
+            type Deep = { a: string; b: string; c: string; val: number };
+            const deepCrud = crudPrepare<Deep>()(['a', 'b', 'c']);
+            const item: Deep = { a: 'x', b: 'y', c: 'z', val: 1 };
+
+            expect(deepCrud.create(item).transitionId).toBe('x/y/z');
+            expect(deepCrud.update('x', 'y', 'z', { val: 2 }).transitionId).toBe('x/y/z');
+            expect(deepCrud.remove('x', 'y', 'z').transitionId).toBe('x/y/z');
+        });
     });
 });

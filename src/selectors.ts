@@ -1,6 +1,6 @@
 import { warn } from './logger';
 import type { BoundReducer } from './reducer';
-import { type TransitionState } from './state';
+import type { TransitionState } from './state.types';
 import { getTransitionMeta, toCommit } from './transitions';
 
 /** Creates a `selectOptimistic` selector closed over the bound reducer.

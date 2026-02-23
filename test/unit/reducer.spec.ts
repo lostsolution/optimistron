@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { bindReducer } from '~reducer';
-import type { TransitionState } from '~state';
 import { bindStateFactory } from '~state';
+import type { TransitionState } from '~state.types';
 import type { TestIndexedState } from '~test/utils';
 import { createItem, indexedState, reducer, throwAction } from '~test/utils';
 

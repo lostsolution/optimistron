@@ -1,63 +1,23 @@
-import type { Action, ActionCreatorWithPreparedPayload, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
+import type { Action, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
 
-import { META_KEY } from './constants';
-import type { Transition, TransitionMeta, TransitionNamespace, WithTransition } from './transitions';
-import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace } from './transitions';
-
-type EmptyPayload = { payload: never };
-type PA_Empty = () => EmptyPayload;
-type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
+import type { PA_Empty, PA_Error, TransitionPayloadAction, TransitionWithPreparedPayload } from './types';
+import { META_KEY } from '../constants';
+import type { Transition, TransitionNamespace, WithTransition } from '../transitions';
+import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace } from '../transitions';
 
 const emptyPA = () => ({ payload: {} });
 const errorPA = (error: unknown) => ({ error: error instanceof Error ? error.message : error, payload: {} });
 
-/** Extracts the payload type from a PrepareAction */
-type PreparePayload<PA extends PrepareAction<any>> = ReturnType<PA>['payload'];
-
-/** Extracts the error type from a PrepareAction, or `never` if none */
-type PrepareError<PA extends PrepareAction<any>> = ReturnType<PA> extends { error: infer E } ? E : never;
-
-/** Merges transition meta with any extra meta from a PrepareAction */
-type ActionMeta<Op extends Operation, PA extends PrepareAction<any>> = TransitionMeta<Op> &
-    (ReturnType<PA> extends { meta: infer M } ? M : object);
-
-/** Resolves the arguments signature for a transition action creator.
- * STAGE auto-detects transitionId when prepare returns it;
- * all other operations require explicit transitionId as first arg. */
-type TransitionArgs<Op extends Operation, PA extends PrepareAction<any>> = Op extends Operation.STAGE
-    ? ReturnType<PA> extends { transitionId: string }
-        ? Parameters<PA>
-        : [transitionId: string, ...Parameters<PA>]
-    : [transitionId: string, ...Parameters<PA>];
-
-export type TransitionWithPreparedPayload<
-    ActionType extends TransitionNamespace,
-    Op extends Operation,
-    PA extends PrepareAction<any>,
-> = ActionCreatorWithPreparedPayload<
-    TransitionArgs<Op, PA>,
-    PreparePayload<PA>,
-    ActionType,
-    PrepareError<PA>,
-    ActionMeta<Op, PA>
->;
-
-export type TransitionPayloadAction<
-    Type extends string,
-    Op extends Operation,
-    PA extends PrepareAction<any>,
-> = PayloadAction<PreparePayload<PA>, Type, ActionMeta<Op, PA>, PrepareError<PA>>;
-
 /** Helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
-const createCommitMatcher =
+export const createCommitMatcher =
     <Type extends string, PA extends PrepareAction<any>>(namespace: Type) =>
     (action: Action): action is TransitionPayloadAction<Type, Operation, PA> =>
         isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
 
 /** Hydrates an action's transition meta definition */
-const prepareTransition = <PA extends PrepareAction<any>>(
+export const prepareTransition = <PA extends PrepareAction<any>>(
     action: ReturnType<PA>,
     options: Transition,
 ): WithTransition<typeof action> => ({
@@ -145,15 +105,3 @@ export const createTransitions =
             match: createCommitMatcher<Type, PA_Stage>(type),
         };
     };
-
-/** Factory for CRUD prepare functions that couple transitionId to entityId.
- * This is the recommended default for indexed state — transitionId === entityId
- * means dispatching `stage(entity)` automatically tracks the transition by the
- * entity's own ID. For edge-cases where transitionId must differ from entityId
- * (batch operations, server-assigned IDs with correlation tokens), write custom
- * prepare functions and pass transitionId explicitly as the first argument. */
-export const crudPrepare = <T extends Record<string, any>>(itemIdKey: keyof T & string) => ({
-    create: (item: T) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
-    update: (id: string, item: Partial<T>) => ({ payload: { id, item }, transitionId: id }),
-    remove: (id: string) => ({ payload: { id }, transitionId: id }),
-});

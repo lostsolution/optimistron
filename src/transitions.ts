@@ -2,7 +2,7 @@ import type { Action } from '@reduxjs/toolkit';
 import { META_KEY } from './constants';
 import { type BoundReducer } from './reducer';
 import type { bindStateFactory } from './state';
-import { type TransitionState } from './state';
+import type { TransitionState } from './state.types';
 
 export enum OptimisticMergeResult {
     SKIP = 'SKIP',
