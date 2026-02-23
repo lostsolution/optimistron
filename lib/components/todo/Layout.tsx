@@ -1,7 +1,7 @@
 import type { FC, PropsWithChildren, ReactNode } from 'react';
 import { COLORS, TransitionGraph } from '~usecases/lib/components/graph/TransitionGraph';
 
-import { C, F, O, X } from '~usecases/lib/components/todo/CodeTags';
+import { F, O, X } from '~usecases/lib/components/todo/CodeTags';
 
 export type UsecaseDescription = {
     subtitle: string;
@@ -9,10 +9,18 @@ export type UsecaseDescription = {
 };
 
 const tryIt: ReactNode[] = [
-    <>Add an epic, project task, or activity entry — appears instantly as <O>optimistic</O>.</>,
-    <>Toggle offline, then add or edit items — they <F>fail</F> with a jiggle.</>,
-    <>Toggle back online — <F>failed</F> items auto-retry.</>,
-    <>Click "Sync API" — observe <X>conflict</X> detection when server state diverges.</>,
+    <>
+        Add an epic, project task, or activity entry — appears instantly as <O>optimistic</O>.
+    </>,
+    <>
+        Toggle offline, then add or edit items — they <F>fail</F> with a jiggle.
+    </>,
+    <>
+        Toggle back online — <F>failed</F> items auto-retry.
+    </>,
+    <>
+        Click "Sync API" — observe <X>conflict</X> detection when server state diverges.
+    </>,
 ];
 
 type Props = {
@@ -24,9 +32,7 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
     <div className="relative h-full">
         <div className="flex absolute inset-0 bottom-36 overflow-hidden">
             {/* App panel */}
-            <div className="w-1/2 h-full overflow-y-auto bg-surface-0">
-                {children}
-            </div>
+            <div className="w-1/2 h-full overflow-y-auto bg-surface-0">{children}</div>
 
             <div className="grad-v self-stretch" />
 
@@ -36,7 +42,9 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
                 <p className="text-[11px] text-gray-500 mb-4">{description.subtitle}</p>
 
                 <section className="mb-3">
-                    <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1.5">How it works</h3>
+                    <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1.5">
+                        How it works
+                    </h3>
                     <ul className="text-xs text-gray-400 leading-relaxed space-y-0.5">
                         {description.howItWorks.map((item, i) => (
                             <li key={i} className="flex gap-1.5">
@@ -61,22 +69,42 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
 
                 <div className="flex gap-6">
                     <section>
-                        <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1">State handlers</h3>
+                        <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1">
+                            State handlers
+                        </h3>
                         <ul className="text-[9px] font-mono text-gray-600 space-y-px">
-                            <li className="flex items-center gap-1"><code className="text-fuchsia-400">singularState</code> profile</li>
-                            <li className="flex items-center gap-1"><code className="text-cyan-400">recordState</code> epics</li>
-                            <li className="flex items-center gap-1"><code className="text-amber-400">nestedRecordState</code> projects</li>
-                            <li className="flex items-center gap-1"><code className="text-green-400">listState</code> activity</li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-fuchsia-400">singularState</code> profile
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-cyan-400">recordState</code> epics
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-amber-400">nestedRecordState</code> projects
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-green-400">listState</code> activity
+                            </li>
                         </ul>
                     </section>
 
                     <section>
-                        <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1">Legend</h3>
+                        <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1">
+                            Legend
+                        </h3>
                         <ul className="text-[9px] font-mono text-gray-600 space-y-px">
-                            <li className="flex items-center gap-1"><code className="text-oc-commit/80">optimistic</code> pending</li>
-                            <li className="flex items-center gap-1"><code className="text-oc-fail/80">fail</code> error</li>
-                            <li className="flex items-center gap-1"><code className="text-oc-stash/80">stash</code> reverted</li>
-                            <li className="flex items-center gap-1"><code className="text-oc-conflict/80">conflict</code> diverged</li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-oc-commit/80">optimistic</code> pending
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-oc-fail/80">fail</code> error
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-oc-stash/80">stash</code> reverted
+                            </li>
+                            <li className="flex items-center gap-1">
+                                <code className="text-oc-conflict/80">conflict</code> diverged
+                            </li>
                         </ul>
                     </section>
                 </div>
