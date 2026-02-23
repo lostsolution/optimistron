@@ -1,4 +1,4 @@
-import type { StagedAction } from './transitions';
+import type { StagedAction } from '~/transitions';
 
 export type TransitionState<T> = {
     state: T;
@@ -26,6 +26,22 @@ export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> 
 export type SingularStateOptions<T> = VersioningOptions<T>;
 export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
 
+/** Type-narrowing action matcher — `.match()` narrows the action's payload.
+ * Input accepts any action shape (index signature) to avoid excess property errors. */
+export type ActionMatcher<P = unknown> = {
+    match(action: {
+        type: string;
+        [key: string]: unknown;
+    }): action is { type: string; payload: P; [key: string]: unknown };
+};
+
+/** CRUD action map with typed payloads per operation */
+export type CrudActionMap<CP = unknown, UP = unknown, RP = unknown> = {
+    create?: ActionMatcher<CP>;
+    update?: ActionMatcher<UP>;
+    remove?: ActionMatcher<RP>;
+};
+
 export interface StateHandler<
     State,
     CreateParams extends unknown[],
@@ -37,6 +53,13 @@ export interface StateHandler<
     remove: (state: State, ...args: DeleteParams) => State;
     merge: (current: State, incoming: State) => State;
 }
+
+/** Structural extension for handlers that support auto-wired CRUD.
+ * Only carries the CRUD map type — avoids duplicating StateHandler's type params
+ * which would confuse TS inference at call sites like `optimistron()`. */
+export type WireMethod<A> = {
+    wire: (bound: any, action: { type: string; [key: string]: unknown }, actions: A) => any;
+};
 
 export interface BoundStateHandler<
     State,

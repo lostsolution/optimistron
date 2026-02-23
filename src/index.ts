@@ -7,14 +7,16 @@ export {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-} from './selectors';
+} from './selectors/selectors';
 export { recordState, nestedRecordState } from './state/record';
 export { singularState } from './state/singular';
 export { DedupeMode, Operation, OptimisticMergeResult, isTransition } from './transitions';
 
-export type { HandlerReducer } from './reducer';
+export type { HandlerReducer, ReducerConfig } from './reducer';
 export type {
+    ActionMatcher,
     BoundStateHandler,
+    CrudActionMap,
     NestedRecordStateOptions,
     RecordStateOptions,
     SingularStateOptions,
@@ -22,6 +24,7 @@ export type {
     StringKeys,
     TransitionState,
     VersioningOptions,
-} from './state.types';
-export type { RecordState as IndexedState, RecursiveRecordState as NestedRecord, PathOf } from './state/record.types';
+} from './state/types';
+
+export type { RecordState as IndexedState, RecursiveRecordState as NestedRecord, PathOf } from './state/record';
 export type { TransitionAction, Transition } from './transitions';

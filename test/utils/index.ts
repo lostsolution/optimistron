@@ -1,8 +1,13 @@
 import { createTransitions } from '~actions';
 import type { HandlerReducer } from '~reducer';
-import type { TransitionState } from '~state.types';
+import type { ActionMatcher, TransitionState } from '~state/types';
 import { recordState } from '~state/record';
 import type { StagedAction } from '~transitions';
+
+/** Test helper — creates a typed ActionMatcher that matches on action.type */
+export const matcher = <P>(type: string): ActionMatcher<P> => ({
+    match: (action): action is { type: string; payload: P; [key: string]: unknown } => action.type === type,
+});
 
 export type TestItem = { id: string; revision: number; value: string };
 export type TestIndexedState = Record<string, TestItem>;
@@ -32,10 +37,12 @@ export const indexedState = recordState<TestItem>({
     eq: (a: TestItem) => (b: TestItem) => a.id === b.id && a.value === b.value,
 });
 
-export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: string, item: TestItem], [itemId: string]> = (
-    handler,
-    action,
-) => {
+export const reducer: HandlerReducer<
+    TestIndexedState,
+    [item: TestItem],
+    [id: string, item: TestItem],
+    [itemId: string]
+> = (handler, action) => {
     if (action.type === throwAction.type) throw new Error('test error');
     if (action.type === 'sync') return (action as ReturnType<typeof sync>).payload.items;
     if (create.match(action)) return handler.create(action.payload.item);

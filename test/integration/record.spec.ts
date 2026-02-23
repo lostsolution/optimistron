@@ -1,8 +1,8 @@
 import { describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { optimistron } from '~optimistron';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors';
-import { buildTransitionState } from '~state';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { buildTransitionState } from '~state/factory';
 import type { TestIndexedState } from '~test/utils';
 import { create, createItem, edit, indexedState, reducer, remove, selectState, sync, throwAction } from '~test/utils';
 import { toStaged, updateTransition } from '~transitions';

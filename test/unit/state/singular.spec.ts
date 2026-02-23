@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
+import { bindStateFactory } from '~state/factory';
+import { matcher } from '~test/utils';
 import { singularState } from '~state/singular';
 import { OptimisticMergeResult } from '~transitions';
 
@@ -87,6 +89,37 @@ describe('singularState', () => {
         test('should throw CONFLICT if same revision but different values', () => {
             const different: Profile = { ...item, name: 'Conflict' };
             expect(() => handler.merge(item, different)).toThrow(OptimisticMergeResult.CONFLICT);
+        });
+    });
+
+    describe('wire', () => {
+        const bound = bindStateFactory(handler)(item);
+
+        const actions = {
+            create: matcher<{ item: Profile }>('create'),
+            update: matcher<{ item: Partial<Profile> }>('update'),
+            remove: matcher<Record<string, never>>('remove'),
+        };
+
+        test('should wire create action', () => {
+            const newItem: Profile = { id: '2', name: 'Bob', revision: 0 };
+            const result = handler.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            expect(result).toEqual(newItem);
+        });
+
+        test('should wire update action', () => {
+            const result = handler.wire(bound, { type: 'update', payload: { item: { name: 'Updated' } } }, actions);
+            expect(result).toEqual({ ...item, name: 'Updated' });
+        });
+
+        test('should wire remove action', () => {
+            const result = handler.wire(bound, { type: 'remove', payload: {} }, actions);
+            expect(result).toBeNull();
+        });
+
+        test('should return undefined for unmatched actions', () => {
+            const result = handler.wire(bound, { type: 'unknown' }, actions);
+            expect(result).toBeUndefined();
         });
     });
 });

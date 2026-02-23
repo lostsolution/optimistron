@@ -3,9 +3,9 @@ import { describe, expect, test } from 'bun:test';
 import { createTransitions } from '~actions';
 import { optimistron } from '~optimistron';
 import type { HandlerReducer } from '~reducer';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors';
-import { buildTransitionState } from '~state';
-import type { TransitionState } from '~state.types';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { buildTransitionState } from '~state/factory';
+import type { TransitionState } from '~state/types';
 import { singularState } from '~state/singular';
 import { toStaged, updateTransition } from '~transitions';
 

@@ -7,7 +7,7 @@ import {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-} from '~selectors';
+} from '~selectors/selectors';
 import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
 import { updateTransition } from '~transitions';
 
@@ -32,14 +32,9 @@ describe('selectors', () => {
         });
 
         test('should warn and return committed state on replay error', () => {
-            const { selectOptimistic } = optimistron(
-                'test',
-                {},
-                indexedState,
-                () => {
-                    throw new Error('replay error');
-                },
-            );
+            const { selectOptimistic } = optimistron('test', {}, indexedState, () => {
+                throw new Error('replay error');
+            });
 
             const errorState = createIndexedState([stage]);
 

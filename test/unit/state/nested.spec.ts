@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
+import { bindStateFactory } from '~state/factory';
+import { matcher } from '~test/utils';
 import { nestedRecordState } from '~state/record';
 import { OptimisticMergeResult } from '~transitions';
 
@@ -139,6 +141,42 @@ describe('nestedRecordState', () => {
             const incoming: State = { g1: { i1: updated }, g2: { i1: other } };
             const merged = handler.merge(existing, incoming);
             expect(merged.g1.i1).toEqual(updated);
+        });
+    });
+
+    describe('wire', () => {
+        const state: State = { g1: { i1: item } };
+        const bound = bindStateFactory(handler)(state);
+
+        const actions = {
+            create: matcher<{ item: Item }>('create'),
+            update: matcher<{ path: [string, string]; item: Partial<Item> }>('update'),
+            remove: matcher<{ path: [string, string] }>('remove'),
+        };
+
+        test('should wire create action', () => {
+            const newItem: Item = { groupId: 'g2', itemId: 'i2', value: 'new', revision: 0 };
+            const result = handler.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            expect(result).toEqual({ ...state, g2: { i2: newItem } });
+        });
+
+        test('should wire update action with path spread', () => {
+            const result = handler.wire(
+                bound,
+                { type: 'update', payload: { path: ['g1', 'i1'], item: { value: 'updated' } } },
+                actions,
+            );
+            expect((result as any).g1.i1).toEqual({ ...item, value: 'updated' });
+        });
+
+        test('should wire remove action with path spread', () => {
+            const result = handler.wire(bound, { type: 'remove', payload: { path: ['g1', 'i1'] } }, actions);
+            expect(result).toEqual({ g1: {} });
+        });
+
+        test('should return undefined for unmatched actions', () => {
+            const result = handler.wire(bound, { type: 'unknown' }, actions);
+            expect(result).toBeUndefined();
         });
     });
 });

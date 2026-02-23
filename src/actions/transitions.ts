@@ -2,9 +2,9 @@ import type { Action, PrepareAction } from '@reduxjs/toolkit';
 import { createAction } from '@reduxjs/toolkit';
 
 import type { PA_Empty, PA_Error, TransitionPayloadAction, TransitionWithPreparedPayload } from './types';
-import { META_KEY } from '../constants';
-import type { Transition, TransitionNamespace, WithTransition } from '../transitions';
-import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace } from '../transitions';
+import { META_KEY } from '~/constants';
+import type { Transition, TransitionNamespace, WithTransition } from '~/transitions';
+import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace } from '~/transitions';
 
 const emptyPA = () => ({ payload: {} });
 const errorPA = (error: unknown) => ({ error: error instanceof Error ? error.message : error, payload: {} });

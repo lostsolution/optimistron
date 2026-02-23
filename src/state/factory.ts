@@ -1,5 +1,5 @@
-import type { TransitionAction } from './transitions';
-import type { BoundStateHandler, StateHandler, TransitionState } from './state.types';
+import type { TransitionAction } from '~/transitions';
+import type { BoundStateHandler, StateHandler, TransitionState } from './types';
 
 export const bindStateFactory =
     <State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]>(
