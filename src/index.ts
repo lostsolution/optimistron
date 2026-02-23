@@ -18,15 +18,16 @@ export type {
     ActionMatcher,
     BoundStateHandler,
     CrudActionMap,
-    ListStateOptions,
-    NestedRecordStateOptions,
-    RecordStateOptions,
-    SingularStateOptions,
     StateHandler,
-    StringKeys,
     TransitionState,
     VersioningOptions,
+    WiredStateHandler,
 } from './state/types';
+
+export type { RecordStateOptions, NestedRecordStateOptions } from './state/record';
+export type { SingularStateOptions } from './state/singular';
+export type { ListStateOptions } from './state/list';
+export type { StringKeys, PathMap as PathIds, MaybeNull } from './utils/types';
 
 export type { RecordState as IndexedState, RecursiveRecordState as NestedRecord, PathOf } from './state/record';
 export type { TransitionAction, Transition } from './transitions';

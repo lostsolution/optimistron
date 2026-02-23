@@ -1,4 +1,13 @@
-import { warn } from '~/logger';
+/**
+ * Internal selector factory — not part of the public API.
+ *
+ * `createSelectOptimistic` is closed over the `boundReducer` from `optimistron()`.
+ * It's not useful as a standalone export since consumers need the factory-produced
+ * instance. The `optimistron()` factory calls this and returns the result as
+ * `selectOptimistic`.
+ */
+
+import { warn } from '~utils/logger';
 import type { BoundReducer } from '~/reducer';
 import type { TransitionState } from '~/state/types';
 import { toCommit } from '~/transitions';

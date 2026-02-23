@@ -1,5 +1,5 @@
 import type { Action } from 'redux';
-import type { BoundStateHandler, CrudActionMap, StateHandler, TransitionState } from './state/types';
+import type { BoundStateHandler, CrudActionMap, StateHandler, TransitionState, WiredStateHandler } from './state/types';
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 
@@ -24,14 +24,15 @@ type CrudConfigRuntime<S, C extends unknown[], U extends unknown[], D extends un
     reducer?: HandlerReducer<S, C, U, D>;
 };
 
-/** Runtime shape of a handler with wire — narrows after the `'wire' in handler` check */
-type WiredHandler<S, C extends unknown[], U extends unknown[], D extends unknown[]> = StateHandler<S, C, U, D> & {
-    wire: (
-        bound: BoundStateHandler<S, C, U, D>,
-        action: { type: string; [key: string]: unknown },
-        actions: CrudConfigRuntime<S, C, U, D>,
-    ) => S | undefined;
-};
+/** Narrows CrudConfigRuntime into the WiredStateHandler's Actions param
+ * after the `'wire' in handler` runtime check */
+type WiredHandler<S, C extends unknown[], U extends unknown[], D extends unknown[]> = WiredStateHandler<
+    S,
+    C,
+    U,
+    D,
+    CrudConfigRuntime<S, C, U, D>
+>;
 
 /** Resolves a `ReducerConfig` to a `HandlerReducer` — auto-wires CRUD maps via the handler's `wire` method */
 export const resolveReducer = <S, C extends unknown[], U extends unknown[], D extends unknown[]>(

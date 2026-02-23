@@ -4,6 +4,7 @@ import { bindStateFactory } from '~state/factory';
 import { matcher } from '~test/utils';
 import { singularState } from '~state/singular';
 import { OptimisticMergeResult } from '~transitions';
+import type { MaybeNull } from '~/utils/types';
 
 type Profile = { id: string; name: string; revision: number };
 
@@ -37,7 +38,7 @@ describe('singularState', () => {
         });
 
         test('should return state in-place if null', () => {
-            const state: Profile | null = null;
+            const state: MaybeNull<Profile> = null;
             const next = handler.update(state, { name: 'Bob' });
             expect(next).toBe(state);
         });
@@ -49,7 +50,7 @@ describe('singularState', () => {
         });
 
         test('should return state in-place if already null', () => {
-            const state: Profile | null = null;
+            const state: MaybeNull<Profile> = null;
             expect(handler.remove(state)).toBe(state);
         });
     });

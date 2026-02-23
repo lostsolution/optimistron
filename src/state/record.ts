@@ -1,13 +1,12 @@
-import type {
-    CrudActionMap,
-    NestedRecordStateOptions,
-    RecordStateOptions,
-    StateHandler,
-    StringKeys,
-    WireMethod,
-} from '~state/types';
-
+import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
+import type { Maybe, StringKeys } from '~/utils/types';
+import type { PathMap } from '~/utils/types';
+import type { Obj } from '~/utils/path';
+import { getAt, setAt, removeAt } from '~/utils/path';
 import { OptimisticMergeResult } from '~/transitions';
+
+export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
+export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
 
 export type RecordState<T> = Record<string, T>;
 
@@ -26,58 +25,15 @@ export type RecursiveRecordState<Keys extends readonly string[], T> = Keys exten
  * `PathOf<['groupId', 'itemId']>` = `{ groupId: string; itemId: string }` */
 export type PathOf<Keys extends readonly string[]> = { [K in Keys[number]]: string };
 
-/** Maps a keys tuple to a tuple of string IDs — one per nesting level */
-type PathIds<Keys extends readonly string[]> = { [K in keyof Keys]: string } & string[];
-
 /** Typed CRUD action map for nested record state */
 type NestedRecordCrudMap<T, Keys extends readonly string[]> = CrudActionMap<
     { item: T },
-    { path: PathIds<Keys>; item: Partial<T> },
-    { path: PathIds<Keys> }
+    { path: PathMap<Keys>; item: Partial<T> },
+    { path: PathMap<Keys> }
 >;
 
 /** Typed CRUD action map for flat record state */
 type RecordCrudMap<T> = CrudActionMap<{ item: T }, { id: string; item: Partial<T> }, { id: string }>;
-
-/** Internal shorthand for untyped nested record traversal */
-type Obj = Record<string, unknown>;
-
-/** Walks the nested state to retrieve the leaf value at the given path */
-const getAt = (state: Obj, ids: string[]): unknown => {
-    let current: unknown = state;
-    for (const id of ids) {
-        if (current == null || typeof current !== 'object') return undefined;
-        current = (current as Obj)[id];
-    }
-    return current;
-};
-
-/** Immutable set at a nested path, creating intermediate records as needed */
-const setAt = (state: Obj | undefined, ids: string[], value: unknown): Obj => {
-    if (ids.length === 0) return value as Obj;
-    const [head, ...tail] = ids;
-    const current = state ?? {};
-    return { ...current, [head]: setAt(current[head] as Obj | undefined, tail, value) };
-};
-
-/** Immutable delete at a nested path. Returns same reference if key doesn't exist. */
-const removeAt = <S extends Obj>(state: S, ids: string[]): S => {
-    if (ids.length === 0) return state;
-    if (ids.length === 1) {
-        const key = ids[0];
-        if (!(key in state)) return state;
-        const next = { ...state };
-        delete next[key];
-        return next as S;
-    }
-
-    const [head, ...tail] = ids;
-    const child = state[head];
-    if (!child || typeof child !== 'object') return state;
-    const nextChild = removeAt(child as Obj, tail);
-    if (nextChild === child) return state;
-    return { ...state, [head]: nextChild } as S;
-};
 
 /**
  * Creates a `StateHandler` for nested record-based state.
@@ -95,13 +51,13 @@ export const nestedRecordState =
         keys,
         compare,
         eq,
-    }: NestedRecordStateOptions<T, Keys>): StateHandler<
+    }: NestedRecordStateOptions<T, Keys>): WiredStateHandler<
         RecursiveRecordState<Keys, T>,
         [item: T],
-        [...PathIds<Keys>, Partial<T>],
-        [...PathIds<Keys>]
-    > &
-        WireMethod<NestedRecordCrudMap<T, Keys>> => {
+        [...PathMap<Keys>, Partial<T>],
+        [...PathMap<Keys>],
+        NestedRecordCrudMap<T, Keys>
+    > => {
         type State = RecursiveRecordState<Keys, T>;
 
         /** Extracts path IDs from an item using the keys tuple */
@@ -111,7 +67,7 @@ export const nestedRecordState =
          * Defers the `{ ...existing }` spread until the first mutation is detected
          * so that SKIP and CONFLICT paths allocate nothing. */
         const mergeAtDepth = (existing: Obj, incoming: Obj, depth: number): Obj => {
-            let merged: Obj | undefined;
+            let merged: Maybe<Obj>;
 
             /** First pass: deletions */
             for (const id in existing) {
@@ -171,7 +127,7 @@ export const nestedRecordState =
             update: (state, ...args) => {
                 const ids = (args as unknown[]).slice(0, keys.length) as string[];
                 const partial = args[keys.length] as Partial<T>;
-                const existing = getAt(state, ids) as T | undefined;
+                const existing = getAt(state, ids) as Maybe<T>;
                 if (!existing) return state;
                 return setAt(state, ids, { ...existing, ...partial }) as State;
             },
@@ -201,13 +157,13 @@ export const recordState = <T extends Record<string, any>>({
     key,
     compare,
     eq,
-}: RecordStateOptions<T>): StateHandler<
+}: RecordStateOptions<T>): WiredStateHandler<
     RecordState<T>,
     [item: T],
     [itemId: string, partialItem: Partial<T>],
-    [itemId: string]
-> &
-    WireMethod<RecordCrudMap<T>> => {
+    [itemId: string],
+    RecordCrudMap<T>
+> => {
     const nested = nestedRecordState<T>()({ keys: [key], compare, eq });
 
     return {
