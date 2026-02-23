@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { createItem, indexedState, type TestItem } from '~test/utils';
 import { OptimisticMergeResult } from '~transitions';
 
-describe('IndexedState', () => {
+describe('recordState', () => {
     const item = createItem();
 
     describe('create', () => {

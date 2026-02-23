@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
+import { describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { optimistron } from '~optimistron';
 import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors';
@@ -10,7 +10,7 @@ import { toStaged, updateTransition } from '~transitions';
 describe('optimistron', () => {
     const { reducer: optimisticReducer, selectOptimistic } = optimistron('test', {}, indexedState, reducer);
 
-    describe('IndexedState', () => {
+    describe('recordState', () => {
         describe('create', () => {
             const item = createItem();
             const conflictItem = { ...item, revision: -1 };
@@ -153,7 +153,6 @@ describe('optimistron', () => {
 
     describe('delete', () => {
         const item = createItem();
-        const updatedItem = { ...item, revision: 2, value: 'server-updated' };
 
         const stage = remove.stage(item.id, item.id);
         const fail = remove.fail(item.id, new Error());

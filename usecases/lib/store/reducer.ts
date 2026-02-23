@@ -1,5 +1,5 @@
 import { optimistron } from '~optimistron';
-import { indexedStateFactory } from '~state/indexed';
+import { recordState } from '~state/record';
 
 import { createTodo, deleteTodo, editTodo, sync } from '~usecases/lib/store/actions';
 import type { Todo } from '~usecases/lib/store/types';
@@ -29,7 +29,7 @@ const eq = (a: Todo) => (b: Todo) => a.done === b.done && a.value === b.value;
 export const { reducer: todos, selectOptimistic } = optimistron(
     'todos',
     initial,
-    indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }),
+    recordState<Todo>({ key: 'id', compare, eq }),
     ({ getState, create, update, remove }, action) => {
         if (createTodo.match(action)) return create(action.payload.item);
         if (editTodo.match(action)) return update(action.payload.id, action.payload.item);

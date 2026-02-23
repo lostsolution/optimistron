@@ -3,8 +3,8 @@ import type { Action, Reducer } from 'redux';
 import { warn } from './logger';
 import { bindReducer, type BoundReducer, type HandlerReducer } from './reducer';
 import { createSelectOptimistic } from './selectors';
-import type { StateHandler, TransitionState } from './state';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state';
+import type { StateHandler, TransitionState } from './state.types';
 import {
     Operation,
     getTransitionID,
@@ -60,7 +60,7 @@ export const optimistron = <S, C extends unknown[], U extends unknown[], D exten
 
                     if (operation === Operation.COMMIT) {
                         const committed = commitTransition(boundReducer, transitionState, transitions, id);
-                        return next(committed ?? state, nextTransitions);
+                        return next(committed !== undefined ? committed : state, nextTransitions);
                     }
 
                     /* Every other transition actions will not be applied.
