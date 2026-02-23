@@ -17,18 +17,18 @@
 
   <!-- Sanitization flow -->
   <text font-family="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" font-size="13" xml:space="preserve">
-    <tspan x="40" y="50" fill="#58a6ff">  sanitizeTransitions</tspan>
+    <tspan x="40" y="50" fill="#38bdf8">  sanitizeTransitions</tspan>
     <tspan x="40" y="78" fill="#484f58">    │</tspan>
-    <tspan x="40" y="106" fill="#484f58">    └── </tspan><tspan fill="#58a6ff">for each transition Tᵢ:</tspan>
+    <tspan x="40" y="106" fill="#484f58">    └── </tspan><tspan fill="#38bdf8">for each transition Tᵢ:</tspan>
     <tspan x="40" y="134" fill="#484f58">         │</tspan>
     <tspan x="40" y="162" fill="#484f58">         ├── </tspan><tspan fill="#8b949e">apply as-if-committed</tspan><tspan fill="#484f58"> ───▶ </tspan><tspan fill="#c4b5fd">nextState</tspan>
     <tspan x="40" y="190" fill="#484f58">         │                              │</tspan>
     <tspan x="40" y="218" fill="#484f58">         │                              ├── </tspan><tspan fill="#8b949e">mutated?</tspan>
-    <tspan x="40" y="246" fill="#484f58">         │                              │    ├── </tspan><tspan fill="#8b949e">No </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#d29922">DISCARD</tspan><tspan fill="#6e7681">     no-op</tspan>
+    <tspan x="40" y="246" fill="#484f58">         │                              │    ├── </tspan><tspan fill="#8b949e">No </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#facc15">DISCARD</tspan><tspan fill="#6e7681">     no-op</tspan>
     <tspan x="40" y="274" fill="#484f58">         │                              │    └── </tspan><tspan fill="#8b949e">Yes</tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#c4b5fd">merge</tspan><tspan fill="#8b949e">(working, nextState)</tspan>
-    <tspan x="40" y="302" fill="#484f58">         │                              │              ├── </tspan><tspan fill="#8b949e">returns merged </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#3fb950">KEEP</tspan><tspan fill="#6e7681">        valid</tspan>
-    <tspan x="40" y="330" fill="#484f58">         │                              │              ├── </tspan><tspan fill="#8b949e">throws SKIP    </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#d29922">DISCARD</tspan><tspan fill="#6e7681">     redundant</tspan>
-    <tspan x="40" y="358" fill="#484f58">         │                              │              └── </tspan><tspan fill="#8b949e">throws CONFLICT</tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#f85149">KEEP+FLAG</tspan><tspan fill="#6e7681">   stale</tspan>
+    <tspan x="40" y="302" fill="#484f58">         │                              │              ├── </tspan><tspan fill="#8b949e">returns merged </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#4ade80">KEEP</tspan><tspan fill="#6e7681">        valid</tspan>
+    <tspan x="40" y="330" fill="#484f58">         │                              │              ├── </tspan><tspan fill="#8b949e">throws SKIP    </tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#facc15">DISCARD</tspan><tspan fill="#6e7681">     redundant</tspan>
+    <tspan x="40" y="358" fill="#484f58">         │                              │              └── </tspan><tspan fill="#8b949e">throws CONFLICT</tspan><tspan fill="#484f58"> ──▶ </tspan><tspan fill="#fb923c">KEEP+FLAG</tspan><tspan fill="#6e7681">   stale</tspan>
   </text>
 
   <!-- Decorative stars — left -->
@@ -38,7 +38,7 @@
   <text x="14" y="355" font-family="monospace" font-size="4" fill="#67e8f9" opacity="0.14">✦</text>
 
   <!-- Decorative stars — right -->
-  <text x="802" y="55" font-family="monospace" font-size="12" fill="#58a6ff" opacity="0.45">✦</text>
+  <text x="802" y="55" font-family="monospace" font-size="12" fill="#38bdf8" opacity="0.45">✦</text>
   <text x="826" y="120" font-family="monospace" font-size="8" fill="#8b5cf6" opacity="0.3">✦</text>
   <text x="782" y="195" font-family="monospace" font-size="6" fill="#d946ef" opacity="0.22">✦</text>
   <text x="832" y="260" font-family="monospace" font-size="10" fill="#06b6d4" opacity="0.26">✦</text>

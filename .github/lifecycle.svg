@@ -17,10 +17,10 @@
 
   <!-- Transition flow -->
   <text font-family="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" font-size="13" xml:space="preserve">
-    <tspan x="30" y="40" fill="#3fb950">  stage</tspan><tspan fill="#484f58"> ───▶ </tspan><tspan fill="#58a6ff">commit</tspan><tspan fill="#484f58">   ✓  stage optimistically, commit on success</tspan>
+    <tspan x="30" y="40" fill="#4ade80">  stage</tspan><tspan fill="#484f58"> ───▶ </tspan><tspan fill="#38bdf8">commit</tspan><tspan fill="#484f58">   ✓  stage optimistically, commit on success</tspan>
     <tspan x="30" y="65" fill="#484f58">    ├──────▶ </tspan><tspan fill="#c4b5fd">amend</tspan><tspan fill="#484f58">    ↻  update staged transition before committing</tspan>
-    <tspan x="30" y="90" fill="#484f58">    ├──────▶ </tspan><tspan fill="#f85149">fail</tspan><tspan fill="#484f58">     ✗  flag as failed — keep for retry/UI feedback</tspan>
-    <tspan x="30" y="115" fill="#484f58">    └──────▶ </tspan><tspan fill="#d29922">stash</tspan><tspan fill="#484f58">    ↩  revert — restore trailing if TRAILING dedupe</tspan>
+    <tspan x="30" y="90" fill="#484f58">    ├──────▶ </tspan><tspan fill="#f472b6">fail</tspan><tspan fill="#484f58">     ✗  flag as failed — keep for retry/UI feedback</tspan>
+    <tspan x="30" y="115" fill="#484f58">    └──────▶ </tspan><tspan fill="#facc15">stash</tspan><tspan fill="#484f58">    ↩  revert — restore trailing if TRAILING dedupe</tspan>
   </text>
 
   <!-- Decorative stars — left -->
@@ -28,7 +28,7 @@
   <text x="8" y="100" font-family="monospace" font-size="4" fill="#06b6d4" opacity="0.15">✦</text>
 
   <!-- Decorative stars — right -->
-  <text x="795" y="32" font-family="monospace" font-size="12" fill="#58a6ff" opacity="0.5">✦</text>
+  <text x="795" y="32" font-family="monospace" font-size="12" fill="#38bdf8" opacity="0.5">✦</text>
   <text x="825" y="58" font-family="monospace" font-size="8" fill="#8b5cf6" opacity="0.3">✦</text>
   <text x="778" y="80" font-family="monospace" font-size="6" fill="#d946ef" opacity="0.22">✦</text>
   <text x="830" y="100" font-family="monospace" font-size="10" fill="#06b6d4" opacity="0.28">✦</text>

@@ -7,9 +7,7 @@ import type { Todo } from '~usecases/lib/store/types';
 import type { store } from '~usecases/thunks';
 import { createTodoThunk, deleteTodoTunk, editTodoThunk } from '~usecases/thunks/thunk';
 
-const C = ({ children }: { children: string }) => <code className="text-emerald-400 font-mono text-[11px]">{children}</code>;
-const O = ({ children }: { children: string }) => <code className="text-blue-400 font-mono text-[11px]">{children}</code>;
-const F = ({ children }: { children: string }) => <code className="text-amber-400 font-mono text-[11px]">{children}</code>;
+import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
 const description: UsecaseDescription = {
     subtitle: 'Redux thunks — same lifecycle, cleaner components.',

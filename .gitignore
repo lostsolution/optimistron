@@ -14,4 +14,4 @@ node_modules
 !.yarn/cache
 #.pnp.*
 .vscode
-lib
+/lib

@@ -1,12 +1,11 @@
-import { isAction, type Middleware } from 'redux';
-import { isTransition, type TransitionAction } from '~transitions';
+import { type Action, isAction, type Middleware } from 'redux';
 
-type TransitionEvent = CustomEvent<TransitionAction>;
-type TransitionEventHandler = (event: TransitionEvent) => void;
+type ActionEvent = CustomEvent<Action>;
+type ActionEventHandler = (event: ActionEvent) => void;
 
 export type TransitionEventBus = {
-    publish: (transition: TransitionAction) => void;
-    subscribe: (subscriber: (transition: TransitionAction) => void) => () => void;
+    publish: (action: Action) => void;
+    subscribe: (subscriber: (action: Action) => void) => () => void;
 };
 
 export const createEventBus = (): TransitionEventBus => {
@@ -14,12 +13,12 @@ export const createEventBus = (): TransitionEventBus => {
     const eventName = '__OPTIMISTRON_TRANSITION_EVENT__';
 
     return {
-        publish: (transition: TransitionAction) => {
-            const event: TransitionEvent = new CustomEvent(eventName, { detail: transition });
+        publish: (action: Action) => {
+            const event: ActionEvent = new CustomEvent(eventName, { detail: action });
             bus.dispatchEvent(event);
         },
-        subscribe: (subscriber: (transition: TransitionAction) => void) => {
-            const handler: TransitionEventHandler = (event) => subscriber(event.detail);
+        subscribe: (subscriber: (action: Action) => void) => {
+            const handler: ActionEventHandler = (event) => subscriber(event.detail);
             bus.addEventListener<any>(eventName, handler);
             return () => bus.removeEventListener<any>(eventName, handler);
         },
@@ -31,7 +30,7 @@ export const createOptimistronMiddlware = (): [Middleware, TransitionEventBus] =
 
     return [
         () => (next) => (action) => {
-            if (isAction(action) && isTransition(action)) eventBus.publish(action);
+            if (isAction(action)) eventBus.publish(action);
             next(action);
         },
         eventBus,

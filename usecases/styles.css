@@ -1,3 +1,23 @@
+/**
+ * CSS vars for non-Tailwind contexts (gradients, status-badges, SVG fills).
+ * Semantic palette (oc-*) defined in Tailwind config (index.html).
+ */
+:root {
+    --color-stage: #4ade80;
+    --color-commit: #38bdf8;
+    --color-amend: #c4b5fd;
+    --color-fail: #f472b6;
+    --color-stash: #facc15;
+    --color-conflict: #fb923c;
+    --color-muted: #484f58;
+    --color-cyan: #06b6d4;
+    --color-purple: #8b5cf6;
+    --color-pink: #d946ef;
+    --color-rose: #f43f5e;
+    --color-light-cyan: #67e8f9;
+    --color-light-lavender: #c4b5fd;
+}
+
 /** Transitions */
 .todo-item {
     transition:
@@ -30,14 +50,15 @@
     animation: jiggle 0.3s ease-in-out;
 }
 
-/** Number input spinners */
+/** Number input spinners — hide native controls */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
-    position: absolute;
-    opacity: 1;
-    top: 0;
-    right: 0;
-    height: 100%;
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type='number'] {
+    -moz-appearance: textfield;
 }
 
 /** Status badges — tiny mono color-coded labels */
@@ -51,10 +72,10 @@ input[type='number']::-webkit-inner-spin-button {
     line-height: 1;
 }
 
-.status-badge--optimistic { color: #60a5fa; }
-.status-badge--failed { color: #fbbf24; }
-.status-badge--conflict { color: #f87171; }
-.status-badge--stashed { color: #c084fc; }
+.status-badge--optimistic { color: var(--color-commit); }
+.status-badge--failed { color: var(--color-fail); }
+.status-badge--conflict { color: var(--color-conflict); }
+.status-badge--stashed { color: var(--color-stash); }
 
 /** Graph legend dots */
 .legend-dot {
@@ -64,19 +85,42 @@ input[type='number']::-webkit-inner-spin-button {
     flex-shrink: 0;
 }
 
-/** Mermaid SVG overrides — tighter, smaller labels */
-pre svg .branch-label {
-    font-size: 10px !important;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
-    font-weight: 500 !important;
+/**
+ * Gradient lines — all share the same page-wide diagonal gradient
+ * via background-attachment:fixed so they look like one continuous
+ * gradient field revealed through border slots.
+ */
+.grad-h,
+.grad-v {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-purple), var(--color-pink), var(--color-rose));
+    background-attachment: fixed;
+    opacity: 0.4;
 }
 
-pre svg .tag-label {
-    font-size: 9px !important;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
-    font-weight: 500 !important;
+.grad-h {
+    height: 1px;
 }
 
-pre svg .commit-label {
-    font-size: 9px !important;
+.grad-v {
+    width: 1px;
+}
+
+/** Gradient border — full wrap like the SVG panels */
+.grad-wrap {
+    position: relative;
+}
+
+.grad-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-purple), var(--color-rose));
+    opacity: 0.4;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }

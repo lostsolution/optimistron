@@ -22,8 +22,8 @@ const TodoConflict: FC<{ id: string }> = ({ id }) => {
     const Tag: keyof JSX.IntrinsicElements = todo.done ? 's' : 'em';
 
     return (
-        <div className="text-[9px] font-mono text-red-400/60 leading-tight">
-            <span className="text-red-400/80">conflict</span> "<Tag>{todo.value}</Tag>"
+        <div className="text-[9px] font-mono text-oc-conflict/60 leading-tight">
+            <span className="text-oc-conflict/80">conflict</span> "<Tag>{todo.value}</Tag>"
         </div>
     );
 };
@@ -40,13 +40,13 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
         if (failedAction) {
             if (createTodo.stage.match(failedAction)) {
                 const create = cloneDeep(failedAction);
-                create.payload.todo = { ...create.payload.todo, ...mutation };
+                create.payload.item = { ...create.payload.item, ...mutation };
                 onRetry(create);
             }
 
             if (editTodo.stage.match(failedAction)) {
                 const edit = cloneDeep(failedAction);
-                edit.payload.todo = { ...edit.payload.todo, ...mutation };
+                edit.payload.item = { ...edit.payload.item, ...mutation };
                 onRetry(edit);
             }
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
@@ -72,11 +72,11 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                     onClick={() => handleMutation({ done: !todo.done })}
                     className={clsx(
                         'todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full',
-                        failed && !conflict && '!border-amber-500 text-amber-500',
-                        conflict && '!border-red-500 text-red-500',
-                        todo.done && '!text-white !bg-emerald-500 !border-emerald-500',
-                        todo.done && failed && !conflict && '!bg-amber-500',
-                        todo.done && conflict && '!bg-red-500',
+                        failed && !conflict && '!border-oc-fail/80 text-oc-fail/80',
+                        conflict && '!border-oc-conflict/80 text-oc-conflict/80',
+                        todo.done && '!text-white !bg-oc-stage/90 !border-oc-stage/90',
+                        todo.done && failed && !conflict && '!bg-oc-fail/80',
+                        todo.done && conflict && '!bg-oc-conflict/80',
                         loading && '!border-gray-600 !text-gray-500 !bg-transparent',
                     )}
                 >
@@ -112,10 +112,10 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                                     className={clsx(
                                         'todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300',
                                         todo.done && 'line-through !text-gray-600',
-                                        loading && '!text-blue-400/70',
-                                        failed && !conflict && '!text-amber-400 jiggle',
-                                        conflict && '!text-red-400 jiggle',
-                                        stashed && !failed && '!text-purple-400 jiggle',
+                                        loading && '!text-oc-commit/60',
+                                        failed && !conflict && '!text-oc-fail/80 jiggle',
+                                        conflict && '!text-oc-conflict/80 jiggle',
+                                        stashed && !failed && '!text-oc-stash/80 jiggle',
                                     )}
                                 >
                                     {todo.value}
@@ -125,15 +125,15 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                         {conflict && <TodoConflict id={todo.id} />}
                     </div>
                     <code className="flex-shrink-0 self-center text-[8px] font-mono leading-none text-left">
-                        {loading && <span className="text-blue-400/70">optimistic</span>}
-                        {failed && !conflict && <span className="text-amber-400">fail</span>}
-                        {conflict && <span className="text-red-400">conflict</span>}
-                        {stashed && <span className="text-purple-400">stash</span>}
+                        {loading && <span className="text-oc-commit/60">optimistic</span>}
+                        {failed && !conflict && <span className="text-oc-fail/80">fail</span>}
+                        {conflict && <span className="text-oc-conflict/80">conflict</span>}
+                        {stashed && <span className="text-oc-stash/80">stash</span>}
                     </code>
                 </div>
 
                 <button
-                    className="self-center font-light text-xs text-gray-600 hover:text-red-400 transition-colors"
+                    className="self-center font-light text-xs text-gray-600 hover:text-oc-fail transition-colors"
                     onClick={() => onDelete(todo)}
                 >
                     <Cross />

@@ -14,7 +14,7 @@ export const MockApiControls: FC = () => {
 
     return (
         <div>
-            <h3 className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-3">Mock API</h3>
+            <h3 className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-2.5">Mock API</h3>
             <div className="space-y-2.5">
                 <label className="flex items-center justify-between cursor-pointer">
                     <span className="text-xs text-gray-400">Online</span>

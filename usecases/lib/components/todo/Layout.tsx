@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren, ReactNode } from 'react';
-import { GRAPH_COLORS, TransitionGraph } from '~usecases/lib/components/graph/TransitionGraph';
+import { COLORS, TransitionGraph } from '~usecases/lib/components/graph/TransitionGraph';
 
 export type UsecaseDescription = {
     subtitle: string;
@@ -16,9 +16,11 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
     <div className="relative h-full">
         <div className="flex absolute inset-0 bottom-48 overflow-hidden">
             {/* Todo app panel */}
-            <div className="w-1/2 h-full overflow-y-auto bg-surface-1 border-r border-border-subtle">
+            <div className="w-1/2 h-full overflow-y-auto bg-surface-0">
                 {children}
             </div>
+
+            <div className="grad-v self-stretch" />
 
             {/* Description panel */}
             <div className="w-1/2 h-full overflow-y-auto p-5 bg-surface-0">
@@ -50,34 +52,35 @@ export const Layout: FC<PropsWithChildren<Props>> = ({ children, title, descript
                 </section>
 
                 <ul className="text-[10px] font-mono text-gray-600 space-y-0.5">
-                    <li className="flex items-center gap-1"><code className="text-blue-400">optimistic</code> pending</li>
-                    <li className="flex items-center gap-1"><code className="text-amber-400">fail</code> error</li>
-                    <li className="flex items-center gap-1"><code className="text-purple-400">stash</code> reverted</li>
-                    <li className="flex items-center gap-1"><code className="text-red-400">conflict</code> diverged</li>
+                    <li className="flex items-center gap-1"><code className="text-oc-commit/80">optimistic</code> pending</li>
+                    <li className="flex items-center gap-1"><code className="text-oc-fail/80">fail</code> error</li>
+                    <li className="flex items-center gap-1"><code className="text-oc-stash/80">stash</code> reverted</li>
+                    <li className="flex items-center gap-1"><code className="text-oc-conflict/80">conflict</code> diverged</li>
                 </ul>
             </div>
         </div>
 
         {/* Transition graph */}
-        <div className="absolute bottom-0 inset-x-0 h-48 bg-surface-1 border-t border-border-subtle">
-            <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
-                <h3 className="text-[10px] font-medium uppercase tracking-widest text-gray-600">Transitions</h3>
+        <div className="absolute bottom-0 inset-x-0 h-48 bg-surface-0 flex flex-col">
+            <div className="grad-h" />
+            <div className="flex items-center justify-between px-5 pt-2.5 pb-1">
+                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-gray-600">Transitions</h3>
                 <div className="flex gap-3 text-[10px] font-mono">
-                    <span className="flex items-center gap-1" style={{ color: GRAPH_COLORS.committed }}>
-                        <span className="legend-dot" style={{ background: GRAPH_COLORS.committed }} />
+                    <span className="flex items-center gap-1" style={{ color: COLORS.state }}>
+                        <span className="legend-dot" style={{ background: COLORS.state }} />
                         state
                     </span>
-                    <span className="flex items-center gap-1" style={{ color: GRAPH_COLORS.optimistic }}>
-                        <span className="legend-dot" style={{ background: GRAPH_COLORS.optimistic }} />
+                    <span className="flex items-center gap-1" style={{ color: COLORS.optimistic }}>
+                        <span className="legend-dot" style={{ background: COLORS.optimistic }} />
                         optimistic
                     </span>
-                    <span className="flex items-center gap-1" style={{ color: GRAPH_COLORS.failed }}>
-                        <span className="legend-dot" style={{ background: GRAPH_COLORS.failed }} />
+                    <span className="flex items-center gap-1" style={{ color: COLORS.failed }}>
+                        <span className="legend-dot" style={{ background: COLORS.failed }} />
                         failed
                     </span>
                 </div>
             </div>
-            <div className="px-4">
+            <div className="px-5 flex-1 flex items-center">
                 <TransitionGraph />
             </div>
         </div>
