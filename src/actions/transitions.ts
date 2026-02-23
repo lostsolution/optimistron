@@ -60,11 +60,7 @@ export const resolveTransition =
  * Type-cast required due to RTK's `PrepareAction` not supporting the variadic
  * `[transitionId, ...prepareArgs]` signature inference. */
 export const createTransition =
-    <Type extends TransitionNamespace, Op extends Operation>(
-        type: Type,
-        operation: Op,
-        dedupe: DedupeMode = DedupeMode.OVERWRITE,
-    ) =>
+    <Type extends TransitionNamespace, Op extends Operation>(type: Type, operation: Op, dedupe: DedupeMode = DedupeMode.OVERWRITE) =>
     <PA extends PrepareAction<any>>(prepare: PA): TransitionWithPreparedPayload<Type, Op, PA> =>
         createAction(type, resolveTransition(operation, dedupe)(prepare));
 

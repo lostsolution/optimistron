@@ -160,11 +160,7 @@ describe('listState', () => {
         });
 
         test('should wire update action', () => {
-            const result = handler.wire(
-                bound,
-                { type: 'update', payload: { id: '1', item: { name: 'Updated' } } },
-                actions,
-            );
+            const result = handler.wire(bound, { type: 'update', payload: { id: '1', item: { name: 'Updated' } } }, actions);
             expect(result).toEqual([{ ...item, name: 'Updated' }]);
         });
 

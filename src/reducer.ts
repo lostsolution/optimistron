@@ -3,12 +3,10 @@ import type { BoundStateHandler, CrudActionMap, StateHandler, TransitionState, W
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 
-export type HandlerReducer<
-    State,
-    CreateParams extends unknown[],
-    UpdateParams extends unknown[],
-    DeleteParams extends unknown[],
-> = (boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>, action: Action) => State;
+export type HandlerReducer<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> = (
+    boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>,
+    action: Action,
+) => State;
 
 /** Consumer-facing reducer config: either a function (manual) or a CRUD map (auto-wired) */
 export type ReducerConfig<S, C extends unknown[], U extends unknown[], D extends unknown[]> =

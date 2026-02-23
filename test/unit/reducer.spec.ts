@@ -68,7 +68,7 @@ describe('resolveReducer', () => {
     });
 
     test('should fall through to fallback reducer for unmatched actions', () => {
-        const fallback = mock((_bound: any, _action: any) => ({ fallback: true }));
+        const fallback = mock(() => ({ fallback: true }));
         const resolved = resolveReducer(indexedState, {
             create: matcher<{ item: TestItem }>('__nomatch__'),
             reducer: fallback as any,

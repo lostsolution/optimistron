@@ -48,8 +48,7 @@ describe('selectors', () => {
         const failed = updateTransition(stage, { failed: true });
         const state = createIndexedState([stage, failed]);
 
-        test('should return transitions flagged as `failed`', () =>
-            expect(selectFailedTransitions(state)).toEqual([failed]));
+        test('should return transitions flagged as `failed`', () => expect(selectFailedTransitions(state)).toEqual([failed]));
     });
 
     describe('selectFailedTransition', () => {
@@ -77,8 +76,7 @@ describe('selectors', () => {
     describe('selectIsOptimistic', () => {
         const state = createIndexedState([stage]);
 
-        test('should return `true` if `transitionId` in transition list', () =>
-            expect(selectIsOptimistic(item.id)(state)).toEqual(true));
+        test('should return `true` if `transitionId` in transition list', () => expect(selectIsOptimistic(item.id)(state)).toEqual(true));
 
         test('should return `false` if not', () => {
             const committedState = createIndexedState();

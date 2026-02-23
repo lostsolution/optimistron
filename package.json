@@ -49,6 +49,9 @@
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:usecases": "bun build ./usecases/index.tsx  --outdir ./usecases/dist --entry-naming [dir]/[name].[ext] --asset-naming [name].[ext] --target browser",
         "serve:usecases": "bun serve ./usecases/",
-        "watch:usecases": "bun build:usecases --watch"
+        "watch:usecases": "bun build:usecases --watch",
+        "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
+        "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
+        "lint:fix": "eslint --fix 'src/**/*.ts' 'test/**/*.ts'"
     }
 }

@@ -161,11 +161,7 @@ describe('nestedRecordState', () => {
         });
 
         test('should wire update action with path spread', () => {
-            const result = handler.wire(
-                bound,
-                { type: 'update', payload: { path: ['g1', 'i1'], item: { value: 'updated' } } },
-                actions,
-            );
+            const result = handler.wire(bound, { type: 'update', payload: { path: ['g1', 'i1'], item: { value: 'updated' } } }, actions);
             expect((result as any).g1.i1).toEqual({ ...item, value: 'updated' });
         });
 

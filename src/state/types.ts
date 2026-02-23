@@ -21,10 +21,7 @@ export type VersioningOptions<T> = {
 /** Type-narrowing action matcher — `.match()` narrows the action's payload.
  * Input accepts any action shape (index signature) to avoid excess property errors. */
 export type ActionMatcher<P = unknown> = {
-    match(action: {
-        type: string;
-        [key: string]: unknown;
-    }): action is { type: string; payload: P; [key: string]: unknown };
+    match(action: { type: string; [key: string]: unknown }): action is { type: string; payload: P; [key: string]: unknown };
 };
 
 /** CRUD action map with typed payloads per operation */
@@ -34,12 +31,7 @@ export type CrudActionMap<CP = unknown, UP = unknown, RP = unknown> = {
     remove?: ActionMatcher<RP>;
 };
 
-export interface StateHandler<
-    State,
-    CreateParams extends unknown[],
-    UpdateParams extends unknown[],
-    DeleteParams extends unknown[],
-> {
+export interface StateHandler<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> {
     create: (state: State, ...args: CreateParams) => State;
     update: (state: State, ...args: UpdateParams) => State;
     remove: (state: State, ...args: DeleteParams) => State;
@@ -63,12 +55,7 @@ export interface WiredStateHandler<
     ) => Maybe<State>;
 }
 
-export interface BoundStateHandler<
-    State,
-    CreateParams extends unknown[],
-    UpdateParams extends unknown[],
-    DeleteParams extends unknown[],
-> {
+export interface BoundStateHandler<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> {
     create: (...args: CreateParams) => State;
     update: (...args: UpdateParams) => State;
     remove: (...args: DeleteParams) => State;

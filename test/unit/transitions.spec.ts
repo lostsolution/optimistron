@@ -16,10 +16,7 @@ import {
 
 const TestTransitionID = `${Math.random()}`;
 
-const transition = createTransitions(
-    'test::transition',
-    DedupeMode.OVERWRITE,
-)((revision: number) => ({ payload: { revision } }));
+const transition = createTransitions('test::transition', DedupeMode.OVERWRITE)((revision: number) => ({ payload: { revision } }));
 
 const transitionTrailing = createTransitions(
     'test::transition_with_history',

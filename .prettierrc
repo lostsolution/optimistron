@@ -1,9 +1,7 @@
 {
-    "printWidth": 120,
+    "printWidth": 140,
     "arrowParens": "always",
     "singleQuote": true,
     "tabWidth": 4,
-    "proseWrap": "never",
-    "importOrderSeparation": true,
-    "importOrderSortSpecifiers": true
+    "proseWrap": "never"
 }

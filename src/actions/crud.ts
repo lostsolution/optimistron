@@ -21,9 +21,7 @@ import type { PathIds } from './types';
  * For edge-cases where transitionId must differ from entityId (batch
  * operations, server-assigned IDs with correlation tokens), write custom
  * prepare functions and pass transitionId explicitly as the first argument. */
-export function crudPrepare<T extends Record<string, any>>(): <
-    const Keys extends readonly [keyof T & string, ...(keyof T & string)[]],
->(
+export function crudPrepare<T extends Record<string, any>>(): <const Keys extends readonly [keyof T & string, ...(keyof T & string)[]]>(
     keys: Keys,
 ) => {
     create: (item: T) => { payload: { item: T }; transitionId: string };

@@ -71,17 +71,11 @@ export const updateTransition = <A extends TransitionAction, T extends Partial<T
 
 /** Maps a transition to a staged transition */
 export const toStaged = (action: TransitionAction, update: Partial<Transition> = {}): StagedAction =>
-    updateTransition(
-        { ...action, type: toType(action.type, Operation.STAGE) },
-        { ...update, operation: Operation.STAGE },
-    );
+    updateTransition({ ...action, type: toType(action.type, Operation.STAGE) }, { ...update, operation: Operation.STAGE });
 
 /** Maps a transition to a committed transition */
 export const toCommit = (action: TransitionAction, update: Partial<Transition> = {}): CommittedAction =>
-    updateTransition(
-        { ...action, type: toType(action.type, Operation.COMMIT) },
-        { ...update, operation: Operation.COMMIT },
-    );
+    updateTransition({ ...action, type: toType(action.type, Operation.COMMIT) }, { ...update, operation: Operation.COMMIT });
 
 export const processTransition = (transition: TransitionAction, transitions: StagedAction[]): StagedAction[] => {
     const { operation, id, dedupe } = getTransitionMeta(transition);
@@ -119,9 +113,7 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
         case Operation.FAIL: {
             if (matchIdx === -1) return transitions;
 
-            return transitions.map((entry) =>
-                getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry,
-            );
+            return transitions.map((entry) => (getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry));
         }
 
         /* During a 'stash' transition, check for trailing transitions related to the transition to
@@ -132,11 +124,7 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
 
             if (existing) {
                 const { trailing } = getTransitionMeta(existing);
-                return [
-                    ...transitions.slice(0, matchIdx),
-                    ...(trailing ? [trailing] : []),
-                    ...transitions.slice(matchIdx + 1),
-                ];
+                return [...transitions.slice(0, matchIdx), ...(trailing ? [trailing] : []), ...transitions.slice(matchIdx + 1)];
             }
 
             return transitions;

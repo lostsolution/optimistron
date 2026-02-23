@@ -12,10 +12,7 @@ export type RecordState<T> = Record<string, T>;
 
 /** Recursively builds a nested Record type from a keys tuple.
  * `NestedRecord<['groupId', 'itemId'], T>` = `Record<string, Record<string, T>>` */
-export type RecursiveRecordState<Keys extends readonly string[], T> = Keys extends readonly [
-    string,
-    ...infer Rest extends string[],
-]
+export type RecursiveRecordState<Keys extends readonly string[], T> = Keys extends readonly [string, ...infer Rest extends string[]]
     ? Rest extends []
         ? Record<string, T>
         : Record<string, RecursiveRecordState<Rest, T>>
@@ -141,10 +138,7 @@ export const nestedRecordState =
 
             wire: (bound, action, actions) => {
                 if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
-                if (actions.update && actions.update.match(action)) {
-                    const { path, item } = action.payload;
-                    return bound.update(...path, item);
-                }
+                if (actions.update && actions.update.match(action)) return bound.update(...action.payload.path, action.payload.item);
                 if (actions.remove && actions.remove.match(action)) return bound.remove(...action.payload.path);
                 return undefined;
             },
@@ -174,8 +168,7 @@ export const recordState = <T extends Record<string, any>>({
 
         wire: (bound, action, actions) => {
             if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
-            if (actions.update && actions.update.match(action))
-                return bound.update(action.payload.id, action.payload.item);
+            if (actions.update && actions.update.match(action)) return bound.update(action.payload.id, action.payload.item);
             if (actions.remove && actions.remove.match(action)) return bound.remove(action.payload.id);
             return undefined;
         },

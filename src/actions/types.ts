@@ -30,18 +30,13 @@ export type TransitionWithPreparedPayload<
     ActionType extends TransitionNamespace,
     Op extends Operation,
     PA extends PrepareAction<any>,
-> = ActionCreatorWithPreparedPayload<
-    TransitionArgs<Op, PA>,
-    PreparePayload<PA>,
-    ActionType,
-    PrepareError<PA>,
-    ActionMeta<Op, PA>
->;
+> = ActionCreatorWithPreparedPayload<TransitionArgs<Op, PA>, PreparePayload<PA>, ActionType, PrepareError<PA>, ActionMeta<Op, PA>>;
 
-export type TransitionPayloadAction<
-    Type extends string,
-    Op extends Operation,
-    PA extends PrepareAction<any>,
-> = PayloadAction<PreparePayload<PA>, Type, ActionMeta<Op, PA>, PrepareError<PA>>;
+export type TransitionPayloadAction<Type extends string, Op extends Operation, PA extends PrepareAction<any>> = PayloadAction<
+    PreparePayload<PA>,
+    Type,
+    ActionMeta<Op, PA>,
+    PrepareError<PA>
+>;
 
 export type { PathMap as PathIds } from '~/utils/types';

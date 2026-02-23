@@ -103,11 +103,7 @@ describe('recordState', () => {
         });
 
         test('should wire update action', () => {
-            const result = indexedState.wire(
-                bound,
-                { type: 'update', payload: { id: item.id, item: { value: 'updated' } } },
-                actions,
-            );
+            const result = indexedState.wire(bound, { type: 'update', payload: { id: item.id, item: { value: 'updated' } } }, actions);
             expect(result![item.id]).toEqual({ ...item, value: 'updated' });
         });
 
