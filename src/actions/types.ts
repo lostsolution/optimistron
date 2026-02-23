@@ -1,7 +1,7 @@
 import type { ActionCreatorWithPreparedPayload, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 
-import type { TransitionMeta, TransitionNamespace } from '../transitions';
-import { type Operation } from '../transitions';
+import type { TransitionMeta, TransitionNamespace } from '~/transitions';
+import { type Operation } from '~/transitions';
 
 export type EmptyPayload = { payload: never };
 export type PA_Empty = () => EmptyPayload;

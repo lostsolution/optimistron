@@ -1,10 +1,10 @@
 import type { Action, Reducer } from 'redux';
 
 import { warn } from './logger';
-import { bindReducer, type BoundReducer, type HandlerReducer } from './reducer';
-import { createSelectOptimistic } from './selectors';
-import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state';
-import type { StateHandler, TransitionState } from './state.types';
+import { bindReducer, resolveReducer, type BoundReducer, type HandlerReducer, type ReducerConfig } from './reducer';
+import { createSelectOptimistic } from './selectors/internal';
+import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state/factory';
+import type { StateHandler, TransitionState, WireMethod } from './state/types';
 import {
     Operation,
     getTransitionID,
@@ -29,15 +29,41 @@ const commitTransition = <S>(
     return boundReducer(transitionState, toCommit(staged));
 };
 
-export const optimistron = <S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+type OptimistronResult<S> = {
+    reducer: Reducer<TransitionState<S>>;
+    selectOptimistic: ReturnType<typeof createSelectOptimistic<S>>;
+};
+
+type OptimistronOptions = { sanitizeAction: <T extends Action>(action: T) => T };
+
+/** Manual mode — full control via a reducer function */
+export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[]>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,
-    reducer: HandlerReducer<S, C, U, D>,
-    options?: { sanitizeAction: <T extends Action>(action: T) => T },
-): { reducer: Reducer<TransitionState<S>>; selectOptimistic: ReturnType<typeof createSelectOptimistic<S>> } => {
+    config: HandlerReducer<S, C, U, D>,
+    options?: OptimistronOptions,
+): OptimistronResult<S>;
+
+/** Auto-wire mode — CRUD action map routed via handler's wire method */
+export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[], A>(
+    namespace: string,
+    initialState: S,
+    handler: StateHandler<S, C, U, D> & WireMethod<A>,
+    config: A & { reducer?: HandlerReducer<S, C, U, D> },
+    options?: OptimistronOptions,
+): OptimistronResult<S>;
+
+export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+    namespace: string,
+    initialState: S,
+    handler: StateHandler<S, C, U, D>,
+    config: ReducerConfig<S, C, U, D>,
+    options?: OptimistronOptions,
+): OptimistronResult<S> {
     if (!namespace) throw new Error('optimistron: namespace cannot be empty');
 
+    const reducer = resolveReducer(handler, config);
     const bindState = bindStateFactory<S, C, U, D>(handler);
     const boundReducer = bindReducer(reducer, bindState);
 
@@ -52,10 +78,7 @@ export const optimistron = <S, C extends unknown[], U extends unknown[], D exten
 
             try {
                 if (isTransitionForNamespace(action, namespace)) {
-                    const nextTransitions = processTransition(
-                        options?.sanitizeAction?.(action) ?? action,
-                        transitions,
-                    );
+                    const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
                     const { operation, id } = getTransitionMeta(action);
 
                     if (operation === Operation.COMMIT) {
@@ -87,4 +110,4 @@ export const optimistron = <S, C extends unknown[], U extends unknown[], D exten
     };
 
     return { reducer: optimisticReducer, selectOptimistic };
-};
+}

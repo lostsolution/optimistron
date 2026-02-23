@@ -1,5 +1,8 @@
-import type { SingularStateOptions, StateHandler } from '../state.types';
-import { OptimisticMergeResult } from '../transitions';
+import type { CrudActionMap, SingularStateOptions, StateHandler, WireMethod } from './types';
+import { OptimisticMergeResult } from '~/transitions';
+
+/** Typed CRUD action map for singular state */
+type SingularCrudMap<T> = CrudActionMap<{ item: T }, { item: Partial<T> }, Record<string, never>>;
 
 /**
  * Creates a `StateHandler` for single-object state (`T | null`).
@@ -9,10 +12,18 @@ import { OptimisticMergeResult } from '../transitions';
 export const singularState = <T extends object>({
     compare,
     eq,
-}: SingularStateOptions<T>): StateHandler<T | null, [item: T], [partial: Partial<T>], []> => ({
-    create: (_state: T | null, item: T) => item,
+}: SingularStateOptions<T>): StateHandler<T | null, [item: T], [partial: Partial<T>], []> &
+    WireMethod<SingularCrudMap<T>> => ({
+    create: (_: T | null, item: T) => item,
     update: (state: T | null, partial: Partial<T>) => (state ? { ...state, ...partial } : state),
     remove: (state: T | null) => (state !== null ? null : state),
+
+    wire: (bound, action, actions) => {
+        if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
+        if (actions.update && actions.update.match(action)) return bound.update(action.payload.item);
+        if (actions.remove && actions.remove.match(action)) return bound.remove();
+        return undefined;
+    },
 
     merge: (existing: T | null, incoming: T | null) => {
         if (existing === incoming) throw OptimisticMergeResult.SKIP;

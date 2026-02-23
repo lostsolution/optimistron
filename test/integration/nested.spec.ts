@@ -3,11 +3,11 @@ import { describe, expect, test } from 'bun:test';
 import { createTransitions, crudPrepare } from '~actions';
 import { optimistron } from '~optimistron';
 import type { HandlerReducer } from '~reducer';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors';
-import { buildTransitionState } from '~state';
-import type { TransitionState } from '~state.types';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { buildTransitionState } from '~state/factory';
+import type { TransitionState } from '~state/types';
 import { nestedRecordState } from '~state/record';
-import type { RecursiveRecordState } from '~state/record.types';
+import type { RecursiveRecordState } from '~state/record';
 import { updateTransition } from '~transitions';
 
 type Item = { groupId: string; itemId: string; value: string; revision: number };

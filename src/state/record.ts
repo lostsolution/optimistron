@@ -1,10 +1,43 @@
-import type { NestedRecordStateOptions, RecordStateOptions, StateHandler, StringKeys } from '~/state.types';
-import type { RecordState, RecursiveRecordState } from './record.types';
+import type {
+    CrudActionMap,
+    NestedRecordStateOptions,
+    RecordStateOptions,
+    StateHandler,
+    StringKeys,
+    WireMethod,
+} from '~state/types';
 
 import { OptimisticMergeResult } from '~/transitions';
 
+export type RecordState<T> = Record<string, T>;
+
+/** Recursively builds a nested Record type from a keys tuple.
+ * `NestedRecord<['groupId', 'itemId'], T>` = `Record<string, Record<string, T>>` */
+export type RecursiveRecordState<Keys extends readonly string[], T> = Keys extends readonly [
+    string,
+    ...infer Rest extends string[],
+]
+    ? Rest extends []
+        ? Record<string, T>
+        : Record<string, RecursiveRecordState<Rest, T>>
+    : never;
+
+/** Maps a keys tuple to a typed path object.
+ * `PathOf<['groupId', 'itemId']>` = `{ groupId: string; itemId: string }` */
+export type PathOf<Keys extends readonly string[]> = { [K in Keys[number]]: string };
+
 /** Maps a keys tuple to a tuple of string IDs — one per nesting level */
 type PathIds<Keys extends readonly string[]> = { [K in keyof Keys]: string } & string[];
+
+/** Typed CRUD action map for nested record state */
+type NestedRecordCrudMap<T, Keys extends readonly string[]> = CrudActionMap<
+    { item: T },
+    { path: PathIds<Keys>; item: Partial<T> },
+    { path: PathIds<Keys> }
+>;
+
+/** Typed CRUD action map for flat record state */
+type RecordCrudMap<T> = CrudActionMap<{ item: T }, { id: string; item: Partial<T> }, { id: string }>;
 
 /** Internal shorthand for untyped nested record traversal */
 type Obj = Record<string, unknown>;
@@ -67,7 +100,8 @@ export const nestedRecordState =
         [item: T],
         [...PathIds<Keys>, Partial<T>],
         [...PathIds<Keys>]
-    > => {
+    > &
+        WireMethod<NestedRecordCrudMap<T, Keys>> => {
         type State = RecursiveRecordState<Keys, T>;
 
         /** Extracts path IDs from an item using the keys tuple */
@@ -148,7 +182,17 @@ export const nestedRecordState =
             },
 
             merge: (existing, incoming) => mergeAtDepth(existing, incoming, keys.length) as State,
-        } as StateHandler<State, [item: T], [...PathIds<Keys>, Partial<T>], [...PathIds<Keys>]>;
+
+            wire: (bound, action, actions) => {
+                if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
+                if (actions.update && actions.update.match(action)) {
+                    const { path, item } = action.payload;
+                    return bound.update(...path, item);
+                }
+                if (actions.remove && actions.remove.match(action)) return bound.remove(...action.payload.path);
+                return undefined;
+            },
+        };
     };
 
 /** Creates a `StateHandler` for a flat record-based state (`Record<string, T>`).
@@ -162,7 +206,8 @@ export const recordState = <T extends Record<string, any>>({
     [item: T],
     [itemId: string, partialItem: Partial<T>],
     [itemId: string]
-> => {
+> &
+    WireMethod<RecordCrudMap<T>> => {
     const nested = nestedRecordState<T>()({ keys: [key], compare, eq });
 
     return {
@@ -170,5 +215,13 @@ export const recordState = <T extends Record<string, any>>({
         merge: nested.merge,
         update: (state, itemId, partialItem) => nested.update(state, itemId, partialItem),
         remove: (state, itemId) => nested.remove(state, itemId),
+
+        wire: (bound, action, actions) => {
+            if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
+            if (actions.update && actions.update.match(action))
+                return bound.update(action.payload.id, action.payload.item);
+            if (actions.remove && actions.remove.match(action)) return bound.remove(action.payload.id);
+            return undefined;
+        },
     };
 };

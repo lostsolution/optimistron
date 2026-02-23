@@ -1,7 +1,7 @@
 import { afterAll, afterEach, describe, expect, mock, spyOn, test } from 'bun:test';
 import { createTransitions } from '~actions';
 import { bindReducer } from '~reducer';
-import { bindStateFactory } from '~state';
+import { bindStateFactory } from '~state/factory';
 import { create, createIndexedState, createItem, edit, indexedState, reducer } from '~test/utils';
 import type { StagedAction, TransitionAction } from '~transitions';
 import {
