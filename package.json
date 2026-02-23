@@ -45,6 +45,7 @@
         "typescript": "^5.9.3"
     },
     "scripts": {
+        "typecheck": "tsc --noEmit",
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:usecases": "bun build ./usecases/index.tsx  --outdir ./usecases/dist --entry-naming [dir]/[name].[ext] --asset-naming [name].[ext] --target browser",
         "serve:usecases": "bun serve ./usecases/",
