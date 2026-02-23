@@ -10,7 +10,7 @@ export function* rootSaga() {
 
         try {
             yield simulateAPIRequest();
-            yield put(createTodo.amend(transitionId, { ...action.payload.todo, id: generateId() }));
+            yield put(createTodo.amend({ ...action.payload.item, id: generateId() }));
             yield put(createTodo.commit(transitionId));
         } catch (error) {
             yield put(createTodo.fail(transitionId, error));
