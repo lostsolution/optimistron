@@ -9,27 +9,27 @@
 
 > Opinionated optimistic state management for Redux. Tracks transitions alongside reducer state and derives the optimistic view at the selector level — like `git rebase`. No state copies. No checkpoints.
 
-## Why
+## When to use Optimistron
 
-Existing optimistic Redux libraries store full state checkpoints to enable rollback:
+Optimistron is a good fit when your app has:
 
-- **redux-optimist**: saves a complete state snapshot at transaction open, replays all subsequent actions from it on revert
-- **redux-optimistic-ui**: wraps state in `{ beforeState, current, history }` — `beforeState` is a full copy of the state tree before any optimistic transaction began
-- **Hand-rolled thunk patterns**: `const previous = getState().slice` in a closure, restore on error
+- **Offline-first flows** — users act while disconnected, transitions queue up, conflicts resolve on reconnect.
+- **Async dispatch patterns** — thunks, sagas, listener middleware — anything where you dispatch an intent and later resolve it with success or failure.
+- **Large or normalized state** — where snapshotting the full state tree per in-flight operation gets expensive fast.
 
-This means memory scales with **state size x number of in-flight operations**. For large normalized stores, each pending action carries a shadow copy. Reverts replay the entire reducer chain — O(actions x reducer cost).
+Other libraries solve optimistic updates in their own way — snapshot/replay, cache patching, query-level invalidation. Optimistron is a different tradeoff: **no state copies, no checkpoints**. Optimistic state is derived at the selector level — which is already memoized by `reselect` in most Redux apps. You get optimistic UI on the read path, with zero write-path overhead.
 
-Optimistron takes a different approach: **no state copies, no checkpoints**. Optimistic state is derived at the selector level — which is already memoized by `reselect` in most Redux apps. You get optimistic UI for free on the read path, with zero write-path overhead.
+> If you're already using RTK Query's built-in optimistic updates and they cover your needs, you probably don't need this.
 
 ---
 
 ## The Mental Model
 
-Think of your Redux store like a git repository:
+Think of each reducer you wrap with `optimistron()` as a **branch** — not the whole store.
 
-- **Committed state** = `main`. Source of truth — only `COMMIT` writes here.
-- **Transitions** = staged commits on top. Intended changes that haven't landed yet.
-- **`selectOptimistic`** = `rebase`. Replays transitions on committed state at read-time. Never stored — always derived.
+- **Committed state** = the branch tip. Source of truth — only `COMMIT` advances it.
+- **Transitions** = staged commits on top of that branch. Intended changes that haven't landed yet.
+- **`selectOptimistic`** = `rebase`. Replays transitions onto the branch tip at read-time. Never stored — always derived.
 - **Sanitization** = conflict detection. After every mutation, transitions are replayed. No-ops get discarded. Conflicts get flagged.
 
 `STAGE`, `AMEND`, `FAIL`, `STASH` never touch reducer state — they only modify the transitions list. The optimistic view updates because `selectOptimistic` re-derives it on the next read.
