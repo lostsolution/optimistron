@@ -28,18 +28,15 @@ export const App: FC = () => {
     const dispatch = useDispatch();
 
     const handleCreate = async (todo: Todo) => {
-        const transitionId = todo.id;
-        dispatch(createTodo.stage(transitionId, todo));
+        dispatch(createTodo.stage(todo));
     };
 
     const handleEdit = async (todo: Todo) => {
-        const transitionId = todo.id;
-        dispatch(editTodo.stage(transitionId, todo.id, todo));
+        dispatch(editTodo.stage(todo.id, todo));
     };
 
     const handleDelete = async (todo: Todo) => {
-        const transitionId = todo.id;
-        dispatch(deleteTodo.stage(transitionId, todo.id));
+        dispatch(deleteTodo.stage(todo.id));
     };
 
     return (

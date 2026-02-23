@@ -9,28 +9,45 @@ type EmptyPayload = { payload: never };
 type PA_Empty = () => EmptyPayload;
 type PA_Error = (error: unknown) => EmptyPayload & { error: Error };
 
+const emptyPA = () => ({ payload: {} });
+const errorPA = (error: unknown) => ({ error: error instanceof Error ? error.message : error, payload: {} });
+
+/** Extracts the payload type from a PrepareAction */
+type PreparePayload<PA extends PrepareAction<any>> = ReturnType<PA>['payload'];
+
+/** Extracts the error type from a PrepareAction, or `never` if none */
+type PrepareError<PA extends PrepareAction<any>> = ReturnType<PA> extends { error: infer E } ? E : never;
+
+/** Merges transition meta with any extra meta from a PrepareAction */
+type ActionMeta<Op extends Operation, PA extends PrepareAction<any>> = TransitionMeta<Op> &
+    (ReturnType<PA> extends { meta: infer M } ? M : object);
+
+/** Resolves the arguments signature for a transition action creator.
+ * STAGE auto-detects transitionId when prepare returns it;
+ * all other operations require explicit transitionId as first arg. */
+type TransitionArgs<Op extends Operation, PA extends PrepareAction<any>> = Op extends Operation.STAGE
+    ? ReturnType<PA> extends { transitionId: string }
+        ? Parameters<PA>
+        : [transitionId: string, ...Parameters<PA>]
+    : [transitionId: string, ...Parameters<PA>];
+
 export type TransitionWithPreparedPayload<
     ActionType extends TransitionNamespace,
     Op extends Operation,
     PA extends PrepareAction<any>,
 > = ActionCreatorWithPreparedPayload<
-    [transitionId: string, ...Parameters<PA>],
-    ReturnType<PA>['payload'],
+    TransitionArgs<Op, PA>,
+    PreparePayload<PA>,
     ActionType,
-    ReturnType<PA> extends { error: infer E } ? E : never,
-    TransitionMeta<Op> & (ReturnType<PA> extends { meta: infer M } ? M : object)
+    PrepareError<PA>,
+    ActionMeta<Op, PA>
 >;
 
 export type TransitionPayloadAction<
     Type extends string,
     Op extends Operation,
     PA extends PrepareAction<any>,
-> = PayloadAction<
-    ReturnType<PA>['payload'],
-    Type,
-    TransitionMeta<Op> & (ReturnType<PA> extends { meta: infer M } ? M : object),
-    ReturnType<PA> extends { error: infer E } ? E : never
->;
+> = PayloadAction<PreparePayload<PA>, Type, ActionMeta<Op, PA>, PrepareError<PA>>;
 
 /** Helper action matcher function that will match the supplied
  * namespace when the transition operation is of type COMMIT */
@@ -51,13 +68,37 @@ const prepareTransition = <PA extends PrepareAction<any>>(
     },
 });
 
-/** This function creates a transition action creator by extending RTK's `createAction`
- * utility. Due to limitations with the type inference of `PrepareAction`, a type cast
- * is required, as we cannot handle all variadic cases of the parameters of the `prepare`
- * function. This arises due to the specific requirements of `createTransition` which
- * necessitates passing a `transitionId` followed by parameters inferred from `PrepareAction`.
- * In contrast, the `PrepareAction` type is defined to accept any number of arguments of
- * any type. */
+/** Resolves transitionId and hydrates transition meta onto a prepare result.
+ * For STAGE, auto-detects transitionId from prepare result when it returns
+ * `transitionId` — coupling transitionId to entityId for the common CRUD case.
+ * All other operations require explicit transitionId as the first argument,
+ * since they target an existing transition the consumer already holds a
+ * reference to. This also avoids a subtle pitfall: amend shares stagePA, so
+ * auto-detecting from an amended entity (which may carry a server-assigned ID)
+ * would target the wrong transition.
+ *
+ * For edge-cases where transitionId !== entityId (batch ops, correlation IDs),
+ * omit `transitionId` from the prepare return — the explicit path works for
+ * all operations including STAGE. */
+export const resolveTransition =
+    (operation: Operation, dedupe: DedupeMode) =>
+    <PA extends PrepareAction<any>>(prepare: PA) =>
+    (...args: any[]) => {
+        if (operation === Operation.STAGE) {
+            const result = prepare(...args);
+            if (result && 'transitionId' in result) {
+                const id = String(result.transitionId);
+                return prepareTransition(result, { id, operation, dedupe });
+            }
+        }
+
+        const [transitionId, ...rest] = args;
+        return prepareTransition(prepare(...rest), { id: transitionId as string, operation, dedupe });
+    };
+
+/** Creates a transition action creator by wrapping RTK's `createAction`.
+ * Type-cast required due to RTK's `PrepareAction` not supporting the variadic
+ * `[transitionId, ...prepareArgs]` signature inference. */
 export const createTransition =
     <Type extends TransitionNamespace, Op extends Operation>(
         type: Type,
@@ -65,12 +106,7 @@ export const createTransition =
         dedupe: DedupeMode = DedupeMode.OVERWRITE,
     ) =>
     <PA extends PrepareAction<any>>(prepare: PA): TransitionWithPreparedPayload<Type, Op, PA> =>
-        createAction(type, ((transitionId: string, ...params: Parameters<PA>) =>
-            prepareTransition(prepare(...params), {
-                id: transitionId,
-                operation,
-                dedupe,
-            })) as PrepareAction<any>);
+        createAction(type, resolveTransition(operation, dedupe)(prepare));
 
 /** Generates transition actions for a specified transition type. By default, it uses the
  * `OVERWRITE` dedupe strategy, which overwrites transitions with the same `transitionId` in
@@ -95,13 +131,6 @@ export const createTransitions =
               },
     ) => {
         const noOptions = typeof options === 'function';
-        const emptyPA = () => ({ payload: {} });
-
-        const errorPA = (error: unknown) => ({
-            error: error instanceof Error ? error.message : error,
-            payload: {},
-        });
-
         const stagePA = noOptions ? options : options.stage;
         const commitPA = noOptions ? emptyPA : (options.commit ?? emptyPA);
         const failPA = noOptions ? errorPA : (options.fail ?? errorPA);
@@ -116,3 +145,15 @@ export const createTransitions =
             match: createCommitMatcher<Type, PA_Stage>(type),
         };
     };
+
+/** Factory for CRUD prepare functions that couple transitionId to entityId.
+ * This is the recommended default for indexed state — transitionId === entityId
+ * means dispatching `stage(entity)` automatically tracks the transition by the
+ * entity's own ID. For edge-cases where transitionId must differ from entityId
+ * (batch operations, server-assigned IDs with correlation tokens), write custom
+ * prepare functions and pass transitionId explicitly as the first argument. */
+export const crudPrepare = <T extends Record<string, any>>(itemIdKey: keyof T & string) => ({
+    create: (item: T) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
+    update: (id: string, item: Partial<T>) => ({ payload: { id, item }, transitionId: id }),
+    remove: (id: string) => ({ payload: { id }, transitionId: id }),
+});

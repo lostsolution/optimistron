@@ -34,10 +34,10 @@ export const App: FC = () => {
         const transitionId = todo.id;
 
         try {
-            dispatch(createTodo.stage(transitionId, todo));
+            dispatch(createTodo.stage(todo));
             await simulateAPIRequest();
 
-            dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
+            dispatch(createTodo.amend({ ...todo, id: generateId() }));
             dispatch(createTodo.commit(transitionId));
         } catch (error) {
             dispatch(createTodo.fail(transitionId, error));
@@ -48,7 +48,7 @@ export const App: FC = () => {
         const transitionId = todo.id;
 
         try {
-            dispatch(editTodo.stage(transitionId, todo.id, todo));
+            dispatch(editTodo.stage(todo.id, todo));
             await simulateAPIRequest();
             dispatch(editTodo.commit(transitionId));
         } catch (error) {
@@ -59,7 +59,7 @@ export const App: FC = () => {
     const handleDelete = async (todo: Todo) => {
         const transitionId = todo.id;
         try {
-            dispatch(deleteTodo.stage(transitionId, todo.id));
+            dispatch(deleteTodo.stage(todo.id));
             await simulateAPIRequest();
             dispatch(deleteTodo.commit(transitionId));
         } catch (error) {

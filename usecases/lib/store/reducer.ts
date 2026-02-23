@@ -31,8 +31,8 @@ export const { reducer: todos, selectOptimistic } = optimistron(
     initial,
     indexedStateFactory<Todo>({ itemIdKey: 'id', compare, eq }),
     ({ getState, create, update, remove }, action) => {
-        if (createTodo.match(action)) return create(action.payload.todo);
-        if (editTodo.match(action)) return update(action.payload.id, action.payload.todo);
+        if (createTodo.match(action)) return create(action.payload.item);
+        if (editTodo.match(action)) return update(action.payload.id, action.payload.item);
         if (deleteTodo.match(action)) return remove(action.payload.id);
 
         if (sync.match(action)) {

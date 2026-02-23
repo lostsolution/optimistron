@@ -1,5 +1,5 @@
 export { optimistron } from './optimistron';
-export { createTransition, createTransitions } from './actions';
+export { createTransition, createTransitions, crudPrepare } from './actions';
 export {
     selectConflictingTransition,
     selectFailedTransition,
