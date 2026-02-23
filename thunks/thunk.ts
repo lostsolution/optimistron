@@ -11,7 +11,7 @@ export const createTodoThunk = (todo: Todo): ThunkAction<void, State, undefined,
         const transitionId = todo.id;
 
         try {
-            dispatch(createTodo.stage(transitionId, todo));
+            dispatch(createTodo.stage(todo));
             await simulateAPIRequest();
             dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
             dispatch(createTodo.commit(transitionId));
@@ -26,7 +26,7 @@ export const editTodoThunk = (id: string, update: Todo): ThunkAction<void, State
         const transitionId = id;
 
         try {
-            dispatch(editTodo.stage(transitionId, id, update));
+            dispatch(editTodo.stage(id, update));
             await simulateAPIRequest();
             dispatch(editTodo.commit(transitionId));
         } catch (error) {
@@ -40,7 +40,7 @@ export const deleteTodoTunk = (id: string): ThunkAction<void, State, undefined, 
         const transitionId = id;
 
         try {
-            dispatch(deleteTodo.stage(transitionId, id));
+            dispatch(deleteTodo.stage(id));
             await simulateAPIRequest();
             dispatch(deleteTodo.commit(transitionId));
         } catch {

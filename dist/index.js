@@ -30374,6 +30374,8 @@ var indexedStateFactory = ({
 };
 
 // src/actions.ts
+var emptyPA = () => ({ payload: {} });
+var errorPA = (error) => ({ error: error instanceof Error ? error.message : error, payload: {} });
 var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === "commit" /* COMMIT */;
 var prepareTransition = (action, options) => ({
   ...action,
@@ -30382,18 +30384,20 @@ var prepareTransition = (action, options) => ({
     [META_KEY]: options
   }
 });
-var createTransition = (type, operation, dedupe = 0 /* OVERWRITE */) => (prepare) => createAction(type, (transitionId, ...params) => prepareTransition(prepare(...params), {
-  id: transitionId,
-  operation,
-  dedupe
-}));
+var resolveTransition = (operation, dedupe) => (prepare) => (...args) => {
+  if (operation === "stage" /* STAGE */) {
+    const result = prepare(...args);
+    if (result && "transitionId" in result) {
+      const id = String(result.transitionId);
+      return prepareTransition(result, { id, operation, dedupe });
+    }
+  }
+  const [transitionId, ...rest] = args;
+  return prepareTransition(prepare(...rest), { id: transitionId, operation, dedupe });
+};
+var createTransition = (type, operation, dedupe = 0 /* OVERWRITE */) => (prepare) => createAction(type, resolveTransition(operation, dedupe)(prepare));
 var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
   const noOptions = typeof options === "function";
-  const emptyPA = () => ({ payload: {} });
-  const errorPA = (error) => ({
-    error: error instanceof Error ? error.message : error,
-    payload: {}
-  });
   const stagePA = noOptions ? options : options.stage;
   const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
   const failPA = noOptions ? errorPA : options.fail ?? errorPA;
@@ -30407,14 +30411,17 @@ var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
     match: createCommitMatcher(type)
   };
 };
+var crudPrepare = (itemIdKey) => ({
+  create: (item) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
+  update: (id, item) => ({ payload: { id, item }, transitionId: id }),
+  remove: (id) => ({ payload: { id }, transitionId: id })
+});
 
 // usecases/lib/store/actions.ts
-var create = (todo) => ({ payload: { todo } });
-var edit = (id, todo) => ({ payload: { id, todo } });
-var remove = (id) => ({ payload: { id } });
-var createTodo = createTransitions("todos::add")(create);
-var editTodo = createTransitions("todos::edit")(edit);
-var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(remove);
+var crud = crudPrepare("id");
+var createTodo = createTransitions("todos::add")(crud.create);
+var editTodo = createTransitions("todos::edit")(crud.update);
+var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(crud.remove);
 var sync = createAction("todos::sync");
 
 // usecases/lib/utils/mock-api.ts
@@ -30453,13 +30460,13 @@ var compare = (a) => (b) => {
   return -1;
 };
 var eq = (a) => (b) => a.done === b.done && a.value === b.value;
-var { reducer: todos, selectOptimistic } = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create: create2, update, remove: remove2 }, action) => {
+var { reducer: todos, selectOptimistic } = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create, update, remove }, action) => {
   if (createTodo.match(action))
-    return create2(action.payload.todo);
+    return create(action.payload.item);
   if (editTodo.match(action))
-    return update(action.payload.id, action.payload.todo);
+    return update(action.payload.id, action.payload.item);
   if (deleteTodo.match(action))
-    return remove2(action.payload.id);
+    return remove(action.payload.id);
   if (sync.match(action)) {
     return Object.fromEntries(Object.entries(getState()).map(([key, todo]) => [
       key,
@@ -30944,14 +30951,14 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
       return;
     if (failedAction) {
       if (createTodo.stage.match(failedAction)) {
-        const create2 = import_cloneDeep.default(failedAction);
-        create2.payload.todo = { ...create2.payload.todo, ...mutation };
-        onRetry(create2);
+        const create = import_cloneDeep.default(failedAction);
+        create.payload.todo = { ...create.payload.todo, ...mutation };
+        onRetry(create);
       }
       if (editTodo.stage.match(failedAction)) {
-        const edit2 = import_cloneDeep.default(failedAction);
-        edit2.payload.todo = { ...edit2.payload.todo, ...mutation };
-        onRetry(edit2);
+        const edit = import_cloneDeep.default(failedAction);
+        edit.payload.todo = { ...edit.payload.todo, ...mutation };
+        onRetry(edit);
       }
     } else
       onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
@@ -31223,7 +31230,7 @@ var App = () => {
   const handleCreate = async (todo) => {
     const transitionId = todo.id;
     try {
-      dispatch(createTodo.stage(transitionId, todo));
+      dispatch(createTodo.stage(todo));
       await simulateAPIRequest();
       dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
       dispatch(createTodo.commit(transitionId));
@@ -31234,7 +31241,7 @@ var App = () => {
   const handleEdit = async (todo) => {
     const transitionId = todo.id;
     try {
-      dispatch(editTodo.stage(transitionId, todo.id, todo));
+      dispatch(editTodo.stage(todo.id, todo));
       await simulateAPIRequest();
       dispatch(editTodo.commit(transitionId));
     } catch (error) {
@@ -31244,7 +31251,7 @@ var App = () => {
   const handleDelete = async (todo) => {
     const transitionId = todo.id;
     try {
-      dispatch(deleteTodo.stage(transitionId, todo.id));
+      dispatch(deleteTodo.stage(todo.id));
       await simulateAPIRequest();
       dispatch(deleteTodo.commit(transitionId));
     } catch (error) {
@@ -31523,7 +31530,7 @@ var flatMap = function flatMap2(mapper, arr) {
   var _ref;
   return (_ref = []).concat.apply(_ref, arr.map(mapper));
 };
-function remove2(array2, item) {
+function remove(array2, item) {
   var index = array2.indexOf(item);
   if (index >= 0) {
     array2.splice(index, 1);
@@ -32028,7 +32035,7 @@ function channel3(buffer3) {
     } else {
       takers.push(cb);
       cb.cancel = function() {
-        remove2(takers, cb);
+        remove(takers, cb);
       };
     }
   }
@@ -32128,7 +32135,7 @@ function multicastChannel() {
     nextTakers.push(cb);
     cb.cancel = once(function() {
       ensureCanMutateNextTakers();
-      remove2(nextTakers, cb);
+      remove(nextTakers, cb);
     });
   }, _ref.close = close, _ref;
 }
@@ -32310,7 +32317,7 @@ function runJoinEffect(env, taskOrTasks, cb, _ref9) {
       };
       cb2.cancel = function() {
         if (taskToJoin.isRunning())
-          remove2(taskToJoin.joiners, joiner);
+          remove(taskToJoin.joiners, joiner);
       };
       taskToJoin.joiners.push(joiner);
     } else {
@@ -32466,7 +32473,7 @@ function forkQueue(mainTask, onAbort, cont) {
       if (completed2) {
         return;
       }
-      remove2(tasks, task2);
+      remove(tasks, task2);
       task2.cont = noop2;
       if (isErr) {
         abort(res);
@@ -32943,16 +32950,13 @@ var description2 = {
 var App2 = () => {
   const dispatch = useDispatch();
   const handleCreate = async (todo) => {
-    const transitionId = todo.id;
-    dispatch(createTodo.stage(transitionId, todo));
+    dispatch(createTodo.stage(todo));
   };
   const handleEdit = async (todo) => {
-    const transitionId = todo.id;
-    dispatch(editTodo.stage(transitionId, todo.id, todo));
+    dispatch(editTodo.stage(todo.id, todo));
   };
   const handleDelete = async (todo) => {
-    const transitionId = todo.id;
-    dispatch(deleteTodo.stage(transitionId, todo.id));
+    dispatch(deleteTodo.stage(todo.id));
   };
   return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(Layout, {
     title: "Sagas",
@@ -33059,7 +33063,7 @@ function* rootSaga() {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(createTodo.amend(transitionId, { ...action.payload.todo, id: generateId() }));
+      yield put(createTodo.amend(transitionId, { ...action.payload.item, id: generateId() }));
       yield put(createTodo.commit(transitionId));
     } catch (error) {
       yield put(createTodo.fail(transitionId, error));
@@ -33111,7 +33115,7 @@ var createTodoThunk = (todo) => {
   return async (dispatch) => {
     const transitionId = todo.id;
     try {
-      dispatch(createTodo.stage(transitionId, todo));
+      dispatch(createTodo.stage(todo));
       await simulateAPIRequest();
       dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
       dispatch(createTodo.commit(transitionId));
@@ -33124,7 +33128,7 @@ var editTodoThunk = (id, update) => {
   return async (dispatch) => {
     const transitionId = id;
     try {
-      dispatch(editTodo.stage(transitionId, id, update));
+      dispatch(editTodo.stage(id, update));
       await simulateAPIRequest();
       dispatch(editTodo.commit(transitionId));
     } catch (error) {
@@ -33136,7 +33140,7 @@ var deleteTodoTunk = (id) => {
   return async (dispatch) => {
     const transitionId = id;
     try {
-      dispatch(deleteTodo.stage(transitionId, id));
+      dispatch(deleteTodo.stage(id));
       await simulateAPIRequest();
       dispatch(deleteTodo.commit(transitionId));
     } catch {
