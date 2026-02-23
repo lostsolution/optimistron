@@ -402,7 +402,7 @@ var require_react_development = __commonJS((exports, module) => {
           }
         }
       }
-      var ReactElement = function(type, key, ref, self2, source, owner, props) {
+      var ReactElement = function(type, key, ref, self, source, owner, props) {
         var element = {
           $$typeof: REACT_ELEMENT_TYPE,
           type,
@@ -423,7 +423,7 @@ var require_react_development = __commonJS((exports, module) => {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: self2
+            value: self
           });
           Object.defineProperty(element, "_source", {
             configurable: false,
@@ -443,7 +443,7 @@ var require_react_development = __commonJS((exports, module) => {
         var props = {};
         var key = null;
         var ref = null;
-        var self2 = null;
+        var self = null;
         var source = null;
         if (config != null) {
           if (hasValidRef(config)) {
@@ -458,7 +458,7 @@ var require_react_development = __commonJS((exports, module) => {
             }
             key = "" + config.key;
           }
-          self2 = config.__self === undefined ? null : config.__self;
+          self = config.__self === undefined ? null : config.__self;
           source = config.__source === undefined ? null : config.__source;
           for (propName in config) {
             if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS.hasOwnProperty(propName)) {
@@ -500,7 +500,7 @@ var require_react_development = __commonJS((exports, module) => {
             }
           }
         }
-        return ReactElement(type, key, ref, self2, source, ReactCurrentOwner.current, props);
+        return ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props);
       }
       function cloneAndReplaceKey(oldElement, newKey) {
         var newElement = ReactElement(oldElement.type, newKey, oldElement.ref, oldElement._self, oldElement._source, oldElement._owner, oldElement.props);
@@ -514,7 +514,7 @@ var require_react_development = __commonJS((exports, module) => {
         var props = assign({}, element.props);
         var key = element.key;
         var ref = element.ref;
-        var self2 = element._self;
+        var self = element._self;
         var source = element._source;
         var owner = element._owner;
         if (config != null) {
@@ -552,7 +552,7 @@ var require_react_development = __commonJS((exports, module) => {
           }
           props.children = childArray;
         }
-        return ReactElement(element.type, key, ref, self2, source, owner, props);
+        return ReactElement(element.type, key, ref, self, source, owner, props);
       }
       function isValidElement(object) {
         return typeof object === "object" && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
@@ -23241,9 +23241,9 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
       }
       function checkPropTypes(typeSpecs, values, location, componentName, element) {
         {
-          var has2 = Function.call.bind(hasOwnProperty);
+          var has = Function.call.bind(hasOwnProperty);
           for (var typeSpecName in typeSpecs) {
-            if (has2(typeSpecs, typeSpecName)) {
+            if (has(typeSpecs, typeSpecName)) {
               var error$1 = undefined;
               try {
                 if (typeof typeSpecs[typeSpecName] !== "function") {
@@ -23337,9 +23337,9 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
         }
         return config.key !== undefined;
       }
-      function warnIfStringRefCannotBeAutoConverted(config, self2) {
+      function warnIfStringRefCannotBeAutoConverted(config, self) {
         {
-          if (typeof config.ref === "string" && ReactCurrentOwner.current && self2 && ReactCurrentOwner.current.stateNode !== self2) {
+          if (typeof config.ref === "string" && ReactCurrentOwner.current && self && ReactCurrentOwner.current.stateNode !== self) {
             var componentName = getComponentNameFromType(ReactCurrentOwner.current.type);
             if (!didWarnAboutStringRefs[componentName]) {
               error('Component "%s" contains the string ref "%s". ' + "Support for string refs will be removed in a future major release. " + "This case cannot be automatically converted to an arrow function. " + "We ask you to manually fix this case by using useRef() or createRef() instead. " + "Learn more about using refs safely here: " + "https://reactjs.org/link/strict-mode-string-ref", getComponentNameFromType(ReactCurrentOwner.current.type), config.ref);
@@ -23378,7 +23378,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
           });
         }
       }
-      var ReactElement = function(type, key, ref, self2, source, owner, props) {
+      var ReactElement = function(type, key, ref, self, source, owner, props) {
         var element = {
           $$typeof: REACT_ELEMENT_TYPE,
           type,
@@ -23399,7 +23399,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: self2
+            value: self
           });
           Object.defineProperty(element, "_source", {
             configurable: false,
@@ -23414,7 +23414,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
         }
         return element;
       };
-      function jsxDEV(type, config, maybeKey, source, self2) {
+      function jsxDEV(type, config, maybeKey, source, self) {
         {
           var propName;
           var props = {};
@@ -23434,7 +23434,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
           }
           if (hasValidRef(config)) {
             ref = config.ref;
-            warnIfStringRefCannotBeAutoConverted(config, self2);
+            warnIfStringRefCannotBeAutoConverted(config, self);
           }
           for (propName in config) {
             if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS.hasOwnProperty(propName)) {
@@ -23458,7 +23458,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
               defineRefPropWarningGetter(props, displayName);
             }
           }
-          return ReactElement(type, key, ref, self2, source, ReactCurrentOwner.current, props);
+          return ReactElement(type, key, ref, self, source, ReactCurrentOwner.current, props);
         }
       }
       var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
@@ -23622,7 +23622,7 @@ Check the top-level render call using <` + parentName + ">.";
         }
       }
       var didWarnAboutKeySpread = {};
-      function jsxWithValidation(type, props, key, isStaticChildren, source, self2) {
+      function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
         {
           var validType = isValidElementType(type);
           if (!validType) {
@@ -23649,7 +23649,7 @@ Check the top-level render call using <` + parentName + ">.";
             }
             error("React.jsx: type is invalid -- expected a string (for " + "built-in components) or a class/function (for composite " + "components) but got: %s.%s", typeString, info);
           }
-          var element = jsxDEV(type, props, key, source, self2);
+          var element = jsxDEV(type, props, key, source, self);
           if (element == null) {
             return element;
           }
@@ -23712,1574 +23712,6 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
   if (false) {} else {
     module.exports = react_jsx_dev_runtime_development;
   }
-});
-
-// node_modules/lodash/_listCacheClear.js
-var require__listCacheClear = __commonJS((exports, module) => {
-  function listCacheClear() {
-    this.__data__ = [];
-    this.size = 0;
-  }
-  module.exports = listCacheClear;
-});
-
-// node_modules/lodash/eq.js
-var require_eq = __commonJS((exports, module) => {
-  function eq2(value, other) {
-    return value === other || value !== value && other !== other;
-  }
-  module.exports = eq2;
-});
-
-// node_modules/lodash/_assocIndexOf.js
-var require__assocIndexOf = __commonJS((exports, module) => {
-  var eq2 = require_eq();
-  function assocIndexOf(array, key) {
-    var length = array.length;
-    while (length--) {
-      if (eq2(array[length][0], key)) {
-        return length;
-      }
-    }
-    return -1;
-  }
-  module.exports = assocIndexOf;
-});
-
-// node_modules/lodash/_listCacheDelete.js
-var require__listCacheDelete = __commonJS((exports, module) => {
-  var assocIndexOf = require__assocIndexOf();
-  var arrayProto = Array.prototype;
-  var splice = arrayProto.splice;
-  function listCacheDelete(key) {
-    var data = this.__data__, index = assocIndexOf(data, key);
-    if (index < 0) {
-      return false;
-    }
-    var lastIndex = data.length - 1;
-    if (index == lastIndex) {
-      data.pop();
-    } else {
-      splice.call(data, index, 1);
-    }
-    --this.size;
-    return true;
-  }
-  module.exports = listCacheDelete;
-});
-
-// node_modules/lodash/_listCacheGet.js
-var require__listCacheGet = __commonJS((exports, module) => {
-  var assocIndexOf = require__assocIndexOf();
-  function listCacheGet(key) {
-    var data = this.__data__, index = assocIndexOf(data, key);
-    return index < 0 ? undefined : data[index][1];
-  }
-  module.exports = listCacheGet;
-});
-
-// node_modules/lodash/_listCacheHas.js
-var require__listCacheHas = __commonJS((exports, module) => {
-  var assocIndexOf = require__assocIndexOf();
-  function listCacheHas(key) {
-    return assocIndexOf(this.__data__, key) > -1;
-  }
-  module.exports = listCacheHas;
-});
-
-// node_modules/lodash/_listCacheSet.js
-var require__listCacheSet = __commonJS((exports, module) => {
-  var assocIndexOf = require__assocIndexOf();
-  function listCacheSet(key, value) {
-    var data = this.__data__, index = assocIndexOf(data, key);
-    if (index < 0) {
-      ++this.size;
-      data.push([key, value]);
-    } else {
-      data[index][1] = value;
-    }
-    return this;
-  }
-  module.exports = listCacheSet;
-});
-
-// node_modules/lodash/_ListCache.js
-var require__ListCache = __commonJS((exports, module) => {
-  var listCacheClear = require__listCacheClear();
-  var listCacheDelete = require__listCacheDelete();
-  var listCacheGet = require__listCacheGet();
-  var listCacheHas = require__listCacheHas();
-  var listCacheSet = require__listCacheSet();
-  function ListCache(entries) {
-    var index = -1, length = entries == null ? 0 : entries.length;
-    this.clear();
-    while (++index < length) {
-      var entry = entries[index];
-      this.set(entry[0], entry[1]);
-    }
-  }
-  ListCache.prototype.clear = listCacheClear;
-  ListCache.prototype["delete"] = listCacheDelete;
-  ListCache.prototype.get = listCacheGet;
-  ListCache.prototype.has = listCacheHas;
-  ListCache.prototype.set = listCacheSet;
-  module.exports = ListCache;
-});
-
-// node_modules/lodash/_stackClear.js
-var require__stackClear = __commonJS((exports, module) => {
-  var ListCache = require__ListCache();
-  function stackClear() {
-    this.__data__ = new ListCache;
-    this.size = 0;
-  }
-  module.exports = stackClear;
-});
-
-// node_modules/lodash/_stackDelete.js
-var require__stackDelete = __commonJS((exports, module) => {
-  function stackDelete(key) {
-    var data = this.__data__, result = data["delete"](key);
-    this.size = data.size;
-    return result;
-  }
-  module.exports = stackDelete;
-});
-
-// node_modules/lodash/_stackGet.js
-var require__stackGet = __commonJS((exports, module) => {
-  function stackGet(key) {
-    return this.__data__.get(key);
-  }
-  module.exports = stackGet;
-});
-
-// node_modules/lodash/_stackHas.js
-var require__stackHas = __commonJS((exports, module) => {
-  function stackHas(key) {
-    return this.__data__.has(key);
-  }
-  module.exports = stackHas;
-});
-
-// node_modules/lodash/_freeGlobal.js
-var require__freeGlobal = __commonJS((exports, module) => {
-  var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-  module.exports = freeGlobal;
-});
-
-// node_modules/lodash/_root.js
-var require__root = __commonJS((exports, module) => {
-  var freeGlobal = require__freeGlobal();
-  var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-  var root = freeGlobal || freeSelf || Function("return this")();
-  module.exports = root;
-});
-
-// node_modules/lodash/_Symbol.js
-var require__Symbol = __commonJS((exports, module) => {
-  var root = require__root();
-  var Symbol2 = root.Symbol;
-  module.exports = Symbol2;
-});
-
-// node_modules/lodash/_getRawTag.js
-var require__getRawTag = __commonJS((exports, module) => {
-  var Symbol2 = require__Symbol();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  var nativeObjectToString = objectProto.toString;
-  var symToStringTag = Symbol2 ? Symbol2.toStringTag : undefined;
-  function getRawTag(value) {
-    var isOwn = hasOwnProperty.call(value, symToStringTag), tag = value[symToStringTag];
-    try {
-      value[symToStringTag] = undefined;
-      var unmasked = true;
-    } catch (e) {}
-    var result = nativeObjectToString.call(value);
-    if (unmasked) {
-      if (isOwn) {
-        value[symToStringTag] = tag;
-      } else {
-        delete value[symToStringTag];
-      }
-    }
-    return result;
-  }
-  module.exports = getRawTag;
-});
-
-// node_modules/lodash/_objectToString.js
-var require__objectToString = __commonJS((exports, module) => {
-  var objectProto = Object.prototype;
-  var nativeObjectToString = objectProto.toString;
-  function objectToString(value) {
-    return nativeObjectToString.call(value);
-  }
-  module.exports = objectToString;
-});
-
-// node_modules/lodash/_baseGetTag.js
-var require__baseGetTag = __commonJS((exports, module) => {
-  var Symbol2 = require__Symbol();
-  var getRawTag = require__getRawTag();
-  var objectToString = require__objectToString();
-  var nullTag = "[object Null]";
-  var undefinedTag = "[object Undefined]";
-  var symToStringTag = Symbol2 ? Symbol2.toStringTag : undefined;
-  function baseGetTag(value) {
-    if (value == null) {
-      return value === undefined ? undefinedTag : nullTag;
-    }
-    return symToStringTag && symToStringTag in Object(value) ? getRawTag(value) : objectToString(value);
-  }
-  module.exports = baseGetTag;
-});
-
-// node_modules/lodash/isObject.js
-var require_isObject = __commonJS((exports, module) => {
-  function isObject(value) {
-    var type = typeof value;
-    return value != null && (type == "object" || type == "function");
-  }
-  module.exports = isObject;
-});
-
-// node_modules/lodash/isFunction.js
-var require_isFunction = __commonJS((exports, module) => {
-  var baseGetTag = require__baseGetTag();
-  var isObject = require_isObject();
-  var asyncTag = "[object AsyncFunction]";
-  var funcTag = "[object Function]";
-  var genTag = "[object GeneratorFunction]";
-  var proxyTag = "[object Proxy]";
-  function isFunction(value) {
-    if (!isObject(value)) {
-      return false;
-    }
-    var tag = baseGetTag(value);
-    return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
-  }
-  module.exports = isFunction;
-});
-
-// node_modules/lodash/_coreJsData.js
-var require__coreJsData = __commonJS((exports, module) => {
-  var root = require__root();
-  var coreJsData = root["__core-js_shared__"];
-  module.exports = coreJsData;
-});
-
-// node_modules/lodash/_isMasked.js
-var require__isMasked = __commonJS((exports, module) => {
-  var coreJsData = require__coreJsData();
-  var maskSrcKey = function() {
-    var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
-    return uid ? "Symbol(src)_1." + uid : "";
-  }();
-  function isMasked(func) {
-    return !!maskSrcKey && maskSrcKey in func;
-  }
-  module.exports = isMasked;
-});
-
-// node_modules/lodash/_toSource.js
-var require__toSource = __commonJS((exports, module) => {
-  var funcProto = Function.prototype;
-  var funcToString = funcProto.toString;
-  function toSource(func) {
-    if (func != null) {
-      try {
-        return funcToString.call(func);
-      } catch (e) {}
-      try {
-        return func + "";
-      } catch (e) {}
-    }
-    return "";
-  }
-  module.exports = toSource;
-});
-
-// node_modules/lodash/_baseIsNative.js
-var require__baseIsNative = __commonJS((exports, module) => {
-  var isFunction = require_isFunction();
-  var isMasked = require__isMasked();
-  var isObject = require_isObject();
-  var toSource = require__toSource();
-  var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-  var reIsHostCtor = /^\[object .+?Constructor\]$/;
-  var funcProto = Function.prototype;
-  var objectProto = Object.prototype;
-  var funcToString = funcProto.toString;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  var reIsNative = RegExp("^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$");
-  function baseIsNative(value) {
-    if (!isObject(value) || isMasked(value)) {
-      return false;
-    }
-    var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
-    return pattern.test(toSource(value));
-  }
-  module.exports = baseIsNative;
-});
-
-// node_modules/lodash/_getValue.js
-var require__getValue = __commonJS((exports, module) => {
-  function getValue2(object, key) {
-    return object == null ? undefined : object[key];
-  }
-  module.exports = getValue2;
-});
-
-// node_modules/lodash/_getNative.js
-var require__getNative = __commonJS((exports, module) => {
-  var baseIsNative = require__baseIsNative();
-  var getValue2 = require__getValue();
-  function getNative(object, key) {
-    var value = getValue2(object, key);
-    return baseIsNative(value) ? value : undefined;
-  }
-  module.exports = getNative;
-});
-
-// node_modules/lodash/_Map.js
-var require__Map = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var root = require__root();
-  var Map2 = getNative(root, "Map");
-  module.exports = Map2;
-});
-
-// node_modules/lodash/_nativeCreate.js
-var require__nativeCreate = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var nativeCreate = getNative(Object, "create");
-  module.exports = nativeCreate;
-});
-
-// node_modules/lodash/_hashClear.js
-var require__hashClear = __commonJS((exports, module) => {
-  var nativeCreate = require__nativeCreate();
-  function hashClear() {
-    this.__data__ = nativeCreate ? nativeCreate(null) : {};
-    this.size = 0;
-  }
-  module.exports = hashClear;
-});
-
-// node_modules/lodash/_hashDelete.js
-var require__hashDelete = __commonJS((exports, module) => {
-  function hashDelete(key) {
-    var result = this.has(key) && delete this.__data__[key];
-    this.size -= result ? 1 : 0;
-    return result;
-  }
-  module.exports = hashDelete;
-});
-
-// node_modules/lodash/_hashGet.js
-var require__hashGet = __commonJS((exports, module) => {
-  var nativeCreate = require__nativeCreate();
-  var HASH_UNDEFINED = "__lodash_hash_undefined__";
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function hashGet(key) {
-    var data = this.__data__;
-    if (nativeCreate) {
-      var result = data[key];
-      return result === HASH_UNDEFINED ? undefined : result;
-    }
-    return hasOwnProperty.call(data, key) ? data[key] : undefined;
-  }
-  module.exports = hashGet;
-});
-
-// node_modules/lodash/_hashHas.js
-var require__hashHas = __commonJS((exports, module) => {
-  var nativeCreate = require__nativeCreate();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function hashHas(key) {
-    var data = this.__data__;
-    return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
-  }
-  module.exports = hashHas;
-});
-
-// node_modules/lodash/_hashSet.js
-var require__hashSet = __commonJS((exports, module) => {
-  var nativeCreate = require__nativeCreate();
-  var HASH_UNDEFINED = "__lodash_hash_undefined__";
-  function hashSet(key, value) {
-    var data = this.__data__;
-    this.size += this.has(key) ? 0 : 1;
-    data[key] = nativeCreate && value === undefined ? HASH_UNDEFINED : value;
-    return this;
-  }
-  module.exports = hashSet;
-});
-
-// node_modules/lodash/_Hash.js
-var require__Hash = __commonJS((exports, module) => {
-  var hashClear = require__hashClear();
-  var hashDelete = require__hashDelete();
-  var hashGet = require__hashGet();
-  var hashHas = require__hashHas();
-  var hashSet = require__hashSet();
-  function Hash(entries) {
-    var index = -1, length = entries == null ? 0 : entries.length;
-    this.clear();
-    while (++index < length) {
-      var entry = entries[index];
-      this.set(entry[0], entry[1]);
-    }
-  }
-  Hash.prototype.clear = hashClear;
-  Hash.prototype["delete"] = hashDelete;
-  Hash.prototype.get = hashGet;
-  Hash.prototype.has = hashHas;
-  Hash.prototype.set = hashSet;
-  module.exports = Hash;
-});
-
-// node_modules/lodash/_mapCacheClear.js
-var require__mapCacheClear = __commonJS((exports, module) => {
-  var Hash = require__Hash();
-  var ListCache = require__ListCache();
-  var Map2 = require__Map();
-  function mapCacheClear() {
-    this.size = 0;
-    this.__data__ = {
-      hash: new Hash,
-      map: new (Map2 || ListCache),
-      string: new Hash
-    };
-  }
-  module.exports = mapCacheClear;
-});
-
-// node_modules/lodash/_isKeyable.js
-var require__isKeyable = __commonJS((exports, module) => {
-  function isKeyable(value) {
-    var type = typeof value;
-    return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
-  }
-  module.exports = isKeyable;
-});
-
-// node_modules/lodash/_getMapData.js
-var require__getMapData = __commonJS((exports, module) => {
-  var isKeyable = require__isKeyable();
-  function getMapData(map, key) {
-    var data = map.__data__;
-    return isKeyable(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
-  }
-  module.exports = getMapData;
-});
-
-// node_modules/lodash/_mapCacheDelete.js
-var require__mapCacheDelete = __commonJS((exports, module) => {
-  var getMapData = require__getMapData();
-  function mapCacheDelete(key) {
-    var result = getMapData(this, key)["delete"](key);
-    this.size -= result ? 1 : 0;
-    return result;
-  }
-  module.exports = mapCacheDelete;
-});
-
-// node_modules/lodash/_mapCacheGet.js
-var require__mapCacheGet = __commonJS((exports, module) => {
-  var getMapData = require__getMapData();
-  function mapCacheGet(key) {
-    return getMapData(this, key).get(key);
-  }
-  module.exports = mapCacheGet;
-});
-
-// node_modules/lodash/_mapCacheHas.js
-var require__mapCacheHas = __commonJS((exports, module) => {
-  var getMapData = require__getMapData();
-  function mapCacheHas(key) {
-    return getMapData(this, key).has(key);
-  }
-  module.exports = mapCacheHas;
-});
-
-// node_modules/lodash/_mapCacheSet.js
-var require__mapCacheSet = __commonJS((exports, module) => {
-  var getMapData = require__getMapData();
-  function mapCacheSet(key, value) {
-    var data = getMapData(this, key), size = data.size;
-    data.set(key, value);
-    this.size += data.size == size ? 0 : 1;
-    return this;
-  }
-  module.exports = mapCacheSet;
-});
-
-// node_modules/lodash/_MapCache.js
-var require__MapCache = __commonJS((exports, module) => {
-  var mapCacheClear = require__mapCacheClear();
-  var mapCacheDelete = require__mapCacheDelete();
-  var mapCacheGet = require__mapCacheGet();
-  var mapCacheHas = require__mapCacheHas();
-  var mapCacheSet = require__mapCacheSet();
-  function MapCache(entries) {
-    var index = -1, length = entries == null ? 0 : entries.length;
-    this.clear();
-    while (++index < length) {
-      var entry = entries[index];
-      this.set(entry[0], entry[1]);
-    }
-  }
-  MapCache.prototype.clear = mapCacheClear;
-  MapCache.prototype["delete"] = mapCacheDelete;
-  MapCache.prototype.get = mapCacheGet;
-  MapCache.prototype.has = mapCacheHas;
-  MapCache.prototype.set = mapCacheSet;
-  module.exports = MapCache;
-});
-
-// node_modules/lodash/_stackSet.js
-var require__stackSet = __commonJS((exports, module) => {
-  var ListCache = require__ListCache();
-  var Map2 = require__Map();
-  var MapCache = require__MapCache();
-  var LARGE_ARRAY_SIZE = 200;
-  function stackSet(key, value) {
-    var data = this.__data__;
-    if (data instanceof ListCache) {
-      var pairs = data.__data__;
-      if (!Map2 || pairs.length < LARGE_ARRAY_SIZE - 1) {
-        pairs.push([key, value]);
-        this.size = ++data.size;
-        return this;
-      }
-      data = this.__data__ = new MapCache(pairs);
-    }
-    data.set(key, value);
-    this.size = data.size;
-    return this;
-  }
-  module.exports = stackSet;
-});
-
-// node_modules/lodash/_Stack.js
-var require__Stack = __commonJS((exports, module) => {
-  var ListCache = require__ListCache();
-  var stackClear = require__stackClear();
-  var stackDelete = require__stackDelete();
-  var stackGet = require__stackGet();
-  var stackHas = require__stackHas();
-  var stackSet = require__stackSet();
-  function Stack(entries) {
-    var data = this.__data__ = new ListCache(entries);
-    this.size = data.size;
-  }
-  Stack.prototype.clear = stackClear;
-  Stack.prototype["delete"] = stackDelete;
-  Stack.prototype.get = stackGet;
-  Stack.prototype.has = stackHas;
-  Stack.prototype.set = stackSet;
-  module.exports = Stack;
-});
-
-// node_modules/lodash/_arrayEach.js
-var require__arrayEach = __commonJS((exports, module) => {
-  function arrayEach(array, iteratee) {
-    var index = -1, length = array == null ? 0 : array.length;
-    while (++index < length) {
-      if (iteratee(array[index], index, array) === false) {
-        break;
-      }
-    }
-    return array;
-  }
-  module.exports = arrayEach;
-});
-
-// node_modules/lodash/_defineProperty.js
-var require__defineProperty = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var defineProperty = function() {
-    try {
-      var func = getNative(Object, "defineProperty");
-      func({}, "", {});
-      return func;
-    } catch (e) {}
-  }();
-  module.exports = defineProperty;
-});
-
-// node_modules/lodash/_baseAssignValue.js
-var require__baseAssignValue = __commonJS((exports, module) => {
-  var defineProperty = require__defineProperty();
-  function baseAssignValue(object, key, value) {
-    if (key == "__proto__" && defineProperty) {
-      defineProperty(object, key, {
-        configurable: true,
-        enumerable: true,
-        value,
-        writable: true
-      });
-    } else {
-      object[key] = value;
-    }
-  }
-  module.exports = baseAssignValue;
-});
-
-// node_modules/lodash/_assignValue.js
-var require__assignValue = __commonJS((exports, module) => {
-  var baseAssignValue = require__baseAssignValue();
-  var eq2 = require_eq();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function assignValue(object, key, value) {
-    var objValue = object[key];
-    if (!(hasOwnProperty.call(object, key) && eq2(objValue, value)) || value === undefined && !(key in object)) {
-      baseAssignValue(object, key, value);
-    }
-  }
-  module.exports = assignValue;
-});
-
-// node_modules/lodash/_copyObject.js
-var require__copyObject = __commonJS((exports, module) => {
-  var assignValue = require__assignValue();
-  var baseAssignValue = require__baseAssignValue();
-  function copyObject(source, props, object, customizer) {
-    var isNew = !object;
-    object || (object = {});
-    var index = -1, length = props.length;
-    while (++index < length) {
-      var key = props[index];
-      var newValue = customizer ? customizer(object[key], source[key], key, object, source) : undefined;
-      if (newValue === undefined) {
-        newValue = source[key];
-      }
-      if (isNew) {
-        baseAssignValue(object, key, newValue);
-      } else {
-        assignValue(object, key, newValue);
-      }
-    }
-    return object;
-  }
-  module.exports = copyObject;
-});
-
-// node_modules/lodash/_baseTimes.js
-var require__baseTimes = __commonJS((exports, module) => {
-  function baseTimes(n, iteratee) {
-    var index = -1, result = Array(n);
-    while (++index < n) {
-      result[index] = iteratee(index);
-    }
-    return result;
-  }
-  module.exports = baseTimes;
-});
-
-// node_modules/lodash/isObjectLike.js
-var require_isObjectLike = __commonJS((exports, module) => {
-  function isObjectLike(value) {
-    return value != null && typeof value == "object";
-  }
-  module.exports = isObjectLike;
-});
-
-// node_modules/lodash/_baseIsArguments.js
-var require__baseIsArguments = __commonJS((exports, module) => {
-  var baseGetTag = require__baseGetTag();
-  var isObjectLike = require_isObjectLike();
-  var argsTag = "[object Arguments]";
-  function baseIsArguments(value) {
-    return isObjectLike(value) && baseGetTag(value) == argsTag;
-  }
-  module.exports = baseIsArguments;
-});
-
-// node_modules/lodash/isArguments.js
-var require_isArguments = __commonJS((exports, module) => {
-  var baseIsArguments = require__baseIsArguments();
-  var isObjectLike = require_isObjectLike();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-  var isArguments = baseIsArguments(function() {
-    return arguments;
-  }()) ? baseIsArguments : function(value) {
-    return isObjectLike(value) && hasOwnProperty.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
-  };
-  module.exports = isArguments;
-});
-
-// node_modules/lodash/isArray.js
-var require_isArray = __commonJS((exports, module) => {
-  var isArray = Array.isArray;
-  module.exports = isArray;
-});
-
-// node_modules/lodash/stubFalse.js
-var require_stubFalse = __commonJS((exports, module) => {
-  function stubFalse() {
-    return false;
-  }
-  module.exports = stubFalse;
-});
-
-// node_modules/lodash/isBuffer.js
-var require_isBuffer = __commonJS((exports, module) => {
-  var root = require__root();
-  var stubFalse = require_stubFalse();
-  var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-  var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-  var moduleExports = freeModule && freeModule.exports === freeExports;
-  var Buffer = moduleExports ? root.Buffer : undefined;
-  var nativeIsBuffer = Buffer ? Buffer.isBuffer : undefined;
-  var isBuffer = nativeIsBuffer || stubFalse;
-  module.exports = isBuffer;
-});
-
-// node_modules/lodash/_isIndex.js
-var require__isIndex = __commonJS((exports, module) => {
-  var MAX_SAFE_INTEGER = 9007199254740991;
-  var reIsUint = /^(?:0|[1-9]\d*)$/;
-  function isIndex(value, length) {
-    var type = typeof value;
-    length = length == null ? MAX_SAFE_INTEGER : length;
-    return !!length && (type == "number" || type != "symbol" && reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
-  }
-  module.exports = isIndex;
-});
-
-// node_modules/lodash/isLength.js
-var require_isLength = __commonJS((exports, module) => {
-  var MAX_SAFE_INTEGER = 9007199254740991;
-  function isLength(value) {
-    return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-  }
-  module.exports = isLength;
-});
-
-// node_modules/lodash/_baseIsTypedArray.js
-var require__baseIsTypedArray = __commonJS((exports, module) => {
-  var baseGetTag = require__baseGetTag();
-  var isLength = require_isLength();
-  var isObjectLike = require_isObjectLike();
-  var argsTag = "[object Arguments]";
-  var arrayTag = "[object Array]";
-  var boolTag = "[object Boolean]";
-  var dateTag = "[object Date]";
-  var errorTag = "[object Error]";
-  var funcTag = "[object Function]";
-  var mapTag = "[object Map]";
-  var numberTag = "[object Number]";
-  var objectTag = "[object Object]";
-  var regexpTag = "[object RegExp]";
-  var setTag = "[object Set]";
-  var stringTag = "[object String]";
-  var weakMapTag = "[object WeakMap]";
-  var arrayBufferTag = "[object ArrayBuffer]";
-  var dataViewTag = "[object DataView]";
-  var float32Tag = "[object Float32Array]";
-  var float64Tag = "[object Float64Array]";
-  var int8Tag = "[object Int8Array]";
-  var int16Tag = "[object Int16Array]";
-  var int32Tag = "[object Int32Array]";
-  var uint8Tag = "[object Uint8Array]";
-  var uint8ClampedTag = "[object Uint8ClampedArray]";
-  var uint16Tag = "[object Uint16Array]";
-  var uint32Tag = "[object Uint32Array]";
-  var typedArrayTags = {};
-  typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
-  typedArrayTags[argsTag] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
-  function baseIsTypedArray(value) {
-    return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
-  }
-  module.exports = baseIsTypedArray;
-});
-
-// node_modules/lodash/_baseUnary.js
-var require__baseUnary = __commonJS((exports, module) => {
-  function baseUnary(func) {
-    return function(value) {
-      return func(value);
-    };
-  }
-  module.exports = baseUnary;
-});
-
-// node_modules/lodash/_nodeUtil.js
-var require__nodeUtil = __commonJS((exports, module) => {
-  var freeGlobal = require__freeGlobal();
-  var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-  var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-  var moduleExports = freeModule && freeModule.exports === freeExports;
-  var freeProcess = moduleExports && freeGlobal.process;
-  var nodeUtil = function() {
-    try {
-      var types = freeModule && freeModule.require && freeModule.require("util").types;
-      if (types) {
-        return types;
-      }
-      return freeProcess && freeProcess.binding && freeProcess.binding("util");
-    } catch (e) {}
-  }();
-  module.exports = nodeUtil;
-});
-
-// node_modules/lodash/isTypedArray.js
-var require_isTypedArray = __commonJS((exports, module) => {
-  var baseIsTypedArray = require__baseIsTypedArray();
-  var baseUnary = require__baseUnary();
-  var nodeUtil = require__nodeUtil();
-  var nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
-  var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedArray;
-  module.exports = isTypedArray;
-});
-
-// node_modules/lodash/_arrayLikeKeys.js
-var require__arrayLikeKeys = __commonJS((exports, module) => {
-  var baseTimes = require__baseTimes();
-  var isArguments = require_isArguments();
-  var isArray = require_isArray();
-  var isBuffer = require_isBuffer();
-  var isIndex = require__isIndex();
-  var isTypedArray = require_isTypedArray();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function arrayLikeKeys(value, inherited) {
-    var isArr = isArray(value), isArg = !isArr && isArguments(value), isBuff = !isArr && !isArg && isBuffer(value), isType = !isArr && !isArg && !isBuff && isTypedArray(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes(value.length, String) : [], length = result.length;
-    for (var key in value) {
-      if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isBuff && (key == "offset" || key == "parent") || isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || isIndex(key, length)))) {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-  module.exports = arrayLikeKeys;
-});
-
-// node_modules/lodash/_isPrototype.js
-var require__isPrototype = __commonJS((exports, module) => {
-  var objectProto = Object.prototype;
-  function isPrototype(value) {
-    var Ctor = value && value.constructor, proto2 = typeof Ctor == "function" && Ctor.prototype || objectProto;
-    return value === proto2;
-  }
-  module.exports = isPrototype;
-});
-
-// node_modules/lodash/_overArg.js
-var require__overArg = __commonJS((exports, module) => {
-  function overArg(func, transform) {
-    return function(arg) {
-      return func(transform(arg));
-    };
-  }
-  module.exports = overArg;
-});
-
-// node_modules/lodash/_nativeKeys.js
-var require__nativeKeys = __commonJS((exports, module) => {
-  var overArg = require__overArg();
-  var nativeKeys = overArg(Object.keys, Object);
-  module.exports = nativeKeys;
-});
-
-// node_modules/lodash/_baseKeys.js
-var require__baseKeys = __commonJS((exports, module) => {
-  var isPrototype = require__isPrototype();
-  var nativeKeys = require__nativeKeys();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function baseKeys(object) {
-    if (!isPrototype(object)) {
-      return nativeKeys(object);
-    }
-    var result = [];
-    for (var key in Object(object)) {
-      if (hasOwnProperty.call(object, key) && key != "constructor") {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-  module.exports = baseKeys;
-});
-
-// node_modules/lodash/isArrayLike.js
-var require_isArrayLike = __commonJS((exports, module) => {
-  var isFunction = require_isFunction();
-  var isLength = require_isLength();
-  function isArrayLike(value) {
-    return value != null && isLength(value.length) && !isFunction(value);
-  }
-  module.exports = isArrayLike;
-});
-
-// node_modules/lodash/keys.js
-var require_keys = __commonJS((exports, module) => {
-  var arrayLikeKeys = require__arrayLikeKeys();
-  var baseKeys = require__baseKeys();
-  var isArrayLike = require_isArrayLike();
-  function keys(object) {
-    return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
-  }
-  module.exports = keys;
-});
-
-// node_modules/lodash/_baseAssign.js
-var require__baseAssign = __commonJS((exports, module) => {
-  var copyObject = require__copyObject();
-  var keys = require_keys();
-  function baseAssign(object, source) {
-    return object && copyObject(source, keys(source), object);
-  }
-  module.exports = baseAssign;
-});
-
-// node_modules/lodash/_nativeKeysIn.js
-var require__nativeKeysIn = __commonJS((exports, module) => {
-  function nativeKeysIn(object) {
-    var result = [];
-    if (object != null) {
-      for (var key in Object(object)) {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-  module.exports = nativeKeysIn;
-});
-
-// node_modules/lodash/_baseKeysIn.js
-var require__baseKeysIn = __commonJS((exports, module) => {
-  var isObject = require_isObject();
-  var isPrototype = require__isPrototype();
-  var nativeKeysIn = require__nativeKeysIn();
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function baseKeysIn(object) {
-    if (!isObject(object)) {
-      return nativeKeysIn(object);
-    }
-    var isProto = isPrototype(object), result = [];
-    for (var key in object) {
-      if (!(key == "constructor" && (isProto || !hasOwnProperty.call(object, key)))) {
-        result.push(key);
-      }
-    }
-    return result;
-  }
-  module.exports = baseKeysIn;
-});
-
-// node_modules/lodash/keysIn.js
-var require_keysIn = __commonJS((exports, module) => {
-  var arrayLikeKeys = require__arrayLikeKeys();
-  var baseKeysIn = require__baseKeysIn();
-  var isArrayLike = require_isArrayLike();
-  function keysIn(object) {
-    return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
-  }
-  module.exports = keysIn;
-});
-
-// node_modules/lodash/_baseAssignIn.js
-var require__baseAssignIn = __commonJS((exports, module) => {
-  var copyObject = require__copyObject();
-  var keysIn = require_keysIn();
-  function baseAssignIn(object, source) {
-    return object && copyObject(source, keysIn(source), object);
-  }
-  module.exports = baseAssignIn;
-});
-
-// node_modules/lodash/_cloneBuffer.js
-var require__cloneBuffer = __commonJS((exports, module) => {
-  var root = require__root();
-  var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-  var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-  var moduleExports = freeModule && freeModule.exports === freeExports;
-  var Buffer = moduleExports ? root.Buffer : undefined;
-  var allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined;
-  function cloneBuffer(buffer, isDeep) {
-    if (isDeep) {
-      return buffer.slice();
-    }
-    var length = buffer.length, result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
-    buffer.copy(result);
-    return result;
-  }
-  module.exports = cloneBuffer;
-});
-
-// node_modules/lodash/_copyArray.js
-var require__copyArray = __commonJS((exports, module) => {
-  function copyArray(source, array) {
-    var index = -1, length = source.length;
-    array || (array = Array(length));
-    while (++index < length) {
-      array[index] = source[index];
-    }
-    return array;
-  }
-  module.exports = copyArray;
-});
-
-// node_modules/lodash/_arrayFilter.js
-var require__arrayFilter = __commonJS((exports, module) => {
-  function arrayFilter(array, predicate) {
-    var index = -1, length = array == null ? 0 : array.length, resIndex = 0, result = [];
-    while (++index < length) {
-      var value = array[index];
-      if (predicate(value, index, array)) {
-        result[resIndex++] = value;
-      }
-    }
-    return result;
-  }
-  module.exports = arrayFilter;
-});
-
-// node_modules/lodash/stubArray.js
-var require_stubArray = __commonJS((exports, module) => {
-  function stubArray() {
-    return [];
-  }
-  module.exports = stubArray;
-});
-
-// node_modules/lodash/_getSymbols.js
-var require__getSymbols = __commonJS((exports, module) => {
-  var arrayFilter = require__arrayFilter();
-  var stubArray = require_stubArray();
-  var objectProto = Object.prototype;
-  var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-  var nativeGetSymbols = Object.getOwnPropertySymbols;
-  var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
-    if (object == null) {
-      return [];
-    }
-    object = Object(object);
-    return arrayFilter(nativeGetSymbols(object), function(symbol) {
-      return propertyIsEnumerable.call(object, symbol);
-    });
-  };
-  module.exports = getSymbols;
-});
-
-// node_modules/lodash/_copySymbols.js
-var require__copySymbols = __commonJS((exports, module) => {
-  var copyObject = require__copyObject();
-  var getSymbols = require__getSymbols();
-  function copySymbols(source, object) {
-    return copyObject(source, getSymbols(source), object);
-  }
-  module.exports = copySymbols;
-});
-
-// node_modules/lodash/_arrayPush.js
-var require__arrayPush = __commonJS((exports, module) => {
-  function arrayPush(array, values) {
-    var index = -1, length = values.length, offset = array.length;
-    while (++index < length) {
-      array[offset + index] = values[index];
-    }
-    return array;
-  }
-  module.exports = arrayPush;
-});
-
-// node_modules/lodash/_getPrototype.js
-var require__getPrototype = __commonJS((exports, module) => {
-  var overArg = require__overArg();
-  var getPrototype = overArg(Object.getPrototypeOf, Object);
-  module.exports = getPrototype;
-});
-
-// node_modules/lodash/_getSymbolsIn.js
-var require__getSymbolsIn = __commonJS((exports, module) => {
-  var arrayPush = require__arrayPush();
-  var getPrototype = require__getPrototype();
-  var getSymbols = require__getSymbols();
-  var stubArray = require_stubArray();
-  var nativeGetSymbols = Object.getOwnPropertySymbols;
-  var getSymbolsIn = !nativeGetSymbols ? stubArray : function(object) {
-    var result = [];
-    while (object) {
-      arrayPush(result, getSymbols(object));
-      object = getPrototype(object);
-    }
-    return result;
-  };
-  module.exports = getSymbolsIn;
-});
-
-// node_modules/lodash/_copySymbolsIn.js
-var require__copySymbolsIn = __commonJS((exports, module) => {
-  var copyObject = require__copyObject();
-  var getSymbolsIn = require__getSymbolsIn();
-  function copySymbolsIn(source, object) {
-    return copyObject(source, getSymbolsIn(source), object);
-  }
-  module.exports = copySymbolsIn;
-});
-
-// node_modules/lodash/_baseGetAllKeys.js
-var require__baseGetAllKeys = __commonJS((exports, module) => {
-  var arrayPush = require__arrayPush();
-  var isArray = require_isArray();
-  function baseGetAllKeys(object, keysFunc, symbolsFunc) {
-    var result = keysFunc(object);
-    return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
-  }
-  module.exports = baseGetAllKeys;
-});
-
-// node_modules/lodash/_getAllKeys.js
-var require__getAllKeys = __commonJS((exports, module) => {
-  var baseGetAllKeys = require__baseGetAllKeys();
-  var getSymbols = require__getSymbols();
-  var keys = require_keys();
-  function getAllKeys(object) {
-    return baseGetAllKeys(object, keys, getSymbols);
-  }
-  module.exports = getAllKeys;
-});
-
-// node_modules/lodash/_getAllKeysIn.js
-var require__getAllKeysIn = __commonJS((exports, module) => {
-  var baseGetAllKeys = require__baseGetAllKeys();
-  var getSymbolsIn = require__getSymbolsIn();
-  var keysIn = require_keysIn();
-  function getAllKeysIn(object) {
-    return baseGetAllKeys(object, keysIn, getSymbolsIn);
-  }
-  module.exports = getAllKeysIn;
-});
-
-// node_modules/lodash/_DataView.js
-var require__DataView = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var root = require__root();
-  var DataView = getNative(root, "DataView");
-  module.exports = DataView;
-});
-
-// node_modules/lodash/_Promise.js
-var require__Promise = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var root = require__root();
-  var Promise2 = getNative(root, "Promise");
-  module.exports = Promise2;
-});
-
-// node_modules/lodash/_Set.js
-var require__Set = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var root = require__root();
-  var Set2 = getNative(root, "Set");
-  module.exports = Set2;
-});
-
-// node_modules/lodash/_WeakMap.js
-var require__WeakMap = __commonJS((exports, module) => {
-  var getNative = require__getNative();
-  var root = require__root();
-  var WeakMap2 = getNative(root, "WeakMap");
-  module.exports = WeakMap2;
-});
-
-// node_modules/lodash/_getTag.js
-var require__getTag = __commonJS((exports, module) => {
-  var DataView = require__DataView();
-  var Map2 = require__Map();
-  var Promise2 = require__Promise();
-  var Set2 = require__Set();
-  var WeakMap2 = require__WeakMap();
-  var baseGetTag = require__baseGetTag();
-  var toSource = require__toSource();
-  var mapTag = "[object Map]";
-  var objectTag = "[object Object]";
-  var promiseTag = "[object Promise]";
-  var setTag = "[object Set]";
-  var weakMapTag = "[object WeakMap]";
-  var dataViewTag = "[object DataView]";
-  var dataViewCtorString = toSource(DataView);
-  var mapCtorString = toSource(Map2);
-  var promiseCtorString = toSource(Promise2);
-  var setCtorString = toSource(Set2);
-  var weakMapCtorString = toSource(WeakMap2);
-  var getTag2 = baseGetTag;
-  if (DataView && getTag2(new DataView(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag2(new Map2) != mapTag || Promise2 && getTag2(Promise2.resolve()) != promiseTag || Set2 && getTag2(new Set2) != setTag || WeakMap2 && getTag2(new WeakMap2) != weakMapTag) {
-    getTag2 = function(value) {
-      var result = baseGetTag(value), Ctor = result == objectTag ? value.constructor : undefined, ctorString = Ctor ? toSource(Ctor) : "";
-      if (ctorString) {
-        switch (ctorString) {
-          case dataViewCtorString:
-            return dataViewTag;
-          case mapCtorString:
-            return mapTag;
-          case promiseCtorString:
-            return promiseTag;
-          case setCtorString:
-            return setTag;
-          case weakMapCtorString:
-            return weakMapTag;
-        }
-      }
-      return result;
-    };
-  }
-  module.exports = getTag2;
-});
-
-// node_modules/lodash/_initCloneArray.js
-var require__initCloneArray = __commonJS((exports, module) => {
-  var objectProto = Object.prototype;
-  var hasOwnProperty = objectProto.hasOwnProperty;
-  function initCloneArray(array) {
-    var length = array.length, result = new array.constructor(length);
-    if (length && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
-      result.index = array.index;
-      result.input = array.input;
-    }
-    return result;
-  }
-  module.exports = initCloneArray;
-});
-
-// node_modules/lodash/_Uint8Array.js
-var require__Uint8Array = __commonJS((exports, module) => {
-  var root = require__root();
-  var Uint8Array2 = root.Uint8Array;
-  module.exports = Uint8Array2;
-});
-
-// node_modules/lodash/_cloneArrayBuffer.js
-var require__cloneArrayBuffer = __commonJS((exports, module) => {
-  var Uint8Array2 = require__Uint8Array();
-  function cloneArrayBuffer(arrayBuffer) {
-    var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-    new Uint8Array2(result).set(new Uint8Array2(arrayBuffer));
-    return result;
-  }
-  module.exports = cloneArrayBuffer;
-});
-
-// node_modules/lodash/_cloneDataView.js
-var require__cloneDataView = __commonJS((exports, module) => {
-  var cloneArrayBuffer = require__cloneArrayBuffer();
-  function cloneDataView(dataView, isDeep) {
-    var buffer = isDeep ? cloneArrayBuffer(dataView.buffer) : dataView.buffer;
-    return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
-  }
-  module.exports = cloneDataView;
-});
-
-// node_modules/lodash/_cloneRegExp.js
-var require__cloneRegExp = __commonJS((exports, module) => {
-  var reFlags = /\w*$/;
-  function cloneRegExp(regexp) {
-    var result = new regexp.constructor(regexp.source, reFlags.exec(regexp));
-    result.lastIndex = regexp.lastIndex;
-    return result;
-  }
-  module.exports = cloneRegExp;
-});
-
-// node_modules/lodash/_cloneSymbol.js
-var require__cloneSymbol = __commonJS((exports, module) => {
-  var Symbol2 = require__Symbol();
-  var symbolProto = Symbol2 ? Symbol2.prototype : undefined;
-  var symbolValueOf = symbolProto ? symbolProto.valueOf : undefined;
-  function cloneSymbol(symbol) {
-    return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
-  }
-  module.exports = cloneSymbol;
-});
-
-// node_modules/lodash/_cloneTypedArray.js
-var require__cloneTypedArray = __commonJS((exports, module) => {
-  var cloneArrayBuffer = require__cloneArrayBuffer();
-  function cloneTypedArray(typedArray, isDeep) {
-    var buffer = isDeep ? cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
-    return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
-  }
-  module.exports = cloneTypedArray;
-});
-
-// node_modules/lodash/_initCloneByTag.js
-var require__initCloneByTag = __commonJS((exports, module) => {
-  var cloneArrayBuffer = require__cloneArrayBuffer();
-  var cloneDataView = require__cloneDataView();
-  var cloneRegExp = require__cloneRegExp();
-  var cloneSymbol = require__cloneSymbol();
-  var cloneTypedArray = require__cloneTypedArray();
-  var boolTag = "[object Boolean]";
-  var dateTag = "[object Date]";
-  var mapTag = "[object Map]";
-  var numberTag = "[object Number]";
-  var regexpTag = "[object RegExp]";
-  var setTag = "[object Set]";
-  var stringTag = "[object String]";
-  var symbolTag = "[object Symbol]";
-  var arrayBufferTag = "[object ArrayBuffer]";
-  var dataViewTag = "[object DataView]";
-  var float32Tag = "[object Float32Array]";
-  var float64Tag = "[object Float64Array]";
-  var int8Tag = "[object Int8Array]";
-  var int16Tag = "[object Int16Array]";
-  var int32Tag = "[object Int32Array]";
-  var uint8Tag = "[object Uint8Array]";
-  var uint8ClampedTag = "[object Uint8ClampedArray]";
-  var uint16Tag = "[object Uint16Array]";
-  var uint32Tag = "[object Uint32Array]";
-  function initCloneByTag(object, tag, isDeep) {
-    var Ctor = object.constructor;
-    switch (tag) {
-      case arrayBufferTag:
-        return cloneArrayBuffer(object);
-      case boolTag:
-      case dateTag:
-        return new Ctor(+object);
-      case dataViewTag:
-        return cloneDataView(object, isDeep);
-      case float32Tag:
-      case float64Tag:
-      case int8Tag:
-      case int16Tag:
-      case int32Tag:
-      case uint8Tag:
-      case uint8ClampedTag:
-      case uint16Tag:
-      case uint32Tag:
-        return cloneTypedArray(object, isDeep);
-      case mapTag:
-        return new Ctor;
-      case numberTag:
-      case stringTag:
-        return new Ctor(object);
-      case regexpTag:
-        return cloneRegExp(object);
-      case setTag:
-        return new Ctor;
-      case symbolTag:
-        return cloneSymbol(object);
-    }
-  }
-  module.exports = initCloneByTag;
-});
-
-// node_modules/lodash/_baseCreate.js
-var require__baseCreate = __commonJS((exports, module) => {
-  var isObject = require_isObject();
-  var objectCreate = Object.create;
-  var baseCreate = function() {
-    function object() {}
-    return function(proto2) {
-      if (!isObject(proto2)) {
-        return {};
-      }
-      if (objectCreate) {
-        return objectCreate(proto2);
-      }
-      object.prototype = proto2;
-      var result = new object;
-      object.prototype = undefined;
-      return result;
-    };
-  }();
-  module.exports = baseCreate;
-});
-
-// node_modules/lodash/_initCloneObject.js
-var require__initCloneObject = __commonJS((exports, module) => {
-  var baseCreate = require__baseCreate();
-  var getPrototype = require__getPrototype();
-  var isPrototype = require__isPrototype();
-  function initCloneObject(object) {
-    return typeof object.constructor == "function" && !isPrototype(object) ? baseCreate(getPrototype(object)) : {};
-  }
-  module.exports = initCloneObject;
-});
-
-// node_modules/lodash/_baseIsMap.js
-var require__baseIsMap = __commonJS((exports, module) => {
-  var getTag2 = require__getTag();
-  var isObjectLike = require_isObjectLike();
-  var mapTag = "[object Map]";
-  function baseIsMap(value) {
-    return isObjectLike(value) && getTag2(value) == mapTag;
-  }
-  module.exports = baseIsMap;
-});
-
-// node_modules/lodash/isMap.js
-var require_isMap = __commonJS((exports, module) => {
-  var baseIsMap = require__baseIsMap();
-  var baseUnary = require__baseUnary();
-  var nodeUtil = require__nodeUtil();
-  var nodeIsMap = nodeUtil && nodeUtil.isMap;
-  var isMap2 = nodeIsMap ? baseUnary(nodeIsMap) : baseIsMap;
-  module.exports = isMap2;
-});
-
-// node_modules/lodash/_baseIsSet.js
-var require__baseIsSet = __commonJS((exports, module) => {
-  var getTag2 = require__getTag();
-  var isObjectLike = require_isObjectLike();
-  var setTag = "[object Set]";
-  function baseIsSet(value) {
-    return isObjectLike(value) && getTag2(value) == setTag;
-  }
-  module.exports = baseIsSet;
-});
-
-// node_modules/lodash/isSet.js
-var require_isSet = __commonJS((exports, module) => {
-  var baseIsSet = require__baseIsSet();
-  var baseUnary = require__baseUnary();
-  var nodeUtil = require__nodeUtil();
-  var nodeIsSet = nodeUtil && nodeUtil.isSet;
-  var isSet2 = nodeIsSet ? baseUnary(nodeIsSet) : baseIsSet;
-  module.exports = isSet2;
-});
-
-// node_modules/lodash/_baseClone.js
-var require__baseClone = __commonJS((exports, module) => {
-  var Stack = require__Stack();
-  var arrayEach = require__arrayEach();
-  var assignValue = require__assignValue();
-  var baseAssign = require__baseAssign();
-  var baseAssignIn = require__baseAssignIn();
-  var cloneBuffer = require__cloneBuffer();
-  var copyArray = require__copyArray();
-  var copySymbols = require__copySymbols();
-  var copySymbolsIn = require__copySymbolsIn();
-  var getAllKeys = require__getAllKeys();
-  var getAllKeysIn = require__getAllKeysIn();
-  var getTag2 = require__getTag();
-  var initCloneArray = require__initCloneArray();
-  var initCloneByTag = require__initCloneByTag();
-  var initCloneObject = require__initCloneObject();
-  var isArray = require_isArray();
-  var isBuffer = require_isBuffer();
-  var isMap2 = require_isMap();
-  var isObject = require_isObject();
-  var isSet2 = require_isSet();
-  var keys = require_keys();
-  var keysIn = require_keysIn();
-  var CLONE_DEEP_FLAG = 1;
-  var CLONE_FLAT_FLAG = 2;
-  var CLONE_SYMBOLS_FLAG = 4;
-  var argsTag = "[object Arguments]";
-  var arrayTag = "[object Array]";
-  var boolTag = "[object Boolean]";
-  var dateTag = "[object Date]";
-  var errorTag = "[object Error]";
-  var funcTag = "[object Function]";
-  var genTag = "[object GeneratorFunction]";
-  var mapTag = "[object Map]";
-  var numberTag = "[object Number]";
-  var objectTag = "[object Object]";
-  var regexpTag = "[object RegExp]";
-  var setTag = "[object Set]";
-  var stringTag = "[object String]";
-  var symbolTag = "[object Symbol]";
-  var weakMapTag = "[object WeakMap]";
-  var arrayBufferTag = "[object ArrayBuffer]";
-  var dataViewTag = "[object DataView]";
-  var float32Tag = "[object Float32Array]";
-  var float64Tag = "[object Float64Array]";
-  var int8Tag = "[object Int8Array]";
-  var int16Tag = "[object Int16Array]";
-  var int32Tag = "[object Int32Array]";
-  var uint8Tag = "[object Uint8Array]";
-  var uint8ClampedTag = "[object Uint8ClampedArray]";
-  var uint16Tag = "[object Uint16Array]";
-  var uint32Tag = "[object Uint32Array]";
-  var cloneableTags = {};
-  cloneableTags[argsTag] = cloneableTags[arrayTag] = cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] = cloneableTags[boolTag] = cloneableTags[dateTag] = cloneableTags[float32Tag] = cloneableTags[float64Tag] = cloneableTags[int8Tag] = cloneableTags[int16Tag] = cloneableTags[int32Tag] = cloneableTags[mapTag] = cloneableTags[numberTag] = cloneableTags[objectTag] = cloneableTags[regexpTag] = cloneableTags[setTag] = cloneableTags[stringTag] = cloneableTags[symbolTag] = cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] = cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
-  cloneableTags[errorTag] = cloneableTags[funcTag] = cloneableTags[weakMapTag] = false;
-  function baseClone(value, bitmask, customizer, key, object, stack) {
-    var result, isDeep = bitmask & CLONE_DEEP_FLAG, isFlat = bitmask & CLONE_FLAT_FLAG, isFull = bitmask & CLONE_SYMBOLS_FLAG;
-    if (customizer) {
-      result = object ? customizer(value, key, object, stack) : customizer(value);
-    }
-    if (result !== undefined) {
-      return result;
-    }
-    if (!isObject(value)) {
-      return value;
-    }
-    var isArr = isArray(value);
-    if (isArr) {
-      result = initCloneArray(value);
-      if (!isDeep) {
-        return copyArray(value, result);
-      }
-    } else {
-      var tag = getTag2(value), isFunc = tag == funcTag || tag == genTag;
-      if (isBuffer(value)) {
-        return cloneBuffer(value, isDeep);
-      }
-      if (tag == objectTag || tag == argsTag || isFunc && !object) {
-        result = isFlat || isFunc ? {} : initCloneObject(value);
-        if (!isDeep) {
-          return isFlat ? copySymbolsIn(value, baseAssignIn(result, value)) : copySymbols(value, baseAssign(result, value));
-        }
-      } else {
-        if (!cloneableTags[tag]) {
-          return object ? value : {};
-        }
-        result = initCloneByTag(value, tag, isDeep);
-      }
-    }
-    stack || (stack = new Stack);
-    var stacked = stack.get(value);
-    if (stacked) {
-      return stacked;
-    }
-    stack.set(value, result);
-    if (isSet2(value)) {
-      value.forEach(function(subValue) {
-        result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
-      });
-    } else if (isMap2(value)) {
-      value.forEach(function(subValue, key2) {
-        result.set(key2, baseClone(subValue, bitmask, customizer, key2, value, stack));
-      });
-    }
-    var keysFunc = isFull ? isFlat ? getAllKeysIn : getAllKeys : isFlat ? keysIn : keys;
-    var props = isArr ? undefined : keysFunc(value);
-    arrayEach(props || value, function(subValue, key2) {
-      if (props) {
-        key2 = subValue;
-        subValue = value[key2];
-      }
-      assignValue(result, key2, baseClone(subValue, bitmask, customizer, key2, value, stack));
-    });
-    return result;
-  }
-  module.exports = baseClone;
-});
-
-// node_modules/lodash/cloneDeep.js
-var require_cloneDeep = __commonJS((exports, module) => {
-  var baseClone = require__baseClone();
-  var CLONE_DEEP_FLAG = 1;
-  var CLONE_SYMBOLS_FLAG = 4;
-  function cloneDeep(value) {
-    return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG);
-  }
-  module.exports = cloneDeep;
 });
 
 // usecases/index.tsx
@@ -27234,7 +25666,7 @@ function useViewTransitionState(to, opts) {
 }
 
 // usecases/basic/index.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react14 = __toESM(require_react(), 1);
 
 // node_modules/react-redux/dist/react-redux.mjs
 var React3 = __toESM(require_react(), 1);
@@ -27564,110 +25996,137 @@ Selectors that return the entire state are almost certainly a mistake, as they w
 }
 var useSelector = /* @__PURE__ */ createSelectorHook();
 
-// usecases/lib/components/graph/TransitionGraph.tsx
+// node_modules/clsx/dist/clsx.mjs
+function r(e) {
+  var t, f, n = "";
+  if (typeof e == "string" || typeof e == "number")
+    n += e;
+  else if (typeof e == "object")
+    if (Array.isArray(e)) {
+      var o = e.length;
+      for (t = 0;t < o; t++)
+        e[t] && (f = r(e[t])) && (n && (n += " "), n += f);
+    } else
+      for (f in e)
+        e[f] && (n && (n += " "), n += f);
+  return n;
+}
+function clsx() {
+  for (var e, t, f = 0, n = "", o = arguments.length;f < o; f++)
+    (e = arguments[f]) && (t = r(e)) && (n && (n += " "), n += t);
+  return n;
+}
+
+// usecases/lib/components/activity/ActivityFeed.tsx
 var import_react2 = __toESM(require_react(), 1);
 
-// src/constants.ts
-var META_KEY = "__OPTIMISTRON_META__";
+// usecases/lib/components/todo/Icons.tsx
+var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
+var Logo = ({ className }) => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("svg", {
+  viewBox: "0 0 24 14",
+  className,
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("defs", {
+      children: /* @__PURE__ */ jsx_dev_runtime.jsxDEV("linearGradient", {
+        id: "logo-grad",
+        x1: "0%",
+        y1: "0%",
+        x2: "100%",
+        y2: "0%",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime.jsxDEV("stop", {
+            offset: "0%",
+            stopColor: "#67e8f9"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime.jsxDEV("stop", {
+            offset: "100%",
+            stopColor: "#c4b5fd"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this)
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("text", {
+      x: "0",
+      y: "12",
+      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
+      fontSize: "13",
+      fill: "url(#logo-grad)",
+      children: "λς"
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var STARS = [
+  { x: "8%", y: "15%", size: 10, color: "#38bdf8", opacity: 0.45 },
+  { x: "88%", y: "20%", size: 14, color: "#38bdf8", opacity: 0.5 },
+  { x: "92%", y: "55%", size: 8, color: "#8b5cf6", opacity: 0.3 },
+  { x: "5%", y: "70%", size: 6, color: "#d946ef", opacity: 0.2 },
+  { x: "85%", y: "80%", size: 10, color: "#06b6d4", opacity: 0.28 },
+  { x: "15%", y: "90%", size: 5, color: "#c4b5fd", opacity: 0.18 },
+  { x: "95%", y: "90%", size: 7, color: "#f43f5e", opacity: 0.16 },
+  { x: "50%", y: "5%", size: 5, color: "#67e8f9", opacity: 0.18 }
+];
+var Stars = () => /* @__PURE__ */ jsx_dev_runtime.jsxDEV(jsx_dev_runtime.Fragment, {
+  children: STARS.map(({ x, y, size, color, opacity }, i) => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("span", {
+    className: "absolute pointer-events-none select-none",
+    style: { left: x, top: y, fontSize: size, color, opacity, fontFamily: "monospace" },
+    children: "✦"
+  }, i, false, undefined, this))
+}, undefined, false, undefined, this);
+var Spinner = () => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("svg", {
+  className: "w-4 h-4",
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 40 40",
+  fill: "currentColor",
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("path", {
+      opacity: "0.2",
+      fill: "currentColor",
+      d: `M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946
+    s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634
+    c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z`
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("path", {
+      fill: "currentColor",
+      d: `M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0
+    C22.32,8.481,24.301,9.057,26.013,10.047z`,
+      children: /* @__PURE__ */ jsx_dev_runtime.jsxDEV("animateTransform", {
+        attributeType: "xml",
+        attributeName: "transform",
+        type: "rotate",
+        from: "0 20 20",
+        to: "360 20 20",
+        dur: "0.5s",
+        repeatCount: "indefinite"
+      }, undefined, false, undefined, this)
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+var CheckMark = () => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("svg", {
+  className: "w-4 h-4",
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 20 20",
+  fill: "currentColor",
+  children: /* @__PURE__ */ jsx_dev_runtime.jsxDEV("path", {
+    fill: "currentColor",
+    fillRule: "evenodd",
+    d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z",
+    clipRule: "evenodd"
+  }, undefined, false, undefined, this)
+}, undefined, false, undefined, this);
+var Cross = () => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("svg", {
+  className: "w-4 h-4",
+  viewBox: "0 0 93.934 93.934",
+  xmlns: "http://www.w3.org/2000/svg",
+  children: /* @__PURE__ */ jsx_dev_runtime.jsxDEV("path", {
+    fill: "currentColor",
+    d: `M80.178,13.757c-18.341-18.342-48.08-18.342-66.421,0c-18.342,18.341-18.342,48.08,0,66.421
+		c18.341,18.342,48.08,18.342,66.421,0C98.52,61.836,98.52,32.098,80.178,13.757z M71.576,61.737l-9.838,9.838l-14.771-14.77
+		l-14.771,14.77l-9.838-9.838l14.77-14.771l-14.77-14.771l9.838-9.838l14.771,14.771l14.771-14.771l9.838,9.838l-14.77,14.772
+		L71.576,61.737z`
+  }, undefined, false, undefined, this)
+}, undefined, false, undefined, this);
 
-// src/transitions.ts
-var getTransitionMeta = (action) => action.meta[META_KEY];
-var getTransitionID = (action) => action.meta[META_KEY].id;
-var isTransition = (action) => ("meta" in action) && typeof action.meta === "object" && action.meta !== null && (META_KEY in action.meta);
-var isTransitionForNamespace = (action, namespace) => isTransition(action) && action.type.startsWith(`${namespace}::`);
-var toType = (type, operation) => {
-  const parts = type.split("::");
-  const base = parts.slice(0, parts.length - 1).join("::");
-  return `${base}::${operation}`;
-};
-var updateTransition = (action, update) => ({
-  ...action,
-  meta: {
-    ...action.meta,
-    [META_KEY]: {
-      ...action.meta[META_KEY],
-      ...update
-    }
-  }
-});
-var toStaged = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "stage" /* STAGE */) }, { ...update, operation: "stage" /* STAGE */ });
-var toCommit = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "commit" /* COMMIT */) }, { ...update, operation: "commit" /* COMMIT */ });
-var processTransition = (transition, transitions) => {
-  const { operation, id, dedupe } = getTransitionMeta(transition);
-  const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
-  const existing = transitions[matchIdx];
-  switch (operation) {
-    case "stage" /* STAGE */:
-    case "amend" /* AMEND */: {
-      if (matchIdx === -1 && operation === "amend" /* AMEND */)
-        return transitions;
-      const stage = toStaged(transition, operation === "amend" /* AMEND */ ? getTransitionMeta(existing) : {});
-      if (matchIdx === -1)
-        return [...transitions, stage];
-      const nextTransitions = [...transitions];
-      const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
-      if (dedupe === 1 /* TRAILING */) {
-        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
-      } else
-        nextTransitions[matchIdx] = stage;
-      return nextTransitions;
-    }
-    case "fail" /* FAIL */: {
-      if (matchIdx === -1)
-        return transitions;
-      return transitions.map((entry) => getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry);
-    }
-    case "stash" /* STASH */: {
-      const existing2 = transitions[matchIdx];
-      if (existing2) {
-        const { trailing } = getTransitionMeta(existing2);
-        return [
-          ...transitions.slice(0, matchIdx),
-          ...trailing ? [trailing] : [],
-          ...transitions.slice(matchIdx + 1)
-        ];
-      }
-      return transitions;
-    }
-    case "commit" /* COMMIT */: {
-      if (!transitions.length)
-        return transitions;
-      return transitions.filter((entry) => id !== getTransitionID(entry));
-    }
-  }
-};
-var sanitizeTransitions = (boundReducer, bindState) => (state) => {
-  const sanitized = state.transitions.reduce((acc, action) => {
-    try {
-      const asIfCommitted = toCommit(action);
-      const nextState = boundReducer(acc.transitionState, asIfCommitted);
-      const noop = nextState === acc.transitionState;
-      if (noop)
-        acc.mutated = true;
-      else {
-        acc.transitionState.state = bindState(acc.transitionState.state).merge(nextState);
-        acc.transitions.push(action);
-      }
-    } catch (mergeError) {
-      acc.mutated = true;
-      switch (mergeError) {
-        case "SKIP" /* SKIP */:
-          break;
-        case "CONFLICT" /* CONFLICT */:
-          acc.transitions.push(updateTransition(action, { conflict: true }));
-          break;
-      }
-    }
-    return acc;
-  }, {
-    mutated: false,
-    transitions: [],
-    transitionState: Object.assign({}, state)
-  });
-  return sanitized.mutated ? sanitized.transitions : state.transitions;
-};
-
-// usecases/lib/components/graph/TransitionHistoryProvider.tsx
+// usecases/lib/store/activity/hooks.ts
 var import_react = __toESM(require_react(), 1);
 
 // node_modules/redux/dist/redux.mjs
@@ -28458,9 +26917,9 @@ var Immer2 = class {
       if (typeof base === "function" && typeof recipe !== "function") {
         const defaultBase = recipe;
         recipe = base;
-        const self2 = this;
+        const self = this;
         return function curriedProduce(base2 = defaultBase, ...args) {
-          return self2.produce(base2, (draft) => recipe.call(this, draft, ...args));
+          return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
         };
       }
       if (typeof recipe !== "function")
@@ -30218,7 +28677,291 @@ var removeListener = Object.assign(createAction(`${alm}/remove`), {
 });
 var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
 
-// src/actions.ts
+// src/constants.ts
+var META_KEY = "__OPTIMISTRON_META__";
+
+// src/transitions.ts
+var getTransitionMeta = (action) => action.meta[META_KEY];
+var getTransitionID = (action) => action.meta[META_KEY].id;
+var isTransition = (action) => ("meta" in action) && typeof action.meta === "object" && action.meta !== null && (META_KEY in action.meta);
+var isTransitionForNamespace = (action, namespace) => isTransition(action) && action.type.startsWith(`${namespace}::`);
+var toType = (type, operation) => {
+  const parts = type.split("::");
+  const base = parts.slice(0, parts.length - 1).join("::");
+  return `${base}::${operation}`;
+};
+var updateTransition = (action, update) => ({
+  ...action,
+  meta: {
+    ...action.meta,
+    [META_KEY]: {
+      ...action.meta[META_KEY],
+      ...update
+    }
+  }
+});
+var toStaged = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "stage" /* STAGE */) }, { ...update, operation: "stage" /* STAGE */ });
+var toCommit = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "commit" /* COMMIT */) }, { ...update, operation: "commit" /* COMMIT */ });
+var processTransition = (transition, transitions) => {
+  const { operation, id, dedupe } = getTransitionMeta(transition);
+  const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
+  const existing = transitions[matchIdx];
+  switch (operation) {
+    case "stage" /* STAGE */:
+    case "amend" /* AMEND */: {
+      if (matchIdx === -1 && operation === "amend" /* AMEND */)
+        return transitions;
+      const stage = toStaged(transition, operation === "amend" /* AMEND */ ? getTransitionMeta(existing) : {});
+      if (matchIdx === -1)
+        return [...transitions, stage];
+      const nextTransitions = [...transitions];
+      const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
+      if (dedupe === 1 /* TRAILING */) {
+        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+      } else
+        nextTransitions[matchIdx] = stage;
+      return nextTransitions;
+    }
+    case "fail" /* FAIL */: {
+      if (matchIdx === -1)
+        return transitions;
+      return transitions.map((entry) => getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry);
+    }
+    case "stash" /* STASH */: {
+      const existing2 = transitions[matchIdx];
+      if (existing2) {
+        const { trailing } = getTransitionMeta(existing2);
+        return [
+          ...transitions.slice(0, matchIdx),
+          ...trailing ? [trailing] : [],
+          ...transitions.slice(matchIdx + 1)
+        ];
+      }
+      return transitions;
+    }
+    case "commit" /* COMMIT */: {
+      if (!transitions.length)
+        return transitions;
+      return transitions.filter((entry) => id !== getTransitionID(entry));
+    }
+  }
+};
+var sanitizeTransitions = (boundReducer, bindState) => (state) => {
+  const sanitized = state.transitions.reduce((acc, action) => {
+    try {
+      const asIfCommitted = toCommit(action);
+      const nextState = boundReducer(acc.transitionState, asIfCommitted);
+      const noop2 = nextState === acc.transitionState;
+      if (noop2)
+        acc.mutated = true;
+      else {
+        acc.transitionState.state = bindState(acc.transitionState.state).merge(nextState);
+        acc.transitions.push(action);
+      }
+    } catch (mergeError) {
+      acc.mutated = true;
+      switch (mergeError) {
+        case "SKIP" /* SKIP */:
+          break;
+        case "CONFLICT" /* CONFLICT */:
+          acc.transitions.push(updateTransition(action, { conflict: true }));
+          break;
+      }
+    }
+    return acc;
+  }, {
+    mutated: false,
+    transitions: [],
+    transitionState: Object.assign({}, state)
+  });
+  return sanitized.mutated ? sanitized.transitions : state.transitions;
+};
+
+// src/selectors/selectors.ts
+var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
+var selectFailedTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
+  const { id, failed } = getTransitionMeta(action);
+  return id === transitionId && failed;
+});
+var selectConflictingTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
+  const { id, conflict } = getTransitionMeta(action);
+  return id === transitionId && conflict;
+});
+var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
+var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
+var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
+
+// src/utils/logger.ts
+var warn = (...args) => {
+  if (true)
+    console.warn(...args);
+};
+
+// src/reducer.ts
+var resolveReducer = (handler, config) => {
+  if (typeof config === "function")
+    return config;
+  if (!("wire" in handler) || typeof handler.wire !== "function") {
+    throw new Error("optimistron: handler does not support auto-wiring (missing wire method)");
+  }
+  const { wire } = handler;
+  const { create, update, remove, reducer: fallback } = config;
+  return (bound, action) => {
+    const result = wire(bound, action, { create, update, remove });
+    if (result !== undefined)
+      return result;
+    if (fallback)
+      return fallback(bound, action);
+    return bound.getState();
+  };
+};
+var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
+
+// src/selectors/internal.ts
+var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) => {
+  if (!state.transitions.length)
+    return selector(state);
+  try {
+    const optimisticState = state.transitions.reduce((acc, transition) => {
+      acc.state = boundReducer(acc, toCommit(transition));
+      return acc;
+    }, Object.assign({}, state));
+    return selector(optimisticState);
+  } catch (error) {
+    warn(`selectOptimistic: error replaying transitions for "${namespace}"`, error);
+    return selector(state);
+  }
+};
+
+// src/state/factory.ts
+var bindStateFactory = (handler) => (state) => ({
+  create: (...args) => handler.create(state, ...args),
+  update: (...args) => handler.update(state, ...args),
+  remove: (...args) => handler.remove(state, ...args),
+  merge: (incoming) => handler.merge(state, incoming),
+  getState: () => state
+});
+var buildTransitionState = (state, transitions) => {
+  const transitionState = { state };
+  Object.defineProperties(transitionState, {
+    transitions: { value: transitions, enumerable: false, writable: true }
+  });
+  return transitionState;
+};
+var transitionStateFactory = (prev) => (state, transitions) => {
+  if (state === prev.state && transitions === prev.transitions)
+    return prev;
+  return buildTransitionState(state, transitions);
+};
+
+// src/optimistron.ts
+var commitTransition = (boundReducer, transitionState, transitions, id) => {
+  const staged = transitions.find((entry) => id === getTransitionID(entry));
+  if (!staged)
+    return;
+  return boundReducer(transitionState, toCommit(staged));
+};
+function optimistron(namespace, initialState, handler, config, options) {
+  if (!namespace)
+    throw new Error("optimistron: namespace cannot be empty");
+  const reducer = resolveReducer(handler, config);
+  const bindState = bindStateFactory(handler);
+  const boundReducer = bindReducer(reducer, bindState);
+  const sanitizer = sanitizeTransitions(boundReducer, bindState);
+  const initial = buildTransitionState(initialState, []);
+  const selectOptimistic = createSelectOptimistic(boundReducer, namespace);
+  const optimisticReducer = (transitionState = initial, action) => {
+    const nextTransitionState = (() => {
+      const { state, transitions } = transitionState;
+      const next = transitionStateFactory(transitionState);
+      try {
+        if (isTransitionForNamespace(action, namespace)) {
+          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
+          const { operation, id } = getTransitionMeta(action);
+          if (operation === "commit" /* COMMIT */) {
+            const committed = commitTransition(boundReducer, transitionState, transitions, id);
+            return next(committed !== undefined ? committed : state, nextTransitions);
+          }
+          return next(state, nextTransitions);
+        }
+        return next(boundReducer(transitionState, action), transitions);
+      } catch (error) {
+        warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
+        return next(state, transitions);
+      }
+    })();
+    const mutated = nextTransitionState !== transitionState;
+    nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
+    return nextTransitionState;
+  };
+  return { reducer: optimisticReducer, selectOptimistic };
+}
+
+// src/state/list.ts
+var listState = ({
+  key,
+  compare,
+  eq
+}) => ({
+  create: (state, item) => {
+    if (state.some((entry) => entry[key] === item[key]))
+      return state;
+    return [...state, item];
+  },
+  update: (state, itemId, partial) => {
+    const idx = state.findIndex((entry) => entry[key] === itemId);
+    if (idx === -1)
+      return state;
+    const next = [...state];
+    next[idx] = { ...state[idx], ...partial };
+    return next;
+  },
+  remove: (state, itemId) => {
+    const idx = state.findIndex((entry) => entry[key] === itemId);
+    if (idx === -1)
+      return state;
+    return state.filter((_, i) => i !== idx);
+  },
+  wire: (bound, action, actions) => {
+    if (actions.create && actions.create.match(action))
+      return bound.create(action.payload.item);
+    if (actions.update && actions.update.match(action))
+      return bound.update(action.payload.id, action.payload.item);
+    if (actions.remove && actions.remove.match(action))
+      return bound.remove(action.payload.id);
+    return;
+  },
+  merge: (existing, incoming) => {
+    if (existing === incoming)
+      throw "SKIP" /* SKIP */;
+    const existingMap = new Map;
+    for (const item of existing)
+      existingMap.set(item[key], item);
+    let matched = 0;
+    for (const item of incoming) {
+      const prev = existingMap.get(item[key]);
+      if (!prev)
+        continue;
+      matched++;
+      if (prev === item)
+        continue;
+      const check = compare(item)(prev);
+      if (check === -1)
+        throw "CONFLICT" /* CONFLICT */;
+      if (check === 0) {
+        if (!eq(item)(prev))
+          throw "CONFLICT" /* CONFLICT */;
+        continue;
+      }
+      return incoming;
+    }
+    if (matched === incoming.length && matched === existingMap.size)
+      throw "SKIP" /* SKIP */;
+    return incoming;
+  }
+});
+
+// src/actions/transitions.ts
 var emptyPA = () => ({ payload: {} });
 var errorPA = (error) => ({ error: error instanceof Error ? error.message : error, payload: {} });
 var createCommitMatcher = (namespace) => (action) => isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === "commit" /* COMMIT */;
@@ -30256,172 +28999,83 @@ var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
     match: createCommitMatcher(type)
   };
 };
-var crudPrepare = (itemIdKey) => ({
-  create: (item) => ({ payload: { item }, transitionId: String(item[itemIdKey]) }),
-  update: (id, item) => ({ payload: { id, item }, transitionId: id }),
-  remove: (id) => ({ payload: { id }, transitionId: id })
-});
-
-// usecases/lib/store/actions.ts
-var crud = crudPrepare("id");
-var createTodo = createTransitions("todos::add")(crud.create);
-var editTodo = createTransitions("todos::edit")(crud.update);
-var deleteTodo = createTransitions("todos::delete", 1 /* TRAILING */)(crud.remove);
-var sync = createAction("todos::sync");
-
-// src/logger.ts
-var warn = (...args) => {
-  if (true)
-    console.warn(...args);
-};
-
-// src/selectors.ts
-var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) => {
-  if (!state.transitions.length)
-    return selector(state);
-  try {
-    const optimisticState = state.transitions.reduce((acc, transition) => {
-      acc.state = boundReducer(acc, toCommit(transition));
-      return acc;
-    }, Object.assign({}, state));
-    return selector(optimisticState);
-  } catch (error) {
-    warn(`selectOptimistic: error replaying transitions for "${namespace}"`, error);
-    return selector(state);
+// src/actions/crud.ts
+function crudPrepare(key) {
+  if (key !== undefined) {
+    return {
+      create: (item) => ({ payload: { item }, transitionId: String(item[key]) }),
+      update: (id, item) => ({ payload: { id, item }, transitionId: id }),
+      remove: (id) => ({ payload: { id }, transitionId: id })
+    };
   }
-};
-var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
-var selectFailedTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
-  const { id, failed } = getTransitionMeta(action);
-  return id === transitionId && failed;
-});
-var selectConflictingTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
-  const { id, conflict } = getTransitionMeta(action);
-  return id === transitionId && conflict;
-});
-var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
-var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
-var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
-
-// src/reducer.ts
-var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
-
-// src/state.ts
-var bindStateFactory = (handler) => (state) => ({
-  create: (...args) => handler.create(state, ...args),
-  update: (...args) => handler.update(state, ...args),
-  remove: (...args) => handler.remove(state, ...args),
-  merge: (incoming) => handler.merge(state, incoming),
-  getState: () => state
-});
-var buildTransitionState = (state, transitions) => {
-  const transitionState = { state };
-  Object.defineProperties(transitionState, {
-    transitions: { value: transitions, enumerable: false, writable: true }
-  });
-  return transitionState;
-};
-var transitionStateFactory = (prev) => (state, transitions) => {
-  if (state === prev.state && transitions === prev.transitions)
-    return prev;
-  return buildTransitionState(state, transitions);
-};
-
-// src/optimistron.ts
-var commitTransition = (boundReducer, transitionState, transitions, id) => {
-  const staged = transitions.find((entry) => id === getTransitionID(entry));
-  if (!staged)
-    return;
-  return boundReducer(transitionState, toCommit(staged));
-};
-var optimistron = (namespace, initialState, handler, reducer, options) => {
-  if (!namespace)
-    throw new Error("optimistron: namespace cannot be empty");
-  const bindState = bindStateFactory(handler);
-  const boundReducer = bindReducer(reducer, bindState);
-  const sanitizer = sanitizeTransitions(boundReducer, bindState);
-  const initial = buildTransitionState(initialState, []);
-  const selectOptimistic = createSelectOptimistic(boundReducer, namespace);
-  const optimisticReducer = (transitionState = initial, action) => {
-    const nextTransitionState = (() => {
-      const { state, transitions } = transitionState;
-      const next = transitionStateFactory(transitionState);
-      try {
-        if (isTransitionForNamespace(action, namespace)) {
-          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
-          const { operation, id } = getTransitionMeta(action);
-          if (operation === "commit" /* COMMIT */) {
-            const committed = commitTransition(boundReducer, transitionState, transitions, id);
-            return next(committed ?? state, nextTransitions);
-          }
-          return next(state, nextTransitions);
-        }
-        return next(boundReducer(transitionState, action), transitions);
-      } catch (error) {
-        warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
-        return next(state, transitions);
-      }
-    })();
-    const mutated = nextTransitionState !== transitionState;
-    nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
-    return nextTransitionState;
-  };
-  return { reducer: optimisticReducer, selectOptimistic };
-};
-
-// src/state/indexed.ts
-var indexedStateFactory = ({
-  itemIdKey,
-  compare,
-  eq
-}) => {
-  return {
-    create: (state, item) => ({ ...state, [item[itemIdKey]]: item }),
-    update: (state, itemId, partialItem) => state[itemId] ? { ...state, [itemId]: { ...state[itemId], ...partialItem } } : state,
-    remove: (state, itemId) => {
-      if (state[itemId]) {
-        const nextState = { ...state };
-        delete nextState[itemId];
-        return nextState;
-      }
-      return state;
+  return (keys) => ({
+    create: (item) => ({
+      payload: { item },
+      transitionId: keys.map((k) => String(item[k])).join("/")
+    }),
+    update: (...args) => {
+      const path = args.slice(0, keys.length);
+      const item = args[keys.length];
+      return { payload: { path, item }, transitionId: path.join("/") };
     },
-    merge: (existing, incoming) => {
-      const mergedState = { ...existing };
-      let mutated = false;
-      for (const itemId in existing) {
-        if (!incoming[itemId]) {
-          mutated = true;
-          delete mergedState[itemId];
-        }
-      }
-      for (const itemId in incoming) {
-        const existingItem = existing[itemId];
-        const incomingItem = incoming[itemId];
-        if (existingItem === incomingItem)
-          continue;
-        if (!existingItem) {
-          mutated = true;
-          mergedState[itemId] = incomingItem;
-          continue;
-        }
-        const check = compare(incomingItem)(existingItem);
-        if (check === -1)
-          throw "CONFLICT" /* CONFLICT */;
-        if (check === 0) {
-          if (eq(incomingItem)(existingItem))
-            continue;
-          else
-            throw "CONFLICT" /* CONFLICT */;
-        }
-        mutated = true;
-        mergedState[itemId] = incomingItem;
-      }
-      if (!mutated)
-        throw "SKIP" /* SKIP */;
-      return mergedState;
+    remove: (...args) => ({
+      payload: { path: args },
+      transitionId: args.join("/")
+    })
+  });
+}
+// usecases/lib/store/activity/actions.ts
+var crud = crudPrepare("id");
+var logActivity = createTransitions("activity::add")(crud.create);
+var editActivity = createTransitions("activity::edit")(crud.update);
+var dismissActivity = createTransitions("activity::dismiss", 1 /* TRAILING */)(crud.remove);
+
+// usecases/lib/store/epics/actions.ts
+var crud2 = crudPrepare("id");
+var createEpic = createTransitions("epics::add")(crud2.create);
+var editEpic = createTransitions("epics::edit")(crud2.update);
+var deleteEpic = createTransitions("epics::delete", 1 /* TRAILING */)(crud2.remove);
+var sync = createAction("store::sync");
+
+// usecases/lib/store/activity/reducer.ts
+var compare = (a) => (b) => {
+  if (a.revision === b.revision)
+    return 0;
+  if (a.revision > b.revision)
+    return 1;
+  return -1;
+};
+var eq = (a) => (b) => a.message === b.message && a.category === b.category;
+var { reducer: activity, selectOptimistic } = optimistron("activity", [], listState({ key: "id", compare, eq }), {
+  create: logActivity,
+  update: editActivity,
+  remove: dismissActivity,
+  reducer: ({ getState }, action) => {
+    if (sync.match(action)) {
+      return getState().map((entry) => ({ ...entry, revision: entry.revision + 10 }));
     }
-  };
+    return getState();
+  }
+});
+
+// usecases/lib/store/activity/selectors.ts
+var selectOptimisticActivity = createSelector((state) => state.activity, selectOptimistic((activity2) => [...activity2.state].sort((a, b) => b.timestamp - a.timestamp)));
+var selectOptimisticActivityState = (id) => createSelector((state) => state.activity, (activity2) => ({
+  optimistic: selectIsOptimistic(id)(activity2),
+  failed: selectIsFailed(id)(activity2),
+  retry: selectFailedTransition(id)(activity2),
+  conflict: selectIsConflicting(id)(activity2)
+}));
+
+// usecases/lib/store/activity/hooks.ts
+var useActivityState = (entry) => {
+  const state = useSelector(selectOptimisticActivityState(entry.id));
+  return import_react.useMemo(() => ({
+    conflict: state.conflict,
+    failed: state.failed,
+    failedAction: state.retry,
+    loading: state.optimistic && !state.failed
+  }), [state.optimistic, state.retry, state.failed, state.conflict]);
 };
 
 // usecases/lib/utils/mock-api.ts
@@ -30440,64 +29094,793 @@ var simulateAPIRequest = async () => {
     throw new Error("Offline ☠️");
 };
 
-// usecases/lib/store/reducer.ts
-var initial = (() => {
-  const createdAt = Date.now();
-  const todo1 = { id: generateId(), value: "Try out optimistron", revision: 0, done: true, createdAt };
-  const todo2 = { id: generateId(), value: "Toggle API Mock", revision: 42, done: false, createdAt };
-  const todo3 = { id: generateId(), value: "Add a new todo", revision: 2, done: true, createdAt };
-  return {
-    [todo1.id]: todo1,
-    [todo2.id]: todo2,
-    [todo3.id]: todo3
+// usecases/lib/components/activity/ActivityFeed.tsx
+var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
+var CATEGORIES = ["user", "system", "error"];
+var CATEGORY_COLORS = {
+  system: "bg-blue-500/15 text-blue-400",
+  user: "bg-emerald-500/15 text-emerald-400",
+  error: "bg-rose-500/15 text-rose-400"
+};
+var ActivityItem = ({ entry, onEdit, onDismiss, onRetry }) => {
+  const { loading, failed, conflict, failedAction } = useActivityState(entry);
+  const ref = import_react2.useRef(null);
+  const error = failed || conflict;
+  const handleCommit = () => {
+    const message = ref.current?.value.trim();
+    if (!message || message === entry.message)
+      return;
+    if (failedAction) {
+      const { payload } = failedAction;
+      const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, message } } };
+      onRetry(retry);
+    } else {
+      onEdit({ ...entry, message, revision: entry.revision + 1 });
+    }
   };
-})();
-var compare = (a) => (b) => {
+  const ts = new Date(entry.timestamp);
+  const time = `${ts.getHours().toString().padStart(2, "0")}:${ts.getMinutes().toString().padStart(2, "0")}:${ts.getSeconds().toString().padStart(2, "0")}`;
+  return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+    className: clsx("flex items-center gap-1.5 px-2 py-1 rounded group", loading && "opacity-70", error && "bg-oc-fail/5"),
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+        className: clsx("text-[8px] font-mono px-1 py-0.5 rounded flex-shrink-0", CATEGORY_COLORS[entry.category]),
+        children: entry.category
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("input", {
+        ref,
+        type: "text",
+        readOnly: loading,
+        defaultValue: entry.message,
+        onBlur: handleCommit,
+        onKeyDown: (e) => e.key === "Enter" && e.currentTarget.blur(),
+        className: clsx("flex-1 min-w-0 text-xs bg-transparent focus:outline-none cursor-pointer focus:cursor-text transition-colors", !error && !loading && "text-gray-300 hover:text-gray-200", loading && "text-oc-commit/60", failed && !conflict && "text-oc-fail/80 jiggle", conflict && "text-oc-conflict/80 jiggle")
+      }, entry.message, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("code", {
+        className: "text-[7px] font-mono leading-none flex-shrink-0",
+        children: [
+          loading && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+            className: "text-oc-commit/60",
+            children: "opt"
+          }, undefined, false, undefined, this),
+          failed && !conflict && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+            className: "text-oc-fail/80",
+            children: "fail"
+          }, undefined, false, undefined, this),
+          conflict && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+            className: "text-oc-conflict/80",
+            children: "conflict"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      loading && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV(Spinner, {}, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+        className: "text-[9px] font-mono text-gray-700 flex-shrink-0",
+        children: time
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("button", {
+        onClick: () => onDismiss(entry),
+        className: "text-gray-700 hover:text-oc-fail transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0",
+        children: /* @__PURE__ */ jsx_dev_runtime2.jsxDEV(Cross, {}, undefined, false, undefined, this)
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
+var ActivityFeed = ({ onLogActivity, onEditActivity, onDismissActivity, onRetry }) => {
+  const entries = useSelector(selectOptimisticActivity);
+  const [message, setMessage] = import_react2.useState("");
+  const [category, setCategory] = import_react2.useState("user");
+  const handleAdd = () => {
+    const sanitized = message.trim();
+    if (sanitized) {
+      onLogActivity({ id: generateId(), message: sanitized, category, timestamp: Date.now(), revision: 0 });
+      setMessage("");
+    }
+  };
+  return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+    className: "pb-3",
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+        className: "flex items-center gap-2 px-3 pt-3 pb-1",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("h3", {
+            className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600",
+            children: "Activity Log"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("span", {
+            className: "text-[8px] font-mono px-1 py-0.5 rounded bg-green-500/10 text-green-400",
+            children: "listState"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+        className: "flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("select", {
+            value: category,
+            onChange: (e) => setCategory(e.target.value),
+            className: "text-[9px] bg-surface-3 text-gray-400 border border-border-subtle rounded px-1 py-0.5 focus:outline-none",
+            children: CATEGORIES.map((c) => /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("option", {
+              value: c,
+              children: c
+            }, c, false, undefined, this))
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("input", {
+            value: message,
+            onChange: (e) => setMessage(e.target.value),
+            onKeyUp: (e) => e.key === "Enter" && handleAdd(),
+            className: "flex-grow h-6 text-xs text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic",
+            type: "text",
+            placeholder: "Log activity..."
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+        className: "py-1",
+        children: [
+          entries.map((entry) => /* @__PURE__ */ jsx_dev_runtime2.jsxDEV(ActivityItem, {
+            entry,
+            onEdit: onEditActivity,
+            onDismiss: onDismissActivity,
+            onRetry
+          }, entry.id, false, undefined, this)),
+          entries.length === 0 && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("p", {
+            className: "px-3 py-2 text-[10px] text-gray-700 italic",
+            children: "No activity logged"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
+
+// usecases/lib/components/profile/ProfileCard.tsx
+var import_react4 = __toESM(require_react(), 1);
+
+// usecases/lib/store/profile/hooks.ts
+var import_react3 = __toESM(require_react(), 1);
+
+// src/state/singular.ts
+var singularState = ({
+  compare: compare2,
+  eq: eq2
+}) => ({
+  create: (_, item) => item,
+  update: (state, partial) => state ? { ...state, ...partial } : state,
+  remove: (state) => state !== null ? null : state,
+  wire: (bound, action, actions) => {
+    if (actions.create && actions.create.match(action))
+      return bound.create(action.payload.item);
+    if (actions.update && actions.update.match(action))
+      return bound.update(action.payload.item);
+    if (actions.remove && actions.remove.match(action))
+      return bound.remove();
+    return;
+  },
+  merge: (existing, incoming) => {
+    if (existing === incoming)
+      throw "SKIP" /* SKIP */;
+    if (existing === null || incoming === null)
+      return incoming;
+    const check = compare2(incoming)(existing);
+    if (check === -1)
+      throw "CONFLICT" /* CONFLICT */;
+    if (check === 0) {
+      if (eq2(incoming)(existing))
+        throw "SKIP" /* SKIP */;
+      else
+        throw "CONFLICT" /* CONFLICT */;
+    }
+    return incoming;
+  }
+});
+
+// usecases/lib/store/profile/actions.ts
+var updatePrepare = (item) => ({ payload: { item }, transitionId: "profile" });
+var clearPrepare = () => ({ payload: {}, transitionId: "profile" });
+var updateProfile = createTransitions("profile::update")(updatePrepare);
+var clearProfile = createTransitions("profile::clear")(clearPrepare);
+
+// usecases/lib/store/profile/reducer.ts
+var compare2 = (a) => (b) => {
   if (a.revision === b.revision)
     return 0;
   if (a.revision > b.revision)
     return 1;
   return -1;
 };
-var eq = (a) => (b) => a.done === b.done && a.value === b.value;
-var { reducer: todos, selectOptimistic } = optimistron("todos", initial, indexedStateFactory({ itemIdKey: "id", compare, eq }), ({ getState, create, update, remove }, action) => {
-  if (createTodo.match(action))
-    return create(action.payload.item);
-  if (editTodo.match(action))
-    return update(action.payload.id, action.payload.item);
-  if (deleteTodo.match(action))
-    return remove(action.payload.id);
-  if (sync.match(action)) {
-    return Object.fromEntries(Object.entries(getState()).map(([key, todo]) => [
-      key,
-      {
-        ...todo,
-        revision: todo.revision + 10
-      }
-    ]));
+var eq2 = (a) => (b) => a.displayName === b.displayName && a.avatarUrl === b.avatarUrl;
+var initial = { displayName: "Andy ZEN", avatarUrl: "https://i.pravatar.cc/80?u=andy", revision: 0 };
+var { reducer: profile, selectOptimistic: selectOptimistic2 } = optimistron("profile", initial, singularState({ compare: compare2, eq: eq2 }), {
+  update: updateProfile,
+  remove: clearProfile,
+  reducer: ({ getState }, action) => {
+    if (sync.match(action)) {
+      const state = getState();
+      return state ? { ...state, revision: state.revision + 10 } : state;
+    }
+    return getState();
   }
-  return getState();
 });
 
-// usecases/lib/store/selectors.ts
-var selectTodo = (id) => createSelector((state) => state.todos, ({ state }) => state[id]);
-var selectOptimisticTodos = createSelector((state) => state.todos, selectOptimistic((todos2) => Object.values(todos2.state).sort((a, b) => b.createdAt - a.createdAt)));
-var selectOptimisticTodoState = (id) => createSelector((state) => state.todos, (todos2) => ({
-  optimistic: selectIsOptimistic(id)(todos2),
-  failed: selectIsFailed(id)(todos2),
-  retry: selectFailedTransition(id)(todos2),
-  conflict: selectIsConflicting(id)(todos2)
+// usecases/lib/store/profile/selectors.ts
+var selectOptimisticProfile = createSelector((state) => state.profile, selectOptimistic2((profile2) => profile2.state));
+var selectOptimisticProfileState = createSelector((state) => state.profile, (profile2) => ({
+  optimistic: selectIsOptimistic("profile")(profile2),
+  failed: selectIsFailed("profile")(profile2),
+  retry: selectFailedTransition("profile")(profile2),
+  conflict: selectIsConflicting("profile")(profile2)
 }));
-var selectFailedTodos = createSelector((state) => state.todos, (todos2) => selectFailedTransitions(todos2));
-var selectTransitions = createSelector((state) => state.todos, (todos2) => todos2.transitions);
+
+// usecases/lib/store/profile/hooks.ts
+var useProfileState = () => {
+  const state = useSelector(selectOptimisticProfileState);
+  return import_react3.useMemo(() => ({
+    conflict: state.conflict,
+    failed: state.failed,
+    failedAction: state.retry,
+    loading: state.optimistic && !state.failed
+  }), [state.optimistic, state.retry, state.failed, state.conflict]);
+};
+
+// usecases/lib/components/profile/ProfileCard.tsx
+var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
+var ProfileCard = ({ onUpdate }) => {
+  const profile2 = useSelector(selectOptimisticProfile);
+  const { loading, failed, conflict } = useProfileState();
+  const nameRef = import_react4.useRef(null);
+  const avatarRef = import_react4.useRef(null);
+  if (!profile2)
+    return null;
+  const error = failed || conflict;
+  const handleCommit = () => {
+    const nameEl = nameRef.current;
+    const avatarEl = avatarRef.current;
+    if (!nameEl || !avatarEl)
+      return;
+    const changes = {};
+    const name = nameEl.value.trim();
+    const avatar = avatarEl.value.trim();
+    if (name && name !== profile2.displayName)
+      changes.displayName = name;
+    else
+      nameEl.value = profile2.displayName;
+    if (avatar && avatar !== profile2.avatarUrl)
+      changes.avatarUrl = avatar;
+    else
+      avatarEl.value = profile2.avatarUrl;
+    if (Object.keys(changes).length > 0) {
+      onUpdate({ ...changes, revision: profile2.revision + 1 });
+    }
+  };
+  return /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+    className: "pb-3",
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        className: "flex items-center gap-2 px-3 pt-3 pb-1",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
+            className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600",
+            children: "Profile"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+            className: "text-[8px] font-mono px-1 py-0.5 rounded bg-fuchsia-500/10 text-fuchsia-400",
+            children: "singularState"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        className: clsx("flex items-center gap-2.5 mx-3 p-2 rounded-lg border transition-colors", error ? "border-oc-fail/30 bg-oc-fail/5" : "border-border-subtle bg-surface-1", conflict && "!border-oc-conflict/30 !bg-oc-conflict/5"),
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("img", {
+            src: profile2.avatarUrl,
+            alt: "",
+            className: "w-8 h-8 rounded-full flex-shrink-0 bg-surface-3"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+            className: "flex-1 min-w-0",
+            children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+              className: "flex items-center gap-2",
+              children: [
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+                  className: "flex-1 min-w-0",
+                  children: [
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("input", {
+                      ref: nameRef,
+                      type: "text",
+                      readOnly: loading,
+                      defaultValue: profile2.displayName,
+                      className: clsx("text-xs font-medium bg-transparent focus:outline-none w-full truncate cursor-pointer focus:cursor-text", loading && "text-oc-commit/60 pointer-events-none", failed && !conflict && "text-oc-fail/80", conflict && "text-oc-conflict/80", !loading && !error && "text-gray-200"),
+                      onBlur: handleCommit,
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter")
+                          handleCommit();
+                        if (e.key === "Escape") {
+                          e.currentTarget.value = profile2.displayName;
+                          e.currentTarget.blur();
+                        }
+                      }
+                    }, undefined, false, undefined, this),
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("input", {
+                      ref: avatarRef,
+                      type: "text",
+                      readOnly: loading,
+                      defaultValue: profile2.avatarUrl,
+                      className: clsx("text-[10px] font-mono bg-transparent focus:outline-none w-full truncate cursor-pointer focus:cursor-text", loading ? "text-gray-700 pointer-events-none" : "text-gray-600"),
+                      onBlur: handleCommit,
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter")
+                          handleCommit();
+                        if (e.key === "Escape") {
+                          e.currentTarget.value = profile2.avatarUrl;
+                          e.currentTarget.blur();
+                        }
+                      }
+                    }, undefined, false, undefined, this)
+                  ]
+                }, undefined, true, undefined, this),
+                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+                  className: "flex items-center gap-1.5 flex-shrink-0",
+                  children: [
+                    loading && /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Spinner, {}, undefined, false, undefined, this),
+                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
+                      className: "text-[7px] font-mono leading-none",
+                      children: [
+                        loading && /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                          className: "text-oc-commit/60",
+                          children: "optimistic"
+                        }, undefined, false, undefined, this),
+                        failed && !conflict && /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                          className: "text-oc-fail/80",
+                          children: "fail"
+                        }, undefined, false, undefined, this),
+                        conflict && /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                          className: "text-oc-conflict/80",
+                          children: "conflict"
+                        }, undefined, false, undefined, this)
+                      ]
+                    }, undefined, true, undefined, this)
+                  ]
+                }, undefined, true, undefined, this)
+              ]
+            }, undefined, true, undefined, this)
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
+
+// usecases/lib/components/projects/ProjectBoard.tsx
+var import_react6 = __toESM(require_react(), 1);
+
+// usecases/lib/store/projects/hooks.ts
+var import_react5 = __toESM(require_react(), 1);
+
+// src/utils/path.ts
+var asObj = (value) => value != null && typeof value === "object" ? value : undefined;
+var getAt = (state, ids) => {
+  let current2 = state;
+  for (const id of ids) {
+    const obj = asObj(current2);
+    if (!obj)
+      return;
+    current2 = obj[id];
+  }
+  return current2;
+};
+var setAt = (state, ids, value) => {
+  if (ids.length === 0)
+    return value;
+  const [head, ...tail] = ids;
+  const current2 = state ?? {};
+  return { ...current2, [head]: setAt(asObj(current2[head]), tail, value) };
+};
+var removeAt = (state, ids) => {
+  if (ids.length === 0)
+    return state;
+  if (ids.length === 1) {
+    const key = ids[0];
+    if (!(key in state))
+      return state;
+    const next = { ...state };
+    delete next[key];
+    return next;
+  }
+  const [head, ...tail] = ids;
+  const child = asObj(state[head]);
+  if (!child)
+    return state;
+  const nextChild = removeAt(child, tail);
+  if (nextChild === child)
+    return state;
+  return { ...state, [head]: nextChild };
+};
+
+// src/state/record.ts
+var nestedRecordState = () => ({
+  keys,
+  compare: compare3,
+  eq: eq3
+}) => {
+  const extractPath = (item) => keys.map((k) => item[k]);
+  const mergeAtDepth = (existing, incoming, depth) => {
+    let merged;
+    for (const id in existing) {
+      if (!incoming[id]) {
+        merged ??= { ...existing };
+        delete merged[id];
+      }
+    }
+    for (const id in incoming) {
+      const existingEntry = existing[id];
+      const incomingEntry = incoming[id];
+      if (existingEntry === incomingEntry)
+        continue;
+      if (!existingEntry) {
+        merged ??= { ...existing };
+        merged[id] = incomingEntry;
+        continue;
+      }
+      if (depth > 1) {
+        try {
+          const mergedChild = mergeAtDepth(existingEntry, incomingEntry, depth - 1);
+          if (mergedChild !== existingEntry) {
+            merged ??= { ...existing };
+            merged[id] = mergedChild;
+          }
+        } catch (e) {
+          if (e === "SKIP" /* SKIP */)
+            continue;
+          throw e;
+        }
+      } else {
+        const check = compare3(incomingEntry)(existingEntry);
+        if (check === -1)
+          throw "CONFLICT" /* CONFLICT */;
+        if (check === 0) {
+          if (eq3(incomingEntry)(existingEntry))
+            continue;
+          else
+            throw "CONFLICT" /* CONFLICT */;
+        }
+        merged ??= { ...existing };
+        merged[id] = incomingEntry;
+      }
+    }
+    if (!merged)
+      throw "SKIP" /* SKIP */;
+    return merged;
+  };
+  return {
+    create: (state, item) => setAt(state, extractPath(item), item),
+    update: (state, ...args) => {
+      const ids = args.slice(0, keys.length);
+      const partial = args[keys.length];
+      const existing = getAt(state, ids);
+      if (!existing)
+        return state;
+      return setAt(state, ids, { ...existing, ...partial });
+    },
+    remove: (state, ...args) => {
+      const ids = args.slice(0, keys.length);
+      return removeAt(state, ids);
+    },
+    merge: (existing, incoming) => mergeAtDepth(existing, incoming, keys.length),
+    wire: (bound, action, actions) => {
+      if (actions.create && actions.create.match(action))
+        return bound.create(action.payload.item);
+      if (actions.update && actions.update.match(action)) {
+        const { path, item } = action.payload;
+        return bound.update(...path, item);
+      }
+      if (actions.remove && actions.remove.match(action))
+        return bound.remove(...action.payload.path);
+      return;
+    }
+  };
+};
+var recordState = ({
+  key,
+  compare: compare3,
+  eq: eq3
+}) => {
+  const nested = nestedRecordState()({ keys: [key], compare: compare3, eq: eq3 });
+  return {
+    create: nested.create,
+    merge: nested.merge,
+    update: (state, itemId, partialItem) => nested.update(state, itemId, partialItem),
+    remove: (state, itemId) => nested.remove(state, itemId),
+    wire: (bound, action, actions) => {
+      if (actions.create && actions.create.match(action))
+        return bound.create(action.payload.item);
+      if (actions.update && actions.update.match(action))
+        return bound.update(action.payload.id, action.payload.item);
+      if (actions.remove && actions.remove.match(action))
+        return bound.remove(action.payload.id);
+      return;
+    }
+  };
+};
+
+// usecases/lib/store/projects/actions.ts
+var crud3 = crudPrepare()(["projectId", "id"]);
+var createProjectTodo = createTransitions("projects::add")(crud3.create);
+var editProjectTodo = createTransitions("projects::edit")(crud3.update);
+var deleteProjectTodo = createTransitions("projects::delete", 1 /* TRAILING */)(crud3.remove);
+
+// usecases/lib/store/projects/reducer.ts
+var compare3 = (a) => (b) => {
+  if (a.revision === b.revision)
+    return 0;
+  if (a.revision > b.revision)
+    return 1;
+  return -1;
+};
+var eq3 = (a) => (b) => a.done === b.done && a.value === b.value;
+var initial2 = (() => {
+  const createdAt = Date.now();
+  const items = [
+    { id: generateId(), projectId: "frontend", value: "Set up component library", done: true, revision: 0, createdAt },
+    { id: generateId(), projectId: "frontend", value: "Add dark mode toggle", done: false, revision: 0, createdAt },
+    { id: generateId(), projectId: "backend", value: "Implement auth middleware", done: false, revision: 3, createdAt },
+    { id: generateId(), projectId: "design", value: "Design landing page", done: true, revision: 1, createdAt }
+  ];
+  const state = {};
+  for (const item of items) {
+    state[item.projectId] ??= {};
+    state[item.projectId][item.id] = item;
+  }
+  return state;
+})();
+var { reducer: projects, selectOptimistic: selectOptimistic3 } = optimistron("projects", initial2, nestedRecordState()({ keys: ["projectId", "id"], compare: compare3, eq: eq3 }), {
+  create: createProjectTodo,
+  update: editProjectTodo,
+  remove: deleteProjectTodo,
+  reducer: ({ getState }, action) => {
+    if (sync.match(action)) {
+      const state = getState();
+      return Object.fromEntries(Object.entries(state).map(([projectId, todos]) => [
+        projectId,
+        Object.fromEntries(Object.entries(todos).map(([todoId, todo]) => [
+          todoId,
+          { ...todo, revision: todo.revision + 10 }
+        ]))
+      ]));
+    }
+    return getState();
+  }
+});
+
+// usecases/lib/store/projects/selectors.ts
+var selectOptimisticProjectTodos = (projectId) => createSelector((state) => state.projects, selectOptimistic3((projects2) => {
+  const group = projects2.state[projectId];
+  return group ? Object.values(group).sort((a, b) => b.createdAt - a.createdAt) : [];
+}));
+var selectOptimisticProjectTodoState = (projectId, todoId) => {
+  const transitionId = `${projectId}/${todoId}`;
+  return createSelector((state) => state.projects, (projects2) => ({
+    optimistic: selectIsOptimistic(transitionId)(projects2),
+    failed: selectIsFailed(transitionId)(projects2),
+    retry: selectFailedTransition(transitionId)(projects2),
+    conflict: selectIsConflicting(transitionId)(projects2)
+  }));
+};
+
+// usecases/lib/store/projects/hooks.ts
+var useProjectTodoState = (todo) => {
+  const state = useSelector(selectOptimisticProjectTodoState(todo.projectId, todo.id));
+  const [stashed, setStashed] = import_react5.useState(false);
+  const revision = import_react5.useRef(todo.revision);
+  import_react5.useEffect(() => {
+    setStashed(revision.current > todo.revision);
+    revision.current = todo.revision;
+  }, [todo.revision]);
+  return import_react5.useMemo(() => ({
+    conflict: state.conflict,
+    failed: state.failed,
+    failedAction: state.retry,
+    loading: state.optimistic && !state.failed,
+    stashed
+  }), [state.optimistic, state.retry, state.failed, state.conflict, stashed]);
+};
+
+// usecases/lib/components/projects/ProjectBoard.tsx
+var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
+var PROJECT_IDS = ["frontend", "backend", "design"];
+var PROJECT_LABELS = {
+  frontend: "Frontend",
+  backend: "Backend",
+  design: "Design"
+};
+var ProjectTodoItem = ({ todo, onEdit, onDelete }) => {
+  const { loading, failed, conflict, stashed } = useProjectTodoState(todo);
+  const error = failed || conflict;
+  return /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+    className: clsx("flex items-center gap-1.5 px-1.5 py-0.5 rounded group", loading && "opacity-70"),
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("button", {
+        onClick: () => !loading && onEdit({ ...todo, done: !todo.done, revision: todo.revision + 1 }),
+        className: clsx("flex items-center justify-center w-3.5 h-3.5 border rounded-full flex-shrink-0 transition-colors", todo.done ? "bg-oc-stage/90 border-oc-stage/90 text-white" : "border-gray-600 text-transparent hover:border-gray-400", failed && !conflict && "!border-oc-fail/80 !bg-oc-fail/30", conflict && "!border-oc-conflict/80 !bg-oc-conflict/30", loading && "!border-gray-600 !bg-transparent !text-gray-500"),
+        children: loading ? /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(Spinner, {}, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(CheckMark, {}, undefined, false, undefined, this)
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+        className: clsx("flex-1 text-[11px] truncate", todo.done && "line-through text-gray-600", !todo.done && !error && !loading && "text-gray-300", loading && "text-oc-commit/60", failed && !conflict && "text-oc-fail/80 jiggle", conflict && "text-oc-conflict/80 jiggle", stashed && !failed && "text-oc-stash/80 jiggle"),
+        children: todo.value
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("code", {
+        className: "text-[7px] font-mono leading-none flex-shrink-0",
+        children: [
+          loading && /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+            className: "text-oc-commit/60",
+            children: "opt"
+          }, undefined, false, undefined, this),
+          failed && !conflict && /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+            className: "text-oc-fail/80",
+            children: "fail"
+          }, undefined, false, undefined, this),
+          conflict && /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+            className: "text-oc-conflict/80",
+            children: "conflict"
+          }, undefined, false, undefined, this),
+          stashed && /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+            className: "text-oc-stash/80",
+            children: "stash"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("button", {
+        onClick: () => onDelete(todo),
+        className: "text-gray-700 hover:text-oc-fail transition-colors opacity-0 group-hover:opacity-100",
+        children: /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(Cross, {}, undefined, false, undefined, this)
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
+var ProjectColumn = ({ projectId, onCreateTodo, onEditTodo, onDeleteTodo }) => {
+  const todos = useSelector(selectOptimisticProjectTodos(projectId));
+  const [value, setValue] = import_react6.useState("");
+  const handleAdd = () => {
+    const sanitized = value.trim();
+    if (sanitized) {
+      onCreateTodo({
+        id: generateId(),
+        projectId,
+        value: sanitized,
+        done: false,
+        revision: 0,
+        createdAt: Date.now()
+      });
+      setValue("");
+    }
+  };
+  return /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+    className: "flex-1 min-w-0 border border-border-subtle rounded-lg bg-surface-1 overflow-hidden",
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+        className: "px-2 py-1.5 border-b border-border-subtle",
+        children: /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("h4", {
+          className: "text-[11px] font-medium text-gray-300",
+          children: PROJECT_LABELS[projectId] ?? projectId
+        }, undefined, false, undefined, this)
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+        className: "flex items-center gap-1.5 px-2 py-1 border-b border-border-subtle",
+        children: /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("input", {
+          value,
+          onChange: (e) => setValue(e.target.value),
+          onKeyUp: (e) => e.key === "Enter" && handleAdd(),
+          className: "flex-1 text-[11px] text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-700 placeholder:italic",
+          type: "text",
+          placeholder: "Add item..."
+        }, undefined, false, undefined, this)
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+        className: "py-1",
+        children: [
+          todos.map((todo) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(ProjectTodoItem, {
+            todo,
+            onEdit: onEditTodo,
+            onDelete: onDeleteTodo
+          }, todo.id, false, undefined, this)),
+          todos.length === 0 && /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("p", {
+            className: "px-3 py-2 text-[10px] text-gray-700 italic",
+            children: "No items"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
+var ProjectBoard = ({ onCreateTodo, onEditTodo, onDeleteTodo }) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+  className: "pb-3",
+  children: [
+    /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+      className: "flex items-center gap-2 px-3 pt-3 pb-1",
+      children: [
+        /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("h3", {
+          className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600",
+          children: "Projects"
+        }, undefined, false, undefined, this),
+        /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+          className: "text-[8px] font-mono px-1 py-0.5 rounded bg-amber-500/10 text-amber-400",
+          children: "nestedRecordState"
+        }, undefined, false, undefined, this)
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("div", {
+      className: "flex gap-1.5 px-3",
+      children: PROJECT_IDS.map((projectId) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(ProjectColumn, {
+        projectId,
+        onCreateTodo,
+        onEditTodo,
+        onDeleteTodo
+      }, projectId, false, undefined, this))
+    }, undefined, false, undefined, this)
+  ]
+}, undefined, true, undefined, this);
+
+// usecases/lib/components/graph/TransitionGraph.tsx
+var import_react8 = __toESM(require_react(), 1);
 
 // usecases/lib/components/graph/TransitionHistoryProvider.tsx
-var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var TransitionHistoryContext = import_react.createContext({ committed: [], staged: [] });
+var import_react7 = __toESM(require_react(), 1);
+
+// usecases/lib/store/epics/reducer.ts
+var initial3 = (() => {
+  const createdAt = Date.now();
+  const e1 = { id: generateId(), value: "Try out optimistron", revision: 0, done: true, createdAt };
+  const e2 = { id: generateId(), value: "Toggle API Mock", revision: 42, done: false, createdAt };
+  const e3 = { id: generateId(), value: "Add a new epic", revision: 2, done: true, createdAt };
+  return { [e1.id]: e1, [e2.id]: e2, [e3.id]: e3 };
+})();
+var compare4 = (a) => (b) => {
+  if (a.revision === b.revision)
+    return 0;
+  if (a.revision > b.revision)
+    return 1;
+  return -1;
+};
+var eq4 = (a) => (b) => a.done === b.done && a.value === b.value;
+var { reducer: epics, selectOptimistic: selectOptimistic4 } = optimistron("epics", initial3, recordState({ key: "id", compare: compare4, eq: eq4 }), {
+  create: createEpic,
+  update: editEpic,
+  remove: deleteEpic,
+  reducer: ({ getState }, action) => {
+    if (sync.match(action)) {
+      return Object.fromEntries(Object.entries(getState()).map(([key, epic]) => [
+        key,
+        { ...epic, revision: epic.revision + 10 }
+      ]));
+    }
+    return getState();
+  }
+});
+
+// usecases/lib/store/epics/selectors.ts
+var selectEpic = (id) => createSelector((state) => state.epics, ({ state }) => state[id]);
+var selectOptimisticEpics = createSelector((state) => state.epics, selectOptimistic4((epics2) => Object.values(epics2.state).sort((a, b) => b.createdAt - a.createdAt)));
+var selectOptimisticEpicState = (id) => createSelector((state) => state.epics, (epics2) => ({
+  optimistic: selectIsOptimistic(id)(epics2),
+  failed: selectIsFailed(id)(epics2),
+  retry: selectFailedTransition(id)(epics2),
+  conflict: selectIsConflicting(id)(epics2)
+}));
+var selectAllTransitions = createSelector((state) => state.epics.transitions, (state) => state.profile.transitions, (state) => state.projects.transitions, (state) => state.activity.transitions, (...lists) => lists.flat());
+var selectAllFailedTransitions = createSelector((state) => state.epics, (state) => state.profile, (state) => state.projects, (state) => state.activity, (epics2, profile2, projects2, activity2) => [
+  ...selectFailedTransitions(epics2),
+  ...selectFailedTransitions(profile2),
+  ...selectFailedTransitions(projects2),
+  ...selectFailedTransitions(activity2)
+]);
+
+// usecases/lib/components/graph/TransitionHistoryProvider.tsx
+var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var TransitionHistoryContext = import_react7.createContext({ committed: [], staged: [] });
 var TransitionHistoryProvider = ({ children, eventBus }) => {
-  const [committed, setCommitted] = import_react.useState([]);
-  const staged = useSelector(selectTransitions);
-  import_react.useEffect(() => eventBus.subscribe((action) => {
+  const [committed, setCommitted] = import_react7.useState([]);
+  const staged = useSelector(selectAllTransitions);
+  import_react7.useEffect(() => eventBus.subscribe((action) => {
     setCommitted((history) => {
       if (isTransition(action)) {
         const meta = getTransitionMeta(action);
@@ -30509,16 +29892,16 @@ var TransitionHistoryProvider = ({ children, eventBus }) => {
       return history;
     });
   }), []);
-  const value = import_react.useMemo(() => ({ staged, committed }), [staged, committed]);
-  return /* @__PURE__ */ jsx_dev_runtime.jsxDEV(TransitionHistoryContext.Provider, {
+  const value = import_react7.useMemo(() => ({ staged, committed }), [staged, committed]);
+  return /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(TransitionHistoryContext.Provider, {
     value,
     children
   }, undefined, false, undefined, this);
 };
-var useTransitionHistory = () => import_react.useContext(TransitionHistoryContext);
+var useTransitionHistory = () => import_react7.useContext(TransitionHistoryContext);
 
 // usecases/lib/components/graph/TransitionGraph.tsx
-var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
 var MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 var COLORS = {
   state: "#4ade80",
@@ -30535,16 +29918,14 @@ var START_X = 110;
 var DOT_R = 4;
 var LABEL_X = 10;
 var TRAIL_PAD = 1;
-var MAX_VISIBLE = 5;
+var MAX_VISIBLE = 8;
 var getTag = (action) => {
   if (sync.match(action))
     return "sync";
-  if (createTodo.stage.match(action) || createTodo.commit.match(action))
-    return "create";
-  if (editTodo.stage.match(action) || editTodo.commit.match(action))
-    return "update";
-  if (deleteTodo.stage.match(action) || deleteTodo.commit.match(action))
-    return "delete";
+  if (!isTransition(action))
+    return;
+  const parts = action.type.split("::");
+  return parts.length >= 3 ? parts[parts.length - 2] : parts[0];
 };
 var getDotColor = (action, branch) => {
   if (isTransition(action)) {
@@ -30558,7 +29939,7 @@ var getDotColor = (action, branch) => {
 };
 var TransitionGraph = () => {
   const { committed, staged } = useTransitionHistory();
-  const graph = import_react2.useMemo(() => {
+  const graph = import_react8.useMemo(() => {
     const committedHasOverflow = committed.length > MAX_VISIBLE - 1;
     const committedSlots = committedHasOverflow ? MAX_VISIBLE - 1 : committed.length;
     const committedOverflow = committed.length - committedSlots;
@@ -30621,15 +30002,15 @@ var TransitionGraph = () => {
       hasStaged: optCount > 0
     };
   }, [committed, staged]);
-  return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
+  return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
     className: "max-w-full overflow-x-auto",
-    children: /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("svg", {
+    children: /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("svg", {
       viewBox: `0 0 ${graph.width} 90`,
       width: graph.width,
       height: 90,
       xmlns: "http://www.w3.org/2000/svg",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+        /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("text", {
           x: LABEL_X,
           y: BRANCH_Y.state + 4,
           fill: COLORS.state,
@@ -30638,7 +30019,7 @@ var TransitionGraph = () => {
           fontWeight: 600,
           children: "state"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+        /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("text", {
           x: LABEL_X,
           y: BRANCH_Y.optimistic + 4,
           fill: COLORS.optimistic,
@@ -30647,7 +30028,7 @@ var TransitionGraph = () => {
           fontWeight: 600,
           children: "optimistic"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: `M ${START_X} ${BRANCH_Y.state} L ${graph.trailEndX} ${BRANCH_Y.state}`,
           stroke: COLORS.muted,
           strokeWidth: 1.5,
@@ -30655,7 +30036,7 @@ var TransitionGraph = () => {
           strokeDasharray: "4 3",
           fill: "none"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: `M ${START_X} ${BRANCH_Y.optimistic} L ${graph.trailEndX} ${BRANCH_Y.optimistic}`,
           stroke: COLORS.faint,
           strokeWidth: 1.5,
@@ -30663,14 +30044,14 @@ var TransitionGraph = () => {
           strokeDasharray: "4 3",
           fill: "none"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: `M ${START_X} ${BRANCH_Y.state} L ${graph.lastStateX} ${BRANCH_Y.state}`,
           stroke: COLORS.state,
           strokeWidth: 1.5,
           strokeLinecap: "round",
           fill: "none"
         }, undefined, false, undefined, this),
-        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: `M ${graph.lastStateX} ${BRANCH_Y.state} L ${graph.mergeX} ${BRANCH_Y.state}`,
           stroke: COLORS.muted,
           strokeWidth: 1.5,
@@ -30678,14 +30059,14 @@ var TransitionGraph = () => {
           strokeDasharray: "4 3",
           fill: "none"
         }, undefined, false, undefined, this),
-        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: `M ${graph.firstOptX} ${BRANCH_Y.optimistic} L ${graph.lastOptX} ${BRANCH_Y.optimistic}`,
           stroke: COLORS.optimistic,
           strokeWidth: 1.5,
           strokeLinecap: "round",
           fill: "none"
         }, undefined, false, undefined, this),
-        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("path", {
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("path", {
           d: graph.mergePath,
           stroke: COLORS.muted,
           strokeWidth: 1.5,
@@ -30693,21 +30074,21 @@ var TransitionGraph = () => {
           strokeDasharray: "4 3",
           fill: "none"
         }, undefined, false, undefined, this),
-        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("circle", {
+        graph.hasStaged && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("circle", {
           cx: graph.mergeX,
           cy: BRANCH_Y.state,
           r: DOT_R,
           fill: COLORS.optimistic
         }, undefined, false, undefined, this),
-        graph.dots.map((dot, i) => /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("g", {
+        graph.dots.map((dot, i) => /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("g", {
           children: [
-            /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("circle", {
+            /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("circle", {
               cx: dot.x,
               cy: dot.y,
               r: DOT_R,
               fill: dot.color
             }, undefined, false, undefined, this),
-            dot.tag && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("text", {
+            dot.tag && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("text", {
               x: dot.x,
               y: dot.y - 10,
               fill: COLORS.tag,
@@ -30724,49 +30105,98 @@ var TransitionGraph = () => {
   }, undefined, false, undefined, this);
 };
 
+// usecases/lib/components/todo/CodeTags.tsx
+var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
+var tag = (color) => ({ children }) => /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("code", {
+  className: `${color} font-mono text-[11px]`,
+  children
+}, undefined, false, undefined, this);
+var C = tag("text-oc-stage");
+var O = tag("text-oc-commit");
+var F = tag("text-oc-fail");
+var X = tag("text-oc-conflict");
+
 // usecases/lib/components/todo/Layout.tsx
-var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
-var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
+var tryIt = [
+  /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    children: [
+      "Add an epic, project task, or activity entry — appears instantly as ",
+      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(O, {
+        children: "optimistic"
+      }, undefined, false, undefined, this),
+      "."
+    ]
+  }, undefined, true, undefined, this),
+  /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    children: [
+      "Toggle offline, then add or edit items — they ",
+      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+        children: "fail"
+      }, undefined, false, undefined, this),
+      " with a jiggle."
+    ]
+  }, undefined, true, undefined, this),
+  /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    children: [
+      "Toggle back online — ",
+      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(F, {
+        children: "failed"
+      }, undefined, false, undefined, this),
+      " items auto-retry."
+    ]
+  }, undefined, true, undefined, this),
+  /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(jsx_dev_runtime8.Fragment, {
+    children: [
+      'Click "Sync API" — observe ',
+      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(X, {
+        children: "conflict"
+      }, undefined, false, undefined, this),
+      " detection when server state diverges."
+    ]
+  }, undefined, true, undefined, this)
+];
+var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
   className: "relative h-full",
   children: [
-    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-      className: "flex absolute inset-0 bottom-48 overflow-hidden",
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+      className: "flex absolute inset-0 bottom-36 overflow-hidden",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
           className: "w-1/2 h-full overflow-y-auto bg-surface-0",
           children
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
           className: "grad-v self-stretch"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "w-1/2 h-full overflow-y-auto p-5 bg-surface-0",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+          className: "w-1/2 h-full overflow-y-auto p-4 bg-surface-0",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h1", {
-              className: "text-lg font-semibold text-white mb-0.5",
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h1", {
+              className: "text-base font-semibold text-white mb-0.5",
               children: title
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("p", {
-              className: "text-xs text-gray-500 mb-5",
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("p", {
+              className: "text-[11px] text-gray-500 mb-4",
               children: description.subtitle
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("section", {
-              className: "mb-5",
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("section", {
+              className: "mb-3",
               children: [
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
-                  className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-2",
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h3", {
+                  className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1.5",
                   children: "How it works"
                 }, undefined, false, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("ul", {
-                  className: "text-sm text-gray-400 leading-relaxed space-y-1",
-                  children: description.howItWorks.map((item, i) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
-                    className: "flex gap-2",
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("ul", {
+                  className: "text-xs text-gray-400 leading-relaxed space-y-0.5",
+                  children: description.howItWorks.map((item, i) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                    className: "flex gap-1.5",
                     children: [
-                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                         className: "text-gray-600 select-none",
                         children: "›"
                       }, undefined, false, undefined, this),
-                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                         children: item
                       }, undefined, false, undefined, this)
                     ]
@@ -30774,23 +30204,23 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                 }, undefined, false, undefined, this)
               ]
             }, undefined, true, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("section", {
-              className: "mb-4",
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("section", {
+              className: "mb-3",
               children: [
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
-                  className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-1.5",
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h3", {
+                  className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1",
                   children: "Try it"
                 }, undefined, false, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("ul", {
-                  className: "text-xs text-gray-500 leading-relaxed space-y-0.5",
-                  children: description.tryIt.map((item, i) => /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("ul", {
+                  className: "text-[11px] text-gray-500 leading-relaxed space-y-0.5",
+                  children: tryIt.map((item, i) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
                     className: "flex gap-1.5 items-start",
                     children: [
-                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                         className: "text-gray-700 select-none",
                         children: "›"
                       }, undefined, false, undefined, this),
-                      /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                      /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                         children: item
                       }, undefined, false, undefined, this)
                     ]
@@ -30798,47 +30228,113 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
                 }, undefined, false, undefined, this)
               ]
             }, undefined, true, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("ul", {
-              className: "text-[10px] font-mono text-gray-600 space-y-0.5",
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+              className: "flex gap-6",
               children: [
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
-                  className: "flex items-center gap-1",
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("section", {
                   children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-oc-commit/80",
-                      children: "optimistic"
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h3", {
+                      className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1",
+                      children: "State handlers"
                     }, undefined, false, undefined, this),
-                    " pending"
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("ul", {
+                      className: "text-[9px] font-mono text-gray-600 space-y-px",
+                      children: [
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-fuchsia-400",
+                              children: "singularState"
+                            }, undefined, false, undefined, this),
+                            " profile"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-cyan-400",
+                              children: "recordState"
+                            }, undefined, false, undefined, this),
+                            " epics"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-amber-400",
+                              children: "nestedRecordState"
+                            }, undefined, false, undefined, this),
+                            " projects"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-green-400",
+                              children: "listState"
+                            }, undefined, false, undefined, this),
+                            " activity"
+                          ]
+                        }, undefined, true, undefined, this)
+                      ]
+                    }, undefined, true, undefined, this)
                   ]
                 }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
-                  className: "flex items-center gap-1",
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("section", {
                   children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-oc-fail/80",
-                      children: "fail"
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h3", {
+                      className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600 mb-1",
+                      children: "Legend"
                     }, undefined, false, undefined, this),
-                    " error"
-                  ]
-                }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
-                  className: "flex items-center gap-1",
-                  children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-oc-stash/80",
-                      children: "stash"
-                    }, undefined, false, undefined, this),
-                    " reverted"
-                  ]
-                }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("li", {
-                  className: "flex items-center gap-1",
-                  children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("code", {
-                      className: "text-oc-conflict/80",
-                      children: "conflict"
-                    }, undefined, false, undefined, this),
-                    " diverged"
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("ul", {
+                      className: "text-[9px] font-mono text-gray-600 space-y-px",
+                      children: [
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-oc-commit/80",
+                              children: "optimistic"
+                            }, undefined, false, undefined, this),
+                            " pending"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-oc-fail/80",
+                              children: "fail"
+                            }, undefined, false, undefined, this),
+                            " error"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-oc-stash/80",
+                              children: "stash"
+                            }, undefined, false, undefined, this),
+                            " reverted"
+                          ]
+                        }, undefined, true, undefined, this),
+                        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("li", {
+                          className: "flex items-center gap-1",
+                          children: [
+                            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
+                              className: "text-oc-conflict/80",
+                              children: "conflict"
+                            }, undefined, false, undefined, this),
+                            " diverged"
+                          ]
+                        }, undefined, true, undefined, this)
+                      ]
+                    }, undefined, true, undefined, this)
                   ]
                 }, undefined, true, undefined, this)
               ]
@@ -30847,49 +30343,49 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
         }, undefined, true, undefined, this)
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-      className: "absolute bottom-0 inset-x-0 h-48 bg-surface-0 flex flex-col",
+    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+      className: "absolute bottom-0 inset-x-0 h-36 bg-surface-0 flex flex-col",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
           className: "grad-h"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
-          className: "flex items-center justify-between px-5 pt-2.5 pb-1",
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+          className: "flex items-center justify-between px-5 pt-2 pb-0.5",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("h3", {
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("h3", {
               className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600",
               children: "Transitions"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+            /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
               className: "flex gap-3 text-[10px] font-mono",
               children: [
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                   className: "flex items-center gap-1",
                   style: { color: COLORS.state },
                   children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                       className: "legend-dot",
                       style: { background: COLORS.state }
                     }, undefined, false, undefined, this),
                     "state"
                   ]
                 }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                   className: "flex items-center gap-1",
                   style: { color: COLORS.optimistic },
                   children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                       className: "legend-dot",
                       style: { background: COLORS.optimistic }
                     }, undefined, false, undefined, this),
                     "optimistic"
                   ]
                 }, undefined, true, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                   className: "flex items-center gap-1",
                   style: { color: COLORS.failed },
                   children: [
-                    /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("span", {
+                    /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
                       className: "legend-dot",
                       style: { background: COLORS.failed }
                     }, undefined, false, undefined, this),
@@ -30900,9 +30396,9 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
             }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime3.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
           className: "px-5 flex-1 flex items-center",
-          children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
+          children: /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(TransitionGraph, {}, undefined, false, undefined, this)
         }, undefined, false, undefined, this)
       ]
     }, undefined, true, undefined, this)
@@ -30910,178 +30406,22 @@ var Layout = ({ children, title, description }) => /* @__PURE__ */ jsx_dev_runti
 }, undefined, true, undefined, this);
 
 // usecases/lib/components/todo/TodoApp.tsx
-var import_react6 = __toESM(require_react(), 1);
-
-// usecases/lib/components/mocks/MockApiProvider.tsx
-var import_react3 = __toESM(require_react(), 1);
-var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
-var MockApiContext = import_react3.createContext(null);
-var MockApiProvider = ({ children }) => {
-  const [state, setState] = import_react3.useState({ online: getMockApiOnline(), timeout: getMockApiTimeout() });
-  import_react3.useEffect(() => {
-    setMockApiOnline(state.online);
-    setMockApiTimeout(state.timeout);
-  }, [state]);
-  return /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(MockApiContext.Provider, {
-    value: import_react3.useMemo(() => ({
-      ...state,
-      setResponseTime: (timeout) => setState((prev) => ({ ...prev, timeout })),
-      setStore: (store) => setState((prev) => ({ ...prev, store })),
-      sync: () => state.store?.dispatch(sync()),
-      toggleOnline: () => setState((prev) => ({ ...prev, online: !prev.online }))
-    }), [state]),
-    children
-  }, undefined, false, undefined, this);
-};
-var useMockApi = () => {
-  const ctx = import_react3.useContext(MockApiContext);
-  if (!ctx)
-    throw new Error;
-  return ctx;
-};
-
-// node_modules/clsx/dist/clsx.mjs
-function r(e) {
-  var t, f, n = "";
-  if (typeof e == "string" || typeof e == "number")
-    n += e;
-  else if (typeof e == "object")
-    if (Array.isArray(e)) {
-      var o = e.length;
-      for (t = 0;t < o; t++)
-        e[t] && (f = r(e[t])) && (n && (n += " "), n += f);
-    } else
-      for (f in e)
-        e[f] && (n && (n += " "), n += f);
-  return n;
-}
-function clsx() {
-  for (var e, t, f = 0, n = "", o = arguments.length;f < o; f++)
-    (e = arguments[f]) && (t = r(e)) && (n && (n += " "), n += t);
-  return n;
-}
+var import_react11 = __toESM(require_react(), 1);
 
 // usecases/lib/components/todo/TodoItem.tsx
-var import_react5 = __toESM(require_react(), 1);
-var import_cloneDeep = __toESM(require_cloneDeep(), 1);
+var import_react10 = __toESM(require_react(), 1);
 
-// usecases/lib/components/todo/Icons.tsx
-var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
-var Logo = ({ className }) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
-  viewBox: "0 0 24 14",
-  className,
-  children: [
-    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("defs", {
-      children: /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("linearGradient", {
-        id: "logo-grad",
-        x1: "0%",
-        y1: "0%",
-        x2: "100%",
-        y2: "0%",
-        children: [
-          /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("stop", {
-            offset: "0%",
-            stopColor: "#67e8f9"
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("stop", {
-            offset: "100%",
-            stopColor: "#c4b5fd"
-          }, undefined, false, undefined, this)
-        ]
-      }, undefined, true, undefined, this)
-    }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("text", {
-      x: "0",
-      y: "12",
-      fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
-      fontSize: "13",
-      fill: "url(#logo-grad)",
-      children: "λς"
-    }, undefined, false, undefined, this)
-  ]
-}, undefined, true, undefined, this);
-var STARS = [
-  { x: "8%", y: "15%", size: 10, color: "#38bdf8", opacity: 0.45 },
-  { x: "88%", y: "20%", size: 14, color: "#38bdf8", opacity: 0.5 },
-  { x: "92%", y: "55%", size: 8, color: "#8b5cf6", opacity: 0.3 },
-  { x: "5%", y: "70%", size: 6, color: "#d946ef", opacity: 0.2 },
-  { x: "85%", y: "80%", size: 10, color: "#06b6d4", opacity: 0.28 },
-  { x: "15%", y: "90%", size: 5, color: "#c4b5fd", opacity: 0.18 },
-  { x: "95%", y: "90%", size: 7, color: "#f43f5e", opacity: 0.16 },
-  { x: "50%", y: "5%", size: 5, color: "#67e8f9", opacity: 0.18 }
-];
-var Stars = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(jsx_dev_runtime5.Fragment, {
-  children: STARS.map(({ x, y, size, color, opacity }, i) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("span", {
-    className: "absolute pointer-events-none select-none",
-    style: { left: x, top: y, fontSize: size, color, opacity, fontFamily: "monospace" },
-    children: "✦"
-  }, i, false, undefined, this))
-}, undefined, false, undefined, this);
-var Spinner = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
-  className: "w-4 h-4",
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 40 40",
-  fill: "currentColor",
-  children: [
-    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("path", {
-      opacity: "0.2",
-      fill: "currentColor",
-      d: `M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946
-    s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634
-    c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z`
-    }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("path", {
-      fill: "currentColor",
-      d: `M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0
-    C22.32,8.481,24.301,9.057,26.013,10.047z`,
-      children: /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("animateTransform", {
-        attributeType: "xml",
-        attributeName: "transform",
-        type: "rotate",
-        from: "0 20 20",
-        to: "360 20 20",
-        dur: "0.5s",
-        repeatCount: "indefinite"
-      }, undefined, false, undefined, this)
-    }, undefined, false, undefined, this)
-  ]
-}, undefined, true, undefined, this);
-var CheckMark = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
-  className: "w-4 h-4",
-  xmlns: "http://www.w3.org/2000/svg",
-  viewBox: "0 0 20 20",
-  fill: "currentColor",
-  children: /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("path", {
-    fill: "currentColor",
-    fillRule: "evenodd",
-    d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z",
-    clipRule: "evenodd"
-  }, undefined, false, undefined, this)
-}, undefined, false, undefined, this);
-var Cross = () => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("svg", {
-  className: "w-4 h-4",
-  viewBox: "0 0 93.934 93.934",
-  xmlns: "http://www.w3.org/2000/svg",
-  children: /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("path", {
-    fill: "currentColor",
-    d: `M80.178,13.757c-18.341-18.342-48.08-18.342-66.421,0c-18.342,18.341-18.342,48.08,0,66.421
-		c18.341,18.342,48.08,18.342,66.421,0C98.52,61.836,98.52,32.098,80.178,13.757z M71.576,61.737l-9.838,9.838l-14.771-14.77
-		l-14.771,14.77l-9.838-9.838l14.77-14.771l-14.77-14.771l9.838-9.838l14.771,14.771l14.771-14.771l9.838,9.838l-14.77,14.772
-		L71.576,61.737z`
-  }, undefined, false, undefined, this)
-}, undefined, false, undefined, this);
-
-// usecases/lib/store/hooks.ts
-var import_react4 = __toESM(require_react(), 1);
-var useTodoState = (todo) => {
-  const state = useSelector(selectOptimisticTodoState(todo.id));
-  const [stashed, setStashed] = import_react4.useState(false);
-  const revision = import_react4.useRef(todo.revision);
-  import_react4.useEffect(() => {
-    setStashed(revision.current > todo.revision);
-    revision.current = todo.revision;
-  }, [todo.revision]);
-  return import_react4.useMemo(() => ({
+// usecases/lib/store/epics/hooks.ts
+var import_react9 = __toESM(require_react(), 1);
+var useEpicState = (epic) => {
+  const state = useSelector(selectOptimisticEpicState(epic.id));
+  const [stashed, setStashed] = import_react9.useState(false);
+  const revision = import_react9.useRef(epic.revision);
+  import_react9.useEffect(() => {
+    setStashed(revision.current > epic.revision);
+    revision.current = epic.revision;
+  }, [epic.revision]);
+  return import_react9.useMemo(() => ({
     conflict: state.conflict,
     failed: state.failed,
     failedAction: state.retry,
@@ -31091,20 +30431,20 @@ var useTodoState = (todo) => {
 };
 
 // usecases/lib/components/todo/TodoItem.tsx
-var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
-var TodoConflict = ({ id }) => {
-  const todo = useSelector(selectTodo(id));
-  const Tag = todo.done ? "s" : "em";
-  return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
+var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
+var EpicConflict = ({ id }) => {
+  const epic = useSelector(selectEpic(id));
+  const Tag = epic.done ? "s" : "em";
+  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
     className: "text-[9px] font-mono text-oc-conflict/60 leading-tight",
     children: [
-      /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
         className: "text-oc-conflict/80",
         children: "conflict"
       }, undefined, false, undefined, this),
       ' "',
-      /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Tag, {
-        children: todo.value
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Tag, {
+        children: epic.value
       }, undefined, false, undefined, this),
       '"'
     ]
@@ -31112,66 +30452,59 @@ var TodoConflict = ({ id }) => {
 };
 var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
   const id = `todo-${todo.id}`;
-  const { loading, stashed, failed, conflict, failedAction } = useTodoState(todo);
-  const [editable, setEditable] = import_react5.useState(false);
+  const { loading, stashed, failed, conflict, failedAction } = useEpicState(todo);
+  const [editable, setEditable] = import_react10.useState(false);
   const error = failed || conflict;
   const handleMutation = (mutation) => {
     if (loading)
       return;
     if (failedAction) {
-      if (createTodo.stage.match(failedAction)) {
-        const create = import_cloneDeep.default(failedAction);
-        create.payload.item = { ...create.payload.item, ...mutation };
-        onRetry(create);
-      }
-      if (editTodo.stage.match(failedAction)) {
-        const edit = import_cloneDeep.default(failedAction);
-        edit.payload.item = { ...edit.payload.item, ...mutation };
-        onRetry(edit);
-      }
+      const { payload } = failedAction;
+      const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, ...mutation } } };
+      onRetry(retry);
     } else
       onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
   };
-  const icon = import_react5.useMemo(() => {
+  const icon = import_react10.useMemo(() => {
     if (loading)
-      return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Spinner, {}, undefined, false, undefined, this);
+      return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Spinner, {}, undefined, false, undefined, this);
     if (failed)
-      return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+      return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
         className: "text-xs",
         children: "!"
       }, undefined, false, undefined, this);
-    return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(CheckMark, {}, undefined, false, undefined, this);
+    return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(CheckMark, {}, undefined, false, undefined, this);
   }, [loading, failed]);
-  return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
-    className: "flex w-full justify-between items-center px-2 pt-1",
+  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
+    className: "flex w-full justify-between items-center px-2 pt-0.5",
     children: [
-      /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("input", {
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("input", {
         className: "hidden",
         type: "checkbox",
         id,
         checked: todo.done,
         readOnly: true
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("label", {
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("label", {
         htmlFor: id,
-        className: clsx("todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-surface-3", loading && "loading pointer-events-none"),
+        className: clsx("todo-item flex flex-row grow items-center max-w-full h-7 px-1.5 rounded cursor-pointer hover:bg-surface-3", loading && "loading pointer-events-none"),
         children: [
-          /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
             onClick: () => handleMutation({ done: !todo.done }),
-            className: clsx("todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full", failed && !conflict && "!border-oc-fail/80 text-oc-fail/80", conflict && "!border-oc-conflict/80 text-oc-conflict/80", todo.done && "!text-white !bg-oc-stage/90 !border-oc-stage/90", todo.done && failed && !conflict && "!bg-oc-fail/80", todo.done && conflict && "!bg-oc-conflict/80", loading && "!border-gray-600 !text-gray-500 !bg-transparent"),
+            className: clsx("todo--icon flex items-center justify-center w-4 h-4 border-2 border-gray-600 text-transparent rounded-full", failed && !conflict && "!border-oc-fail/80 text-oc-fail/80", conflict && "!border-oc-conflict/80 text-oc-conflict/80", todo.done && "!text-white !bg-oc-stage/90 !border-oc-stage/90", todo.done && failed && !conflict && "!bg-oc-fail/80", todo.done && conflict && "!bg-oc-conflict/80", loading && "!border-gray-600 !text-gray-500 !bg-transparent"),
             children: icon
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
-            className: "flex-1 mx-4 flex items-center gap-2",
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
+            className: "flex-1 mx-3 flex items-center gap-2",
             children: [
-              /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
                 className: "flex-1 flex flex-col min-w-0",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("div", {
+                  /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
                     className: "flex items-center",
-                    children: editable ? /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("input", {
+                    children: editable ? /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("input", {
                       type: "text",
-                      className: "text-sm flex-1 text-gray-200 bg-transparent focus:outline-none",
+                      className: "text-xs flex-1 text-gray-200 bg-transparent focus:outline-none",
                       defaultValue: todo.value,
                       autoFocus: true,
                       onBlur: ({ currentTarget }) => {
@@ -31187,33 +30520,33 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
                           setEditable(false);
                         }
                       }
-                    }, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                    }, undefined, false, undefined, this) : /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
                       onClick: () => setEditable(true),
-                      className: clsx("todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300", todo.done && "line-through !text-gray-600", loading && "!text-oc-commit/60", failed && !conflict && "!text-oc-fail/80 jiggle", conflict && "!text-oc-conflict/80 jiggle", stashed && !failed && "!text-oc-stash/80 jiggle"),
+                      className: clsx("todo--value hoverable flex-1 text-xs truncate text-nowrap text-gray-300", todo.done && "line-through !text-gray-600", loading && "!text-oc-commit/60", failed && !conflict && "!text-oc-fail/80 jiggle", conflict && "!text-oc-conflict/80 jiggle", stashed && !failed && "!text-oc-stash/80 jiggle"),
                       children: todo.value
                     }, undefined, false, undefined, this)
                   }, undefined, false, undefined, this),
-                  conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(TodoConflict, {
+                  conflict && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(EpicConflict, {
                     id: todo.id
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("code", {
-                className: "flex-shrink-0 self-center text-[8px] font-mono leading-none text-left",
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("code", {
+                className: "flex-shrink-0 self-center text-[7px] font-mono leading-none text-left",
                 children: [
-                  loading && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                  loading && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
                     className: "text-oc-commit/60",
                     children: "optimistic"
                   }, undefined, false, undefined, this),
-                  failed && !conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                  failed && !conflict && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
                     className: "text-oc-fail/80",
                     children: "fail"
                   }, undefined, false, undefined, this),
-                  conflict && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                  conflict && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
                     className: "text-oc-conflict/80",
                     children: "conflict"
                   }, undefined, false, undefined, this),
-                  stashed && /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("span", {
+                  stashed && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("span", {
                     className: "text-oc-stash/80",
                     children: "stash"
                   }, undefined, false, undefined, this)
@@ -31221,10 +30554,10 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
               }, undefined, true, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime6.jsxDEV("button", {
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("button", {
             className: "self-center font-light text-xs text-gray-600 hover:text-oc-fail transition-colors",
             onClick: () => onDelete(todo),
-            children: /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Cross, {}, undefined, false, undefined, this)
+            children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Cross, {}, undefined, false, undefined, this)
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this)
@@ -31233,204 +30566,340 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
 };
 
 // usecases/lib/components/todo/TodoApp.tsx
-var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
-var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
-  const todos2 = useSelector(selectOptimisticTodos);
-  const failedTransitions = useSelector(selectFailedTodos);
-  const mockApi = useMockApi();
-  const [value, setValue] = import_react6.useState("");
-  const handleAddTodo = (value2) => {
+var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
+var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo, onRetry }) => {
+  const epics2 = useSelector(selectOptimisticEpics);
+  const [value, setValue] = import_react11.useState("");
+  const handleAdd = (value2) => {
     const sanitized = value2.trim();
     if (sanitized) {
       onCreateTodo({ id: generateId(), value: value2, done: false, revision: 0, createdAt: Date.now() });
       setValue("");
     }
   };
-  const handleRetry = (action) => {
-    if (createTodo.stage.match(action))
-      return onCreateTodo(action.payload.item);
-    if (editTodo.stage.match(action))
-      return onEditTodo(action.payload.item);
-  };
-  import_react6.useEffect(() => {
-    if (mockApi.online) {
-      failedTransitions.forEach((action) => {
-        if (createTodo.stage.match(action))
-          return onCreateTodo(action.payload.item);
-        if (editTodo.stage.match(action))
-          return onEditTodo(action.payload.item);
-      });
-    }
-  }, [mockApi.online, failedTransitions]);
-  return /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(jsx_dev_runtime7.Fragment, {
+  return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+    className: "pb-3",
     children: [
-      /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("div", {
-        className: "flex items-center gap-2 px-3 py-2 border-b border-border-subtle",
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+        className: "flex items-center gap-2 px-3 pt-3 pb-1",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("svg", {
-            className: "w-3.5 h-3.5 text-gray-600 flex-shrink-0",
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("h3", {
+            className: "text-[9px] font-semibold uppercase tracking-widest text-gray-600",
+            children: "Epics"
+          }, undefined, false, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
+            className: "text-[8px] font-mono px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-400",
+            children: "recordState"
+          }, undefined, false, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
+        className: "flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle",
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("svg", {
+            className: "w-3 h-3 text-gray-600 flex-shrink-0",
             xmlns: "http://www.w3.org/2000/svg",
             fill: "none",
             viewBox: "0 0 24 24",
             stroke: "currentColor",
-            children: /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("path", {
+            children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("path", {
               strokeLinecap: "round",
               strokeLinejoin: "round",
               strokeWidth: "2",
               d: "M12 6v6m0 0v6m0-6h6m-6 0H6"
             }, undefined, false, undefined, this)
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("input", {
+          /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("input", {
             value,
             onChange: (e) => setValue(e.target.value),
-            onKeyUp: (e) => e.key === "Enter" && handleAddTodo(value),
-            className: "flex-grow h-7 text-sm text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic",
+            onKeyUp: (e) => e.key === "Enter" && handleAdd(value),
+            className: "flex-grow h-6 text-xs text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic",
             type: "text",
-            placeholder: "Add a todo..."
+            placeholder: "Add an epic..."
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      todos2.map((todo) => /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(TodoItem, {
+      epics2.map((todo) => /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TodoItem, {
         todo,
         onEdit: onEditTodo,
-        onRetry: handleRetry,
+        onRetry,
         onDelete: onDeleteTodo
       }, todo.id, false, undefined, this))
     ]
   }, undefined, true, undefined, this);
 };
 
-// usecases/lib/components/todo/CodeTags.tsx
-var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
-var tag = (color) => ({ children }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("code", {
-  className: `${color} font-mono text-[11px]`,
-  children
-}, undefined, false, undefined, this);
-var C = tag("text-oc-stage");
-var O = tag("text-oc-commit");
-var F = tag("text-oc-fail");
-var X = tag("text-oc-conflict");
+// usecases/lib/hooks/useAutoRetry.ts
+var import_react13 = __toESM(require_react(), 1);
+
+// usecases/lib/components/mocks/MockApiProvider.tsx
+var import_react12 = __toESM(require_react(), 1);
+var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
+var MockApiContext = import_react12.createContext(null);
+var MockApiProvider = ({ children }) => {
+  const [state, setState] = import_react12.useState({ online: getMockApiOnline(), timeout: getMockApiTimeout() });
+  import_react12.useEffect(() => {
+    setMockApiOnline(state.online);
+    setMockApiTimeout(state.timeout);
+  }, [state]);
+  return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV(MockApiContext.Provider, {
+    value: import_react12.useMemo(() => ({
+      ...state,
+      setResponseTime: (timeout) => setState((prev) => ({ ...prev, timeout })),
+      setStore: (store) => setState((prev) => ({ ...prev, store })),
+      sync: () => state.store?.dispatch(sync()),
+      toggleOnline: () => setState((prev) => ({ ...prev, online: !prev.online }))
+    }), [state]),
+    children
+  }, undefined, false, undefined, this);
+};
+var useMockApi = () => {
+  const ctx = import_react12.useContext(MockApiContext);
+  if (!ctx)
+    throw new Error;
+  return ctx;
+};
+
+// usecases/lib/hooks/useAutoRetry.ts
+var useAutoRetry = (retry) => {
+  const { online } = useMockApi();
+  const failedTransitions = useSelector(selectAllFailedTransitions);
+  const retryRef = import_react13.useRef(retry);
+  retryRef.current = retry;
+  import_react13.useEffect(() => {
+    if (online)
+      failedTransitions.forEach((a) => retryRef.current(a));
+  }, [online, failedTransitions]);
+};
 
 // usecases/basic/App.tsx
-var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
 var description = {
-  subtitle: "Component-level async — the simplest optimistic pattern.",
+  subtitle: "Component-level async — full transition lifecycle managed in the component.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
         "Component dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
-        ", then awaits the API call."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: [
-        "On success: ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
+        ", awaits the API, then ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
           children: "amend"
         }, undefined, false, undefined, this),
-        " (server ID) → ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(C, {
+        "s / ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(C, {
           children: "commit"
         }, undefined, false, undefined, this),
-        ". On failure: ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
+        "s or ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
+        "s directly."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+      children: [
+        "The full lifecycle (",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " → API → ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
+          children: "amend"
+        }, undefined, false, undefined, this),
+        " → ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(C, {
+          children: "commit"
+        }, undefined, false, undefined, this),
+        " / ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
+          children: "fail"
+        }, undefined, false, undefined, this),
+        ") lives in the handler function — maximum visibility, minimum indirection."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+      children: [
+        "Optimistic state is computed at the selector level via ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "selectOptimistic"
+        }, undefined, false, undefined, this),
+        " — no state copies, no checkpoints."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+      children: [
+        "Retry routes the failed stage action back through the same handler — pattern matching on ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "action.match()"
+        }, undefined, false, undefined, this),
         "."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: "Optimistic state is computed at the selector level — no state copies."
-    }, undefined, false, undefined, this)
-  ],
-  tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: [
-        "Add a todo online — appears instantly (",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(O, {
-          children: "opt"
-        }, undefined, false, undefined, this),
-        "), then ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(C, {
-          children: "commits"
-        }, undefined, false, undefined, this),
-        "."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: [
-        "Toggle offline, add a todo — it ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
-          children: "fails"
-        }, undefined, false, undefined, this),
-        " with a jiggle."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: [
-        "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(F, {
-          children: "failed"
-        }, undefined, false, undefined, this),
-        " todos auto-retry."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
-      children: [
-        'Click "Sync API" — observe ',
-        /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(X, {
-          children: "conflict"
-        }, undefined, false, undefined, this),
-        " detection."
       ]
     }, undefined, true, undefined, this)
   ]
 };
 var App = () => {
   const dispatch = useDispatch();
-  const handleCreate = async (todo) => {
-    const transitionId = todo.id;
+  const handleCreateEpic = async (epic) => {
+    const transitionId = epic.id;
     try {
-      dispatch(createTodo.stage(todo));
+      dispatch(createEpic.stage(epic));
       await simulateAPIRequest();
-      dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
-      dispatch(createTodo.commit(transitionId));
+      dispatch(createEpic.amend(transitionId, { ...epic, id: generateId() }));
+      dispatch(createEpic.commit(transitionId));
     } catch (error) {
-      dispatch(createTodo.fail(transitionId, error));
+      dispatch(createEpic.fail(transitionId, error));
     }
   };
-  const handleEdit = async (todo) => {
-    const transitionId = todo.id;
+  const handleEditEpic = async (epic) => {
+    const transitionId = epic.id;
     try {
-      dispatch(editTodo.stage(todo.id, todo));
+      dispatch(editEpic.stage(epic.id, epic));
       await simulateAPIRequest();
-      dispatch(editTodo.commit(transitionId));
+      dispatch(editEpic.commit(transitionId));
     } catch (error) {
-      dispatch(editTodo.fail(transitionId, error));
+      dispatch(editEpic.fail(transitionId, error));
     }
   };
-  const handleDelete = async (todo) => {
-    const transitionId = todo.id;
+  const handleDeleteEpic = async (epic) => {
+    const transitionId = epic.id;
     try {
-      dispatch(deleteTodo.stage(todo.id));
+      dispatch(deleteEpic.stage(epic.id));
       await simulateAPIRequest();
-      dispatch(deleteTodo.commit(transitionId));
+      dispatch(deleteEpic.commit(transitionId));
     } catch (error) {
-      dispatch(deleteTodo.stash(transitionId));
+      dispatch(deleteEpic.stash(transitionId));
     }
   };
-  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Layout, {
+  const handleUpdateProfile = async (update) => {
+    try {
+      dispatch(updateProfile.stage(update));
+      await simulateAPIRequest();
+      dispatch(updateProfile.commit("profile"));
+    } catch (error) {
+      dispatch(updateProfile.fail("profile", error));
+    }
+  };
+  const handleCreateProjectTodo = async (todo) => {
+    const transitionId = `${todo.projectId}/${todo.id}`;
+    try {
+      dispatch(createProjectTodo.stage(todo));
+      await simulateAPIRequest();
+      dispatch(createProjectTodo.amend(transitionId, { ...todo, id: generateId() }));
+      dispatch(createProjectTodo.commit(transitionId));
+    } catch (error) {
+      dispatch(createProjectTodo.fail(transitionId, error));
+    }
+  };
+  const handleEditProjectTodo = async (todo) => {
+    const transitionId = `${todo.projectId}/${todo.id}`;
+    try {
+      dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+      await simulateAPIRequest();
+      dispatch(editProjectTodo.commit(transitionId));
+    } catch (error) {
+      dispatch(editProjectTodo.fail(transitionId, error));
+    }
+  };
+  const handleDeleteProjectTodo = async (todo) => {
+    const transitionId = `${todo.projectId}/${todo.id}`;
+    try {
+      dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+      await simulateAPIRequest();
+      dispatch(deleteProjectTodo.commit(transitionId));
+    } catch (error) {
+      dispatch(deleteProjectTodo.stash(transitionId));
+    }
+  };
+  const handleLogActivity = async (entry) => {
+    const transitionId = entry.id;
+    try {
+      dispatch(logActivity.stage(entry));
+      await simulateAPIRequest();
+      dispatch(logActivity.amend(transitionId, { ...entry, id: generateId() }));
+      dispatch(logActivity.commit(transitionId));
+    } catch (error) {
+      dispatch(logActivity.fail(transitionId, error));
+    }
+  };
+  const handleEditActivity = async (entry) => {
+    const transitionId = entry.id;
+    try {
+      dispatch(editActivity.stage(entry.id, entry));
+      await simulateAPIRequest();
+      dispatch(editActivity.commit(transitionId));
+    } catch (error) {
+      dispatch(editActivity.fail(transitionId, error));
+    }
+  };
+  const handleDismissActivity = async (entry) => {
+    const transitionId = entry.id;
+    try {
+      dispatch(dismissActivity.stage(entry.id));
+      await simulateAPIRequest();
+      dispatch(dismissActivity.commit(transitionId));
+    } catch (error) {
+      dispatch(dismissActivity.stash(transitionId));
+    }
+  };
+  const retryTransition = (action) => {
+    if (createEpic.stage.match(action))
+      return handleCreateEpic(action.payload.item);
+    if (editEpic.stage.match(action))
+      return handleEditEpic(action.payload.item);
+    if (updateProfile.stage.match(action))
+      return handleUpdateProfile(action.payload.item);
+    if (createProjectTodo.stage.match(action))
+      return handleCreateProjectTodo(action.payload.item);
+    if (editProjectTodo.stage.match(action))
+      return handleEditProjectTodo(action.payload.item);
+    if (logActivity.stage.match(action))
+      return handleLogActivity(action.payload.item);
+    if (editActivity.stage.match(action))
+      return handleEditActivity(action.payload.item);
+  };
+  useAutoRetry(retryTransition);
+  return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
     title: "Basic",
     description,
-    children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TodoApp, {
-      onCreateTodo: handleCreate,
-      onEditTodo: handleEdit,
-      onDeleteTodo: handleDelete
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(ProfileCard, {
+        onUpdate: handleUpdateProfile
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(TodoApp, {
+        onCreateTodo: handleCreateEpic,
+        onEditTodo: handleEditEpic,
+        onDeleteTodo: handleDeleteEpic,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(ProjectBoard, {
+        onCreateTodo: handleCreateProjectTodo,
+        onEditTodo: handleEditProjectTodo,
+        onDeleteTodo: handleDeleteProjectTodo
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(ActivityFeed, {
+        onLogActivity: handleLogActivity,
+        onEditActivity: handleEditActivity,
+        onDismissActivity: handleDismissActivity,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
+        className: "h-4"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
 };
 
 // usecases/lib/store/middleware.ts
@@ -31465,84 +30934,84 @@ var createOptimistronMiddlware = () => {
 var createDebugStore = (middleware) => {
   const [debug, eventBus] = createOptimistronMiddlware();
   const store = configureStore({
-    reducer: { todos },
+    reducer: { epics, profile, projects, activity },
     middleware: (mw) => mw({ thunk: true }).concat([...middleware ? [middleware] : [], debug])
   });
   return { store, eventBus };
 };
 
 // usecases/basic/index.tsx
-var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
 var { store, eventBus } = createDebugStore();
 var Usecase = () => {
   const mockApi = useMockApi();
-  import_react7.useEffect(() => mockApi.setStore(store), []);
-  return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Provider_default, {
+  import_react14.useEffect(() => mockApi.setStore(store), []);
+  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Provider_default, {
     store,
-    children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TransitionHistoryProvider, {
       eventBus,
-      children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(App, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(App, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var basic_default = Usecase;
 
 // usecases/lib/components/mocks/MockApiControls.tsx
-var import_react8 = __toESM(require_react(), 1);
-var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
+var import_react15 = __toESM(require_react(), 1);
+var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
 var MockApiControls = () => {
   const mockApi = useMockApi();
-  const [syncing, setSyncing] = import_react8.useState(false);
-  const handleSync = import_react8.useCallback(() => {
+  const [syncing, setSyncing] = import_react15.useState(false);
+  const handleSync = import_react15.useCallback(() => {
     if (syncing)
       return;
     setSyncing(true);
     mockApi.sync();
     setTimeout(() => setSyncing(false), mockApi.timeout);
   }, [syncing, mockApi]);
-  return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
+  return /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("div", {
     children: [
-      /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("h3", {
+      /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("h3", {
         className: "text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-2.5",
         children: "Mock API"
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
+      /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("div", {
         className: "space-y-2.5",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("label", {
+          /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("label", {
             className: "flex items-center justify-between cursor-pointer",
             children: [
-              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
+              /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("span", {
                 className: "text-xs text-gray-400",
                 children: "Online"
               }, undefined, false, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
+              /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("div", {
                 className: "relative",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("input", {
+                  /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("input", {
                     type: "checkbox",
                     className: "sr-only peer",
                     checked: mockApi.online,
                     onChange: mockApi.toggleOnline
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
+                  /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("div", {
                     className: "w-9 h-5 rounded-full bg-surface-3 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white peer-checked:after:translate-x-full after:rounded-full after:h-4 after:w-4 after:transition-all"
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("label", {
+          /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("label", {
             className: "flex items-center justify-between",
             children: [
-              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
+              /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("span", {
                 className: "text-xs text-gray-400",
                 children: "Latency"
               }, undefined, false, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("div", {
+              /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("div", {
                 className: "flex items-center gap-1",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("input", {
+                  /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("input", {
                     type: "number",
                     min: 0,
                     max: 1e4,
@@ -31551,7 +31020,7 @@ var MockApiControls = () => {
                     onChange: (e) => mockApi.setResponseTime(parseInt(e.target.value, 10)),
                     className: "w-16 text-right text-xs font-mono text-gray-300 bg-surface-3 border border-border-subtle rounded px-1.5 py-0.5 focus:outline-none focus:border-gray-500"
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("span", {
                     className: "text-[10px] text-gray-600",
                     children: "ms"
                   }, undefined, false, undefined, this)
@@ -31559,7 +31028,7 @@ var MockApiControls = () => {
               }, undefined, true, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("button", {
+          /* @__PURE__ */ jsx_dev_runtime14.jsxDEV("button", {
             onClick: handleSync,
             disabled: syncing,
             className: "w-full text-xs text-gray-400 bg-surface-3 hover:bg-surface-2 disabled:opacity-50 disabled:pointer-events-none border border-border-subtle rounded py-1.5 transition-colors",
@@ -33041,88 +32510,111 @@ function sagaMiddlewareFactory(_temp) {
   return sagaMiddleware;
 }
 // usecases/sagas/index.tsx
-var import_react9 = __toESM(require_react(), 1);
+var import_react16 = __toESM(require_react(), 1);
 
 // usecases/sagas/App.tsx
-var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
 var description2 = {
   subtitle: "Redux sagas — the most decoupled approach.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
         "Component only dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
-        " — that's it."
+        " — that's it. No async, no lifecycle awareness."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
-        "Saga observes ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
+        "Saga watcher observes ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
-        " and drives the full transition lifecycle."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
-      children: "Max separation: UI fires intent, saga handles orchestration."
-    }, undefined, false, undefined, this)
-  ],
-  tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
-      children: [
-        "Add a todo — component dispatches a single ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
-          children: "stage"
+        " via ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "takeEvery"
         }, undefined, false, undefined, this),
-        " action."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
-      children: [
-        "Toggle offline, add a todo — saga catches the ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
-          children: "failure"
+        " and orchestrates the full lifecycle to ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(C, {
+          children: "commit"
+        }, undefined, false, undefined, this),
+        " or ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(F, {
+          children: "fail"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
+      children: "Maximum separation: UI fires intent, saga handles all orchestration — components are pure dispatch."
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
-        "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
-          children: "failed"
+        "Retry is a one-liner: ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "dispatch(action)"
         }, undefined, false, undefined, this),
-        " todos auto-retry via saga."
+        " — the saga picks it up automatically."
       ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
-      children: "Compare to Basic and Thunks — most decoupled pattern."
-    }, undefined, false, undefined, this)
+    }, undefined, true, undefined, this)
   ]
 };
 var App2 = () => {
   const dispatch = useDispatch();
-  const handleCreate = async (todo) => {
-    dispatch(createTodo.stage(todo));
-  };
-  const handleEdit = async (todo) => {
-    dispatch(editTodo.stage(todo.id, todo));
-  };
-  const handleDelete = async (todo) => {
-    dispatch(deleteTodo.stage(todo.id));
-  };
-  return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
+  const handleCreateEpic = (epic) => dispatch(createEpic.stage(epic));
+  const handleEditEpic = (epic) => dispatch(editEpic.stage(epic.id, epic));
+  const handleDeleteEpic = (epic) => dispatch(deleteEpic.stage(epic.id));
+  const handleUpdateProfile = (update) => dispatch(updateProfile.stage(update));
+  const handleCreateProjectTodo = (todo) => dispatch(createProjectTodo.stage(todo));
+  const handleEditProjectTodo = (todo) => dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+  const handleDeleteProjectTodo = (todo) => dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+  const handleLogActivity = (entry) => dispatch(logActivity.stage(entry));
+  const handleEditActivity = (entry) => dispatch(editActivity.stage(entry.id, entry));
+  const handleDismissActivity = (entry) => dispatch(dismissActivity.stage(entry.id));
+  const retryTransition = (action) => dispatch(action);
+  useAutoRetry(retryTransition);
+  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Layout, {
     title: "Sagas",
     description: description2,
-    children: /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(TodoApp, {
-      onCreateTodo: handleCreate,
-      onEditTodo: handleEdit,
-      onDeleteTodo: handleDelete
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProfileCard, {
+        onUpdate: handleUpdateProfile
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TodoApp, {
+        onCreateTodo: handleCreateEpic,
+        onEditTodo: handleEditEpic,
+        onDeleteTodo: handleDeleteEpic,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProjectBoard, {
+        onCreateTodo: handleCreateProjectTodo,
+        onEditTodo: handleEditProjectTodo,
+        onDeleteTodo: handleDeleteProjectTodo
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ActivityFeed, {
+        onLogActivity: handleLogActivity,
+        onEditActivity: handleEditActivity,
+        onDismissActivity: handleDismissActivity,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "h-4"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
 };
 // node_modules/@redux-saga/core/effects/dist/redux-saga-core-effects.development.esm.js
 var done = function done2(value) {
@@ -33215,269 +32707,430 @@ function takeEvery(patternOrChannel, worker) {
 }
 // usecases/sagas/saga.ts
 function* rootSaga() {
-  yield takeEvery(createTodo.stage.match, function* (action) {
+  yield takeEvery(createEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(createTodo.amend(transitionId, { ...action.payload.item, id: generateId() }));
-      yield put(createTodo.commit(transitionId));
+      yield put(createEpic.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(createEpic.commit(transitionId));
     } catch (error) {
-      yield put(createTodo.fail(transitionId, error));
+      yield put(createEpic.fail(transitionId, error));
     }
   });
-  yield takeEvery(editTodo.stage.match, function* (action) {
+  yield takeEvery(editEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(editTodo.commit(transitionId));
+      yield put(editEpic.commit(transitionId));
     } catch (error) {
-      yield put(editTodo.fail(transitionId, error));
+      yield put(editEpic.fail(transitionId, error));
     }
   });
-  yield takeEvery(deleteTodo.stage.match, function* (action) {
+  yield takeEvery(deleteEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(deleteTodo.commit(transitionId));
+      yield put(deleteEpic.commit(transitionId));
     } catch {
-      yield put(deleteTodo.stash(transitionId));
+      yield put(deleteEpic.stash(transitionId));
+    }
+  });
+  yield takeEvery(updateProfile.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(updateProfile.commit(transitionId));
+    } catch (error) {
+      yield put(updateProfile.fail(transitionId, error));
+    }
+  });
+  yield takeEvery(createProjectTodo.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(createProjectTodo.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(createProjectTodo.commit(transitionId));
+    } catch (error) {
+      yield put(createProjectTodo.fail(transitionId, error));
+    }
+  });
+  yield takeEvery(editProjectTodo.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(editProjectTodo.commit(transitionId));
+    } catch (error) {
+      yield put(editProjectTodo.fail(transitionId, error));
+    }
+  });
+  yield takeEvery(deleteProjectTodo.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(deleteProjectTodo.commit(transitionId));
+    } catch {
+      yield put(deleteProjectTodo.stash(transitionId));
+    }
+  });
+  yield takeEvery(logActivity.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(logActivity.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(logActivity.commit(transitionId));
+    } catch (error) {
+      yield put(logActivity.fail(transitionId, error));
+    }
+  });
+  yield takeEvery(editActivity.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(editActivity.commit(transitionId));
+    } catch (error) {
+      yield put(editActivity.fail(transitionId, error));
+    }
+  });
+  yield takeEvery(dismissActivity.stage.match, function* (action) {
+    const transitionId = getTransitionMeta(action).id;
+    try {
+      yield simulateAPIRequest();
+      yield put(dismissActivity.commit(transitionId));
+    } catch {
+      yield put(dismissActivity.stash(transitionId));
     }
   });
 }
 
 // usecases/sagas/index.tsx
-var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime16 = __toESM(require_jsx_dev_runtime(), 1);
 var sagaMiddleware = sagaMiddlewareFactory();
 var { store: store2, eventBus: eventBus2 } = createDebugStore(sagaMiddleware);
 sagaMiddleware.run(rootSaga);
 var Usecase2 = () => {
   const mockApi = useMockApi();
-  import_react9.useEffect(() => mockApi.setStore(store2), []);
-  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Provider_default, {
+  import_react16.useEffect(() => mockApi.setStore(store2), []);
+  return /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Provider_default, {
     store: store2,
-    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus2,
-      children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(App2, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(App2, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var sagas_default = Usecase2;
 
 // usecases/thunks/index.tsx
-var import_react10 = __toESM(require_react(), 1);
+var import_react17 = __toESM(require_react(), 1);
 
 // usecases/thunks/thunk.ts
-var createTodoThunk = (todo) => {
-  return async (dispatch) => {
-    const transitionId = todo.id;
-    try {
-      dispatch(createTodo.stage(todo));
-      await simulateAPIRequest();
-      dispatch(createTodo.amend(transitionId, { ...todo, id: generateId() }));
-      dispatch(createTodo.commit(transitionId));
-    } catch (error) {
-      dispatch(createTodo.fail(transitionId, error));
-    }
-  };
+var createEpicThunk = (epic) => async (dispatch) => {
+  const transitionId = epic.id;
+  try {
+    dispatch(createEpic.stage(epic));
+    await simulateAPIRequest();
+    dispatch(createEpic.amend(transitionId, { ...epic, id: generateId() }));
+    dispatch(createEpic.commit(transitionId));
+  } catch (error) {
+    dispatch(createEpic.fail(transitionId, error));
+  }
 };
-var editTodoThunk = (id, update) => {
-  return async (dispatch) => {
-    const transitionId = id;
-    try {
-      dispatch(editTodo.stage(id, update));
-      await simulateAPIRequest();
-      dispatch(editTodo.commit(transitionId));
-    } catch (error) {
-      dispatch(editTodo.fail(transitionId, error));
-    }
-  };
+var editEpicThunk = (id, update) => async (dispatch) => {
+  const transitionId = id;
+  try {
+    dispatch(editEpic.stage(id, update));
+    await simulateAPIRequest();
+    dispatch(editEpic.commit(transitionId));
+  } catch (error) {
+    dispatch(editEpic.fail(transitionId, error));
+  }
 };
-var deleteTodoTunk = (id) => {
-  return async (dispatch) => {
-    const transitionId = id;
-    try {
-      dispatch(deleteTodo.stage(id));
-      await simulateAPIRequest();
-      dispatch(deleteTodo.commit(transitionId));
-    } catch {
-      dispatch(deleteTodo.stash(transitionId));
-    }
-  };
+var deleteEpicThunk = (id) => async (dispatch) => {
+  const transitionId = id;
+  try {
+    dispatch(deleteEpic.stage(id));
+    await simulateAPIRequest();
+    dispatch(deleteEpic.commit(transitionId));
+  } catch {
+    dispatch(deleteEpic.stash(transitionId));
+  }
+};
+var updateProfileThunk = (update) => async (dispatch) => {
+  try {
+    dispatch(updateProfile.stage(update));
+    await simulateAPIRequest();
+    dispatch(updateProfile.commit("profile"));
+  } catch (error) {
+    dispatch(updateProfile.fail("profile", error));
+  }
+};
+var createProjectTodoThunk = (todo) => async (dispatch) => {
+  const transitionId = `${todo.projectId}/${todo.id}`;
+  try {
+    dispatch(createProjectTodo.stage(todo));
+    await simulateAPIRequest();
+    dispatch(createProjectTodo.amend(transitionId, { ...todo, id: generateId() }));
+    dispatch(createProjectTodo.commit(transitionId));
+  } catch (error) {
+    dispatch(createProjectTodo.fail(transitionId, error));
+  }
+};
+var editProjectTodoThunk = (todo) => async (dispatch) => {
+  const transitionId = `${todo.projectId}/${todo.id}`;
+  try {
+    dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+    await simulateAPIRequest();
+    dispatch(editProjectTodo.commit(transitionId));
+  } catch (error) {
+    dispatch(editProjectTodo.fail(transitionId, error));
+  }
+};
+var deleteProjectTodoThunk = (todo) => async (dispatch) => {
+  const transitionId = `${todo.projectId}/${todo.id}`;
+  try {
+    dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+    await simulateAPIRequest();
+    dispatch(deleteProjectTodo.commit(transitionId));
+  } catch {
+    dispatch(deleteProjectTodo.stash(transitionId));
+  }
+};
+var logActivityThunk = (entry) => async (dispatch) => {
+  const transitionId = entry.id;
+  try {
+    dispatch(logActivity.stage(entry));
+    await simulateAPIRequest();
+    dispatch(logActivity.amend(transitionId, { ...entry, id: generateId() }));
+    dispatch(logActivity.commit(transitionId));
+  } catch (error) {
+    dispatch(logActivity.fail(transitionId, error));
+  }
+};
+var editActivityThunk = (entry) => async (dispatch) => {
+  const transitionId = entry.id;
+  try {
+    dispatch(editActivity.stage(entry.id, entry));
+    await simulateAPIRequest();
+    dispatch(editActivity.commit(transitionId));
+  } catch (error) {
+    dispatch(editActivity.fail(transitionId, error));
+  }
+};
+var dismissActivityThunk = (entry) => async (dispatch) => {
+  const transitionId = entry.id;
+  try {
+    dispatch(dismissActivity.stage(entry.id));
+    await simulateAPIRequest();
+    dispatch(dismissActivity.commit(transitionId));
+  } catch {
+    dispatch(dismissActivity.stash(transitionId));
+  }
 };
 
 // usecases/thunks/App.tsx
-var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime17 = __toESM(require_jsx_dev_runtime(), 1);
 var description3 = {
   subtitle: "Redux thunks — same lifecycle, cleaner components.",
   howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
-      children: "Component dispatches a thunk — no direct transition management."
+    /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
+      children: "Component dispatches a thunk — no transition management in the component at all."
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
       children: [
-        "Thunk handles ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
+        "Each thunk encapsulates the full lifecycle: ",
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
         " → API → ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(O, {
           children: "amend"
         }, undefined, false, undefined, this),
-        "/",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(C, {
+        " → ",
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(C, {
           children: "commit"
         }, undefined, false, undefined, this),
-        " or ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
+        " / ",
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
-      children: "Same optimistic behavior — components are thinner."
-    }, undefined, false, undefined, this)
-  ],
-  tryIt: [
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
+    /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
       children: [
-        "Add a todo online — same instant ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(O, {
-          children: "opt"
-        }, undefined, false, undefined, this),
-        ", simpler component code."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
-      children: [
-        "Toggle offline, add a todo — thunk catches and dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
-          children: "fail"
+        "Same optimistic behavior as Basic — components only call ",
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "dispatch(thunk(item))"
         }, undefined, false, undefined, this),
         "."
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
-      children: [
-        "Toggle back online — ",
-        /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(F, {
-          children: "failed"
-        }, undefined, false, undefined, this),
-        " todos auto-retry."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(jsx_dev_runtime14.Fragment, {
-      children: "Compare to Basic — note how much cleaner the component is."
+    /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
+      children: "Retry routes the failed stage action through the matching thunk — same pattern, thinner component."
     }, undefined, false, undefined, this)
   ]
 };
 var App3 = () => {
   const dispatch = useDispatch();
-  const handleCreate = async (todo) => dispatch(createTodoThunk(todo));
-  const handleEdit = async (update) => dispatch(editTodoThunk(update.id, update));
-  const handleDelete = async ({ id }) => dispatch(deleteTodoTunk(id));
-  return /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(Layout, {
+  const handleCreateEpic = async (epic) => dispatch(createEpicThunk(epic));
+  const handleEditEpic = async (epic) => dispatch(editEpicThunk(epic.id, epic));
+  const handleDeleteEpic = async ({ id }) => dispatch(deleteEpicThunk(id));
+  const handleUpdateProfile = async (update) => dispatch(updateProfileThunk(update));
+  const handleCreateProjectTodo = async (todo) => dispatch(createProjectTodoThunk(todo));
+  const handleEditProjectTodo = async (todo) => dispatch(editProjectTodoThunk(todo));
+  const handleDeleteProjectTodo = async (todo) => dispatch(deleteProjectTodoThunk(todo));
+  const handleLogActivity = async (entry) => dispatch(logActivityThunk(entry));
+  const handleEditActivity = async (entry) => dispatch(editActivityThunk(entry));
+  const handleDismissActivity = async (entry) => dispatch(dismissActivityThunk(entry));
+  const retryTransition = (action) => {
+    if (createEpic.stage.match(action))
+      return handleCreateEpic(action.payload.item);
+    if (editEpic.stage.match(action))
+      return handleEditEpic(action.payload.item);
+    if (updateProfile.stage.match(action))
+      return handleUpdateProfile(action.payload.item);
+    if (createProjectTodo.stage.match(action))
+      return handleCreateProjectTodo(action.payload.item);
+    if (editProjectTodo.stage.match(action))
+      return handleEditProjectTodo(action.payload.item);
+    if (logActivity.stage.match(action))
+      return handleLogActivity(action.payload.item);
+    if (editActivity.stage.match(action))
+      return handleEditActivity(action.payload.item);
+  };
+  useAutoRetry(retryTransition);
+  return /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(Layout, {
     title: "Thunks",
     description: description3,
-    children: /* @__PURE__ */ jsx_dev_runtime14.jsxDEV(TodoApp, {
-      onCreateTodo: handleCreate,
-      onEditTodo: handleEdit,
-      onDeleteTodo: handleDelete
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(ProfileCard, {
+        onUpdate: handleUpdateProfile
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(TodoApp, {
+        onCreateTodo: handleCreateEpic,
+        onEditTodo: handleEditEpic,
+        onDeleteTodo: handleDeleteEpic,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(ProjectBoard, {
+        onCreateTodo: handleCreateProjectTodo,
+        onEditTodo: handleEditProjectTodo,
+        onDeleteTodo: handleDeleteProjectTodo
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(ActivityFeed, {
+        onLogActivity: handleLogActivity,
+        onEditActivity: handleEditActivity,
+        onDismissActivity: handleDismissActivity,
+        onRetry: retryTransition
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
+        className: "h-4"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
 };
 
 // usecases/thunks/index.tsx
-var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime18 = __toESM(require_jsx_dev_runtime(), 1);
 var { store: store3, eventBus: eventBus3 } = createDebugStore(thunk);
 var Usecase3 = () => {
   const mockApi = useMockApi();
-  import_react10.useEffect(() => mockApi.setStore(store3), []);
-  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Provider_default, {
+  import_react17.useEffect(() => mockApi.setStore(store3), []);
+  return /* @__PURE__ */ jsx_dev_runtime18.jsxDEV(Provider_default, {
     store: store3,
-    children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TransitionHistoryProvider, {
+    children: /* @__PURE__ */ jsx_dev_runtime18.jsxDEV(TransitionHistoryProvider, {
       eventBus: eventBus3,
-      children: /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(App3, {}, undefined, false, undefined, this)
+      children: /* @__PURE__ */ jsx_dev_runtime18.jsxDEV(App3, {}, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
 };
 var thunks_default = Usecase3;
 
 // usecases/index.tsx
-var jsx_dev_runtime16 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime19 = __toESM(require_jsx_dev_runtime(), 1);
 var usecases = [
   { key: "Basic", path: "/basic", component: basic_default, desc: "Component-level async" },
   { key: "Thunks", path: "/thunks", component: thunks_default, desc: "Thunk orchestration" },
   { key: "Sagas", path: "/sagas", component: sagas_default, desc: "Saga-driven lifecycle" }
 ];
-var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
+var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("svg", {
   xmlns: "http://www.w3.org/2000/svg",
   viewBox: "0 0 850 160",
   className: "w-full rounded-lg",
   children: [
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("defs", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("defs", {
       children: [
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("linearGradient", {
           id: "bn-title-grad",
           x1: "0%",
           y1: "0%",
           x2: "100%",
           y2: "0%",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "0%",
               stopColor: "#06b6d4"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "30%",
               stopColor: "#8b5cf6"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "60%",
               stopColor: "#d946ef"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "100%",
               stopColor: "#f43f5e"
             }, undefined, false, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("linearGradient", {
           id: "bn-border-grad",
           x1: "0%",
           y1: "0%",
           x2: "100%",
           y2: "100%",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "0%",
               stopColor: "#06b6d4",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "50%",
               stopColor: "#8b5cf6",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "100%",
               stopColor: "#f43f5e",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("linearGradient", {
           id: "bn-tagline-grad",
           x1: "0%",
           y1: "0%",
           x2: "100%",
           y2: "0%",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "0%",
               stopColor: "#67e8f9"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "100%",
               stopColor: "#c4b5fd"
             }, undefined, false, undefined, this)
@@ -33485,13 +33138,13 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
         }, undefined, true, undefined, this)
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("rect", {
       width: "850",
       height: "160",
       rx: "12",
       fill: "#0d1117"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("rect", {
       x: "1",
       y: "1",
       width: "848",
@@ -33501,57 +33154,57 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       stroke: "url(#bn-border-grad)",
       strokeWidth: "1.5"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("circle", {
       cx: "28",
       cy: "20",
       r: "5.5",
       fill: "#ff5f57"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("circle", {
       cx: "46",
       cy: "20",
       r: "5.5",
       fill: "#febc2e"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("circle", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("circle", {
       cx: "64",
       cy: "20",
       r: "5.5",
       fill: "#28c840"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("g", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("g", {
       fill: "url(#bn-title-grad)",
-      children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+      children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
         fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
         fontSize: "12.5",
         xmlSpace: "preserve",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "62",
             children: " ██████╗ ██████╗ ████████╗██╗███╗   ███╗██╗███████╗████████╗██████╗  ██████╗ ███╗   ██╗"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "76",
             children: "██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗████╗  ██║"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "90",
             children: "██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║███████╗   ██║   ██████╔╝██║   ██║██╔██╗ ██║"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "104",
             children: "██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║╚════██║   ██║   ██╔══██╗██║   ██║██║╚██╗██║"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "118",
             children: "╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████║   ██║   ██║  ██║╚██████╔╝██║ ╚████║"
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+          /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
             x: "85",
             y: "132",
             children: " ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝"
@@ -33559,7 +33212,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
         ]
       }, undefined, true, undefined, this)
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "22",
       y: "55",
       fontFamily: "monospace",
@@ -33568,7 +33221,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.45",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "40",
       y: "80",
       fontFamily: "monospace",
@@ -33577,7 +33230,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.3",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "15",
       y: "105",
       fontFamily: "monospace",
@@ -33586,7 +33239,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.2",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "55",
       y: "120",
       fontFamily: "monospace",
@@ -33595,7 +33248,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.25",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "30",
       y: "145",
       fontFamily: "monospace",
@@ -33604,7 +33257,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.18",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "68",
       y: "48",
       fontFamily: "monospace",
@@ -33613,7 +33266,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.2",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "795",
       y: "55",
       fontFamily: "monospace",
@@ -33622,7 +33275,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.55",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "825",
       y: "80",
       fontFamily: "monospace",
@@ -33631,7 +33284,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.35",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "778",
       y: "100",
       fontFamily: "monospace",
@@ -33640,7 +33293,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.25",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "830",
       y: "120",
       fontFamily: "monospace",
@@ -33649,7 +33302,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.3",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "805",
       y: "148",
       fontFamily: "monospace",
@@ -33658,7 +33311,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.2",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "770",
       y: "42",
       fontFamily: "monospace",
@@ -33667,7 +33320,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.18",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "815",
       y: "45",
       fontFamily: "monospace",
@@ -33676,7 +33329,7 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.2",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "838",
       y: "150",
       fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
@@ -33688,49 +33341,49 @@ var BannerSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
     }, undefined, false, undefined, this)
   ]
 }, undefined, true, undefined, this);
-var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
+var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("svg", {
   xmlns: "http://www.w3.org/2000/svg",
   viewBox: "0 0 850 150",
   className: "w-full rounded grad-wrap",
   children: [
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("defs", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("defs", {
       children: [
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("linearGradient", {
           id: "lc-border-grad",
           x1: "0%",
           y1: "0%",
           x2: "100%",
           y2: "100%",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "0%",
               stopColor: "#06b6d4",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "50%",
               stopColor: "#8b5cf6",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "100%",
               stopColor: "#f43f5e",
               stopOpacity: "0.4"
             }, undefined, false, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("linearGradient", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("linearGradient", {
           id: "lc-tagline-grad",
           x1: "0%",
           y1: "0%",
           x2: "100%",
           y2: "0%",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "0%",
               stopColor: "#67e8f9"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("stop", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("stop", {
               offset: "100%",
               stopColor: "#c4b5fd"
             }, undefined, false, undefined, this)
@@ -33738,13 +33391,13 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
         }, undefined, true, undefined, this)
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("rect", {
       width: "850",
       height: "150",
       rx: "12",
       fill: "#0d1117"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("rect", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("rect", {
       x: "1",
       y: "1",
       width: "848",
@@ -33754,74 +33407,74 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       stroke: "url(#lc-border-grad)",
       strokeWidth: "1.5"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
       fontSize: "13",
       xmlSpace: "preserve",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           x: "30",
           y: "40",
           fill: "#4ade80",
           children: "  stage"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#484f58",
           children: " ───▶ "
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#38bdf8",
           children: "commit"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#484f58",
           children: "   ✓  stage optimistically, commit on success"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           x: "30",
           y: "65",
           fill: "#484f58",
           children: "    ├──────▶ "
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#c4b5fd",
           children: "amend"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#484f58",
           children: "    ↻  update staged transition before committing"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           x: "30",
           y: "90",
           fill: "#484f58",
           children: "    ├──────▶ "
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#f472b6",
           children: "fail"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#484f58",
           children: "     ✗  flag as failed — keep for retry/UI feedback"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           x: "30",
           y: "115",
           fill: "#484f58",
           children: "    └──────▶ "
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#facc15",
           children: "stash"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("tspan", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("tspan", {
           fill: "#484f58",
           children: "    ↩  revert — restore trailing if TRAILING dedupe"
         }, undefined, false, undefined, this)
       ]
     }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "15",
       y: "68",
       fontFamily: "monospace",
@@ -33830,7 +33483,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.18",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "8",
       y: "100",
       fontFamily: "monospace",
@@ -33839,7 +33492,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.15",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "795",
       y: "32",
       fontFamily: "monospace",
@@ -33848,7 +33501,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.5",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "825",
       y: "58",
       fontFamily: "monospace",
@@ -33857,7 +33510,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.3",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "778",
       y: "80",
       fontFamily: "monospace",
@@ -33866,7 +33519,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.22",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "830",
       y: "100",
       fontFamily: "monospace",
@@ -33875,7 +33528,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.28",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "805",
       y: "130",
       fontFamily: "monospace",
@@ -33884,7 +33537,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.18",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "770",
       y: "115",
       fontFamily: "monospace",
@@ -33893,7 +33546,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.15",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "815",
       y: "140",
       fontFamily: "monospace",
@@ -33902,7 +33555,7 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
       opacity: "0.16",
       children: "✦"
     }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("text", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("text", {
       x: "838",
       y: "142",
       fontFamily: "'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace",
@@ -33914,148 +33567,178 @@ var LifecycleSvg = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("svg", {
     }, undefined, false, undefined, this)
   ]
 }, undefined, true, undefined, this);
-var Home = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+var Home = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
   className: "flex items-center justify-center h-full relative overflow-hidden",
   children: [
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Stars, {}, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(Stars, {}, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
       className: "max-w-2xl text-center px-6 relative z-10",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "mb-6",
-          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(BannerSvg, {}, undefined, false, undefined, this)
+          children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(BannerSvg, {}, undefined, false, undefined, this)
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
           className: "text-xs text-gray-500 uppercase tracking-widest mb-8",
           children: "Optimistic state for Redux"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
               children: [
-                "Optimistic state is ",
-                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                "This demo is a ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
                   className: "text-gray-200",
-                  children: "computed, not stored"
+                  children: "project management app"
                 }, undefined, false, undefined, this),
-                ". Only ",
-                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("code", {
-                  className: "text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded",
-                  children: "commit"
-                }, undefined, false, undefined, this),
-                " mutates reducer state. All other operations modify the transitions list."
+                " built to showcase Optimistron's four state handlers — each section uses a different state shape with full optimistic CRUD."
               ]
             }, undefined, true, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("p", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
               children: [
-                "Think ",
-                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("code", {
-                  className: "text-xs text-oc-stage/80 bg-surface-3 px-1 py-0.5 rounded",
-                  children: "git rebase"
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
+                  className: "text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "singularState"
                 }, undefined, false, undefined, this),
-                " — committed state is your main branch, transitions are replayed on top at read-time."
+                " ",
+                "powers the user profile,",
+                " ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
+                  className: "text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "nestedRecordState"
+                }, undefined, false, undefined, this),
+                " ",
+                "drives project-grouped tasks,",
+                " ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
+                  className: "text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "recordState"
+                }, undefined, false, undefined, this),
+                " ",
+                "backs the flat epic list, and",
+                " ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
+                  className: "text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded",
+                  children: "listState"
+                }, undefined, false, undefined, this),
+                " ",
+                "powers the activity log."
               ]
             }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "mb-8",
-          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(LifecycleSvg, {}, undefined, false, undefined, this)
+          children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(LifecycleSvg, {}, undefined, false, undefined, this)
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
-          className: "p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed grad-wrap",
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
+          className: "p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed space-y-2 grad-wrap",
           children: [
-            "Pick a usecase from the sidebar. Use the ",
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
-              className: "text-gray-300",
-              children: "Mock API"
-            }, undefined, false, undefined, this),
-            " controls to simulate network conditions."
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
+              children: [
+                "Pick a usecase from the sidebar. Each one implements the ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
+                  className: "text-gray-300",
+                  children: "same store"
+                }, undefined, false, undefined, this),
+                " with a different async pattern — component-level, thunks, or sagas."
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
+              children: [
+                "Use the ",
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
+                  className: "text-gray-300",
+                  children: "Mock API"
+                }, undefined, false, undefined, this),
+                " controls to toggle offline mode, adjust latency, and trigger a sync to see how Optimistron handles failures, retries, and conflict detection in real-time."
+              ]
+            }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this)
       ]
     }, undefined, true, undefined, this)
   ]
 }, undefined, true, undefined, this);
-var App4 = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(MockApiProvider, {
-  children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(HashRouter, {
-    children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+var App4 = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(MockApiProvider, {
+  children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(HashRouter, {
+    children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
       className: "flex w-full h-screen overflow-hidden",
       children: [
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "w-64 flex-shrink-0 h-full flex flex-col bg-surface-1",
           children: [
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
               className: "p-4 pb-2",
-              children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(NavLink, {
+              children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(NavLink, {
                 to: "/",
                 className: "flex items-center gap-1.5",
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                  /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                     children: [
-                      /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("h2", {
+                      /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("h2", {
                         className: "text-sm font-bold text-white tracking-tight",
                         children: "Optimistron"
                       }, undefined, false, undefined, this),
-                      /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                      /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
                         className: "text-[10px] text-gray-600 uppercase tracking-widest",
                         children: "demos"
                       }, undefined, false, undefined, this)
                     ]
                   }, undefined, true, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Logo, {
+                  /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(Logo, {
                     className: "w-5 h-3.5 opacity-50 ml-auto"
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this)
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
               className: "grad-h"
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("nav", {
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("nav", {
               className: "flex-1 px-2 py-2 space-y-0.5 overflow-y-auto",
-              children: usecases.map(({ key, path, desc }) => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(NavLink, {
+              children: usecases.map(({ key, path, desc }) => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(NavLink, {
                 to: path,
                 className: ({ isActive }) => `block px-3 py-2 rounded-md text-sm transition-colors ${isActive ? "bg-surface-3 text-white" : "text-gray-400 hover:text-gray-200 hover:bg-surface-2"}`,
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
                     className: "block font-medium",
                     children: key
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("span", {
+                  /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
                     className: "block text-[11px] text-gray-600",
                     children: desc
                   }, undefined, false, undefined, this)
                 ]
               }, key, true, undefined, this))
             }, undefined, false, undefined, this),
-            /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
-              className: "h-48 flex-shrink-0 flex flex-col",
+            /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
+              className: "h-36 flex-shrink-0 flex flex-col",
               children: [
-                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                   className: "grad-h"
                 }, undefined, false, undefined, this),
-                /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+                /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                   className: "px-5 pt-2.5 pb-4 flex-1",
-                  children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
+                  children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(MockApiControls, {}, undefined, false, undefined, this)
                 }, undefined, false, undefined, this)
               ]
             }, undefined, true, undefined, this)
           ]
         }, undefined, true, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "grad-v self-stretch"
         }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsx_dev_runtime16.jsxDEV("div", {
+        /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           className: "flex flex-col grow h-full overflow-hidden bg-surface-0",
-          children: /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Routes, {
+          children: /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(Routes, {
             children: [
-              /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Route, {
+              /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(Route, {
                 path: "/",
                 Component: Home
               }, undefined, false, undefined, this),
-              usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(Route, {
+              usecases.map(({ key, path, component }) => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV(Route, {
                 path,
                 Component: component
               }, key, false, undefined, this))
@@ -34068,7 +33751,7 @@ var App4 = () => /* @__PURE__ */ jsx_dev_runtime16.jsxDEV(MockApiProvider, {
 }, undefined, false, undefined, this);
 var el = document.getElementById("root");
 var root = import_client.createRoot(el);
-root.render(/* @__PURE__ */ jsx_dev_runtime16.jsxDEV(App4, {}, undefined, false, undefined, this));
+root.render(/* @__PURE__ */ jsx_dev_runtime19.jsxDEV(App4, {}, undefined, false, undefined, this));
 requestAnimationFrame(() => el.classList.add("ready"));
 export {
   App4 as App

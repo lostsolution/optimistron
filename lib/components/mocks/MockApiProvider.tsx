@@ -2,8 +2,9 @@ import type { FC, PropsWithChildren } from 'react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Store } from 'redux';
 
-import { sync } from '~usecases/lib/store/actions';
+import { sync } from '~usecases/lib/store/epics/actions';
 import { getMockApiOnline, getMockApiTimeout, setMockApiOnline, setMockApiTimeout } from '~usecases/lib/utils/mock-api';
+import type { MaybeNull } from '~/utils/types';
 
 type MockApiState = { online: boolean; timeout: number; store?: Store };
 
@@ -14,7 +15,7 @@ type MockApiContextType = MockApiState & {
     toggleOnline: () => void;
 };
 
-const MockApiContext = createContext<MockApiContextType | null>(null);
+const MockApiContext = createContext<MaybeNull<MockApiContextType>>(null);
 
 export const MockApiProvider: FC<PropsWithChildren> = ({ children }) => {
     const [state, setState] = useState<MockApiState>({ online: getMockApiOnline(), timeout: getMockApiTimeout() });
