@@ -1,30 +1,26 @@
 import type { FC, PropsWithChildren } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import type { TransitionAction } from '~transitions';
 
-import { useMockApi } from '~usecases/lib/components/mocks/MockApiProvider';
 import { TodoItem } from '~usecases/lib/components/todo/TodoItem';
-import { createTodo, editTodo } from '~usecases/lib/store/actions';
-import { selectFailedTodos, selectOptimisticTodos } from '~usecases/lib/store/selectors';
-import type { Todo } from '~usecases/lib/store/types';
+import { selectOptimisticEpics } from '~usecases/lib/store/epics/selectors';
+import type { Epic } from '~usecases/lib/store/types';
 import { generateId } from '~usecases/lib/utils/mock-api';
 
 type Props = {
-    onCreateTodo: (todo: Todo) => void;
-    onEditTodo: (todo: Todo) => void;
-    onDeleteTodo: (todo: Todo) => void;
+    onCreateTodo: (todo: Epic) => void;
+    onEditTodo: (todo: Epic) => void;
+    onDeleteTodo: (todo: Epic) => void;
+    onRetry: (action: TransitionAction) => void;
 };
 
-export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
-    const todos = useSelector(selectOptimisticTodos);
-    const failedTransitions = useSelector(selectFailedTodos);
-    const mockApi = useMockApi();
-
+export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTodo, onEditTodo, onRetry }) => {
+    const epics = useSelector(selectOptimisticEpics);
     const [value, setValue] = useState('');
 
-    const handleAddTodo = (value: string) => {
+    const handleAdd = (value: string) => {
         const sanitized = value.trim();
         if (sanitized) {
             onCreateTodo({ id: generateId(), value, done: false, revision: 0, createdAt: Date.now() });
@@ -32,25 +28,18 @@ export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTo
         }
     };
 
-    const handleRetry = (action: TransitionAction) => {
-        if (createTodo.stage.match(action)) return onCreateTodo(action.payload.item);
-        if (editTodo.stage.match(action)) return onEditTodo(action.payload.item as Todo);
-    };
-
-    useEffect(() => {
-        if (mockApi.online) {
-            failedTransitions.forEach((action) => {
-                if (createTodo.stage.match(action)) return onCreateTodo(action.payload.item);
-                if (editTodo.stage.match(action)) return onEditTodo(action.payload.item as Todo);
-            });
-        }
-    }, [mockApi.online, failedTransitions]);
-
     return (
-        <>
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle">
+        <div className="pb-3">
+            <div className="flex items-center gap-2 px-3 pt-3 pb-1">
+                <h3 className="text-[9px] font-semibold uppercase tracking-widest text-gray-600">Epics</h3>
+                <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-400">
+                    recordState
+                </span>
+            </div>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-subtle">
                 <svg
-                    className="w-3.5 h-3.5 text-gray-600 flex-shrink-0"
+                    className="w-3 h-3 text-gray-600 flex-shrink-0"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -66,15 +55,15 @@ export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTo
                 <input
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    onKeyUp={(e) => e.key === 'Enter' && handleAddTodo(value)}
-                    className="flex-grow h-7 text-sm text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic"
+                    onKeyUp={(e) => e.key === 'Enter' && handleAdd(value)}
+                    className="flex-grow h-6 text-xs text-gray-300 bg-transparent focus:outline-none placeholder:text-gray-600 placeholder:italic"
                     type="text"
-                    placeholder="Add a todo..."
+                    placeholder="Add an epic..."
                 />
             </div>
-            {todos.map((todo) => (
-                <TodoItem key={todo.id} todo={todo} onEdit={onEditTodo} onRetry={handleRetry} onDelete={onDeleteTodo} />
+            {epics.map((todo) => (
+                <TodoItem key={todo.id} todo={todo} onEdit={onEditTodo} onRetry={onRetry} onDelete={onDeleteTodo} />
             ))}
-        </>
+        </div>
     );
 };

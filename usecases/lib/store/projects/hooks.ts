@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { selectOptimisticTodoState } from '~usecases/lib/store/selectors';
-import type { Todo } from '~usecases/lib/store/types';
+import { selectOptimisticProjectTodoState } from '~usecases/lib/store/projects/selectors';
+import type { ProjectTodo } from '~usecases/lib/store/types';
 
-export const useTodoState = (todo: Todo) => {
-    const state = useSelector(selectOptimisticTodoState(todo.id));
+export const useProjectTodoState = (todo: ProjectTodo) => {
+    const state = useSelector(selectOptimisticProjectTodoState(todo.projectId, todo.id));
     const [stashed, setStashed] = useState(false);
     const revision = useRef(todo.revision);
 

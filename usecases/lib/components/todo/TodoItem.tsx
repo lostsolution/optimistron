@@ -2,53 +2,46 @@ import { clsx } from 'clsx';
 import { useMemo, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 
-import cloneDeep from 'lodash/cloneDeep';
+import type { TransitionAction } from '~transitions';
+
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
-import type { OptimisticActions } from '~usecases/lib/store/actions';
-import { createTodo, editTodo } from '~usecases/lib/store/actions';
-import { useTodoState } from '~usecases/lib/store/hooks';
-import { selectTodo } from '~usecases/lib/store/selectors';
-import type { Todo } from '~usecases/lib/store/types';
+import { useEpicState } from '~usecases/lib/store/epics/hooks';
+import { selectEpic } from '~usecases/lib/store/epics/selectors';
+import type { Epic } from '~usecases/lib/store/types';
 
 type Props = {
-    todo: Todo;
-    onRetry: (action: OptimisticActions) => void;
-    onEdit: (todo: Todo) => void;
-    onDelete: (todo: Todo) => void;
+    todo: Epic;
+    onRetry: (action: TransitionAction) => void;
+    onEdit: (todo: Epic) => void;
+    onDelete: (todo: Epic) => void;
 };
 
-const TodoConflict: FC<{ id: string }> = ({ id }) => {
-    const todo = useSelector(selectTodo(id));
-    const Tag: keyof JSX.IntrinsicElements = todo.done ? 's' : 'em';
+const EpicConflict: FC<{ id: string }> = ({ id }) => {
+    const epic = useSelector(selectEpic(id));
+    const Tag: keyof JSX.IntrinsicElements = epic.done ? 's' : 'em';
 
     return (
         <div className="text-[9px] font-mono text-oc-conflict/60 leading-tight">
-            <span className="text-oc-conflict/80">conflict</span> "<Tag>{todo.value}</Tag>"
+            <span className="text-oc-conflict/80">conflict</span> "<Tag>{epic.value}</Tag>"
         </div>
     );
 };
 
 export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
     const id = `todo-${todo.id}`;
-    const { loading, stashed, failed, conflict, failedAction } = useTodoState(todo);
+    const { loading, stashed, failed, conflict, failedAction } = useEpicState(todo);
     const [editable, setEditable] = useState(false);
     const error = failed || conflict;
 
-    const handleMutation = (mutation: Partial<Todo>) => {
+    const handleMutation = (mutation: Partial<Epic>) => {
         if (loading) return;
 
         if (failedAction) {
-            if (createTodo.stage.match(failedAction)) {
-                const create = cloneDeep(failedAction);
-                create.payload.item = { ...create.payload.item, ...mutation };
-                onRetry(create);
-            }
-
-            if (editTodo.stage.match(failedAction)) {
-                const edit = cloneDeep(failedAction);
-                edit.payload.item = { ...edit.payload.item, ...mutation };
-                onRetry(edit);
-            }
+            /** Re-dispatch the failed stage action with the mutation applied.
+             *  The App-level retryTransition routes it through the correct lifecycle. */
+            const { payload } = failedAction as any;
+            const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, ...mutation } } };
+            onRetry(retry as TransitionAction);
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
 
@@ -59,19 +52,19 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
     }, [loading, failed]);
 
     return (
-        <div className="flex w-full justify-between items-center px-2 pt-1">
+        <div className="flex w-full justify-between items-center px-2 pt-0.5">
             <input className="hidden" type="checkbox" id={id} checked={todo.done} readOnly />
             <label
                 htmlFor={id}
                 className={clsx(
-                    'todo-item flex flex-row grow items-center max-w-full h-8 px-2 rounded cursor-pointer hover:bg-surface-3',
+                    'todo-item flex flex-row grow items-center max-w-full h-7 px-1.5 rounded cursor-pointer hover:bg-surface-3',
                     loading && 'loading pointer-events-none',
                 )}
             >
                 <span
                     onClick={() => handleMutation({ done: !todo.done })}
                     className={clsx(
-                        'todo--icon flex items-center justify-center w-5 h-5 border-2 border-gray-600 text-transparent rounded-full',
+                        'todo--icon flex items-center justify-center w-4 h-4 border-2 border-gray-600 text-transparent rounded-full',
                         failed && !conflict && '!border-oc-fail/80 text-oc-fail/80',
                         conflict && '!border-oc-conflict/80 text-oc-conflict/80',
                         todo.done && '!text-white !bg-oc-stage/90 !border-oc-stage/90',
@@ -83,13 +76,13 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                     {icon}
                 </span>
 
-                <div className="flex-1 mx-4 flex items-center gap-2">
+                <div className="flex-1 mx-3 flex items-center gap-2">
                     <div className="flex-1 flex flex-col min-w-0">
                         <div className="flex items-center">
                             {editable ? (
                                 <input
                                     type="text"
-                                    className="text-sm flex-1 text-gray-200 bg-transparent focus:outline-none"
+                                    className="text-xs flex-1 text-gray-200 bg-transparent focus:outline-none"
                                     defaultValue={todo.value}
                                     autoFocus
                                     onBlur={({ currentTarget }) => {
@@ -110,7 +103,7 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                                 <span
                                     onClick={() => setEditable(true)}
                                     className={clsx(
-                                        'todo--value hoverable flex-1 text-sm truncate text-nowrap text-gray-300',
+                                        'todo--value hoverable flex-1 text-xs truncate text-nowrap text-gray-300',
                                         todo.done && 'line-through !text-gray-600',
                                         loading && '!text-oc-commit/60',
                                         failed && !conflict && '!text-oc-fail/80 jiggle',
@@ -122,9 +115,9 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
                                 </span>
                             )}
                         </div>
-                        {conflict && <TodoConflict id={todo.id} />}
+                        {conflict && <EpicConflict id={todo.id} />}
                     </div>
-                    <code className="flex-shrink-0 self-center text-[8px] font-mono leading-none text-left">
+                    <code className="flex-shrink-0 self-center text-[7px] font-mono leading-none text-left">
                         {loading && <span className="text-oc-commit/60">optimistic</span>}
                         {failed && !conflict && <span className="text-oc-fail/80">fail</span>}
                         {conflict && <span className="text-oc-conflict/80">conflict</span>}

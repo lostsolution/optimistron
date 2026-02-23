@@ -6,9 +6,9 @@ import { useSelector } from 'react-redux';
 import type { TransitionAction } from '~transitions';
 import { Operation, getTransitionMeta, isTransition } from '~transitions';
 
-import { sync } from '~usecases/lib/store/actions';
+import { sync } from '~usecases/lib/store/epics/actions';
 import type { TransitionEventBus } from '~usecases/lib/store/middleware';
-import { selectTransitions } from '~usecases/lib/store/selectors';
+import { selectAllTransitions } from '~usecases/lib/store/epics/selectors';
 
 type Props = PropsWithChildren<{ eventBus: TransitionEventBus }>;
 type TransitionHistoryContextType = { committed: Action[]; staged: TransitionAction[] };
@@ -17,7 +17,7 @@ const TransitionHistoryContext = createContext<TransitionHistoryContextType>({ c
 
 export const TransitionHistoryProvider: FC<Props> = ({ children, eventBus }) => {
     const [committed, setCommitted] = useState<Action[]>([]);
-    const staged = useSelector(selectTransitions);
+    const staged = useSelector(selectAllTransitions);
 
     useEffect(
         () =>
