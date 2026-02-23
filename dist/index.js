@@ -28731,11 +28731,7 @@ var processTransition = (transition, transitions) => {
       const existing2 = transitions[matchIdx];
       if (existing2) {
         const { trailing } = getTransitionMeta(existing2);
-        return [
-          ...transitions.slice(0, matchIdx),
-          ...trailing ? [trailing] : [],
-          ...transitions.slice(matchIdx + 1)
-        ];
+        return [...transitions.slice(0, matchIdx), ...trailing ? [trailing] : [], ...transitions.slice(matchIdx + 1)];
       }
       return transitions;
     }
@@ -29570,10 +29566,8 @@ var nestedRecordState = () => ({
     wire: (bound, action, actions) => {
       if (actions.create && actions.create.match(action))
         return bound.create(action.payload.item);
-      if (actions.update && actions.update.match(action)) {
-        const { path, item } = action.payload;
-        return bound.update(...path, item);
-      }
+      if (actions.update && actions.update.match(action))
+        return bound.update(...action.payload.path, action.payload.item);
       if (actions.remove && actions.remove.match(action))
         return bound.remove(...action.payload.path);
       return;
