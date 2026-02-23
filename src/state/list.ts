@@ -1,5 +1,8 @@
-import type { CrudActionMap, ListStateOptions, StateHandler, StringKeys, WireMethod } from '~state/types';
+import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
+import type { StringKeys } from '~/utils/types';
 import { OptimisticMergeResult } from '~/transitions';
+
+export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 
 /** Typed CRUD action map for list state */
 type ListCrudMap<T> = CrudActionMap<{ item: T }, { id: string; item: Partial<T> }, { id: string }>;
@@ -14,8 +17,7 @@ export const listState = <T extends Record<string, any>>({
     key,
     compare,
     eq,
-}: ListStateOptions<T>): StateHandler<T[], [item: T], [itemId: string, partial: Partial<T>], [itemId: string]> &
-    WireMethod<ListCrudMap<T>> => ({
+}: ListStateOptions<T>): WiredStateHandler<T[], [item: T], [itemId: string, partial: Partial<T>], [itemId: string], ListCrudMap<T>> => ({
     create: (state: T[], item: T) => {
         if (state.some((entry) => entry[key] === item[key])) return state;
         return [...state, item];

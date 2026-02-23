@@ -1,10 +1,10 @@
 import type { Action, Reducer } from 'redux';
 
-import { warn } from './logger';
+import { warn } from './utils/logger';
 import { bindReducer, resolveReducer, type BoundReducer, type HandlerReducer, type ReducerConfig } from './reducer';
 import { createSelectOptimistic } from './selectors/internal';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state/factory';
-import type { StateHandler, TransitionState, WireMethod } from './state/types';
+import type { StateHandler, TransitionState, WiredStateHandler } from './state/types';
 import {
     Operation,
     getTransitionID,
@@ -15,6 +15,7 @@ import {
     toCommit,
     type StagedAction,
 } from './transitions';
+import type { Maybe } from './utils/types';
 
 /** Applies a staged transition as a commit via the bound reducer.
  * Returns undefined if no matching staged action exists. */
@@ -23,7 +24,7 @@ const commitTransition = <S>(
     transitionState: TransitionState<S>,
     transitions: StagedAction[],
     id: string,
-): S | undefined => {
+): Maybe<S> => {
     const staged = transitions.find((entry) => id === getTransitionID(entry));
     if (!staged) return undefined;
     return boundReducer(transitionState, toCommit(staged));
@@ -49,7 +50,7 @@ export function optimistron<S, C extends unknown[], U extends unknown[], D exten
 export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[], A>(
     namespace: string,
     initialState: S,
-    handler: StateHandler<S, C, U, D> & WireMethod<A>,
+    handler: WiredStateHandler<S, C, U, D, A>,
     config: A & { reducer?: HandlerReducer<S, C, U, D> },
     options?: OptimistronOptions,
 ): OptimistronResult<S>;

@@ -44,5 +44,4 @@ export type TransitionPayloadAction<
     PA extends PrepareAction<any>,
 > = PayloadAction<PreparePayload<PA>, Type, ActionMeta<Op, PA>, PrepareError<PA>>;
 
-/** Maps a keys tuple to a tuple of string IDs — one per nesting level */
-export type PathIds<Keys extends readonly string[]> = { [K in keyof Keys]: string } & string[];
+export type { PathMap as PathIds } from '~/utils/types';

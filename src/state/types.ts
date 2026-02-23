@@ -1,14 +1,10 @@
 import type { StagedAction } from '~/transitions';
+import type { Maybe } from '~/utils/types';
 
 export type TransitionState<T> = {
     state: T;
     transitions: StagedAction[];
 };
-
-export type StringKeys<T> = {
-    [K in keyof T]: T[K] extends string ? K : never;
-}[keyof T] &
-    string;
 
 export type VersioningOptions<T> = {
     /** Given two items returns a sorting result.
@@ -21,11 +17,6 @@ export type VersioningOptions<T> = {
      * than comparing. */
     eq: (a: T) => (b: T) => boolean;
 };
-
-export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
-export type SingularStateOptions<T> = VersioningOptions<T>;
-export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
-export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
 
 /** Type-narrowing action matcher — `.match()` narrows the action's payload.
  * Input accepts any action shape (index signature) to avoid excess property errors. */
@@ -55,12 +46,22 @@ export interface StateHandler<
     merge: (current: State, incoming: State) => State;
 }
 
-/** Structural extension for handlers that support auto-wired CRUD.
- * Only carries the CRUD map type — avoids duplicating StateHandler's type params
- * which would confuse TS inference at call sites like `optimistron()`. */
-export type WireMethod<A> = {
-    wire: (bound: any, action: { type: string; [key: string]: unknown }, actions: A) => any;
-};
+/** StateHandler extended with auto-wired CRUD support.
+ * `wire` receives the fully-typed `BoundStateHandler` — all type params
+ * are inherited from `StateHandler`, so inference works at call sites. */
+export interface WiredStateHandler<
+    State,
+    CreateParams extends unknown[],
+    UpdateParams extends unknown[],
+    DeleteParams extends unknown[],
+    Actions,
+> extends StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
+    wire: (
+        bound: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>,
+        action: { type: string; [key: string]: unknown },
+        actions: Actions,
+    ) => Maybe<State>;
+}
 
 export interface BoundStateHandler<
     State,

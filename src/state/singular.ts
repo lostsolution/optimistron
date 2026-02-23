@@ -1,22 +1,24 @@
-import type { CrudActionMap, SingularStateOptions, StateHandler, WireMethod } from './types';
+import type { MaybeNull } from '~/utils/types';
+import type { CrudActionMap, VersioningOptions, WiredStateHandler } from './types';
 import { OptimisticMergeResult } from '~/transitions';
+
+export type SingularStateOptions<T> = VersioningOptions<T>;
 
 /** Typed CRUD action map for singular state */
 type SingularCrudMap<T> = CrudActionMap<{ item: T }, { item: Partial<T> }, Record<string, never>>;
 
 /**
- * Creates a `StateHandler` for single-object state (`T | null`).
+ * Creates a `StateHandler` for single-object state (`MaybeNull<T>`).
  * Suited for cases like user profile, settings, or any singleton entity.
  * - `compare` determines if an incoming item is newer/conflicting
  * - `eq` checks deep equality beyond versioning */
 export const singularState = <T extends object>({
     compare,
     eq,
-}: SingularStateOptions<T>): StateHandler<T | null, [item: T], [partial: Partial<T>], []> &
-    WireMethod<SingularCrudMap<T>> => ({
-    create: (_: T | null, item: T) => item,
-    update: (state: T | null, partial: Partial<T>) => (state ? { ...state, ...partial } : state),
-    remove: (state: T | null) => (state !== null ? null : state),
+}: SingularStateOptions<T>): WiredStateHandler<MaybeNull<T>, [item: T], [partial: Partial<T>], [], SingularCrudMap<T>> => ({
+    create: (_: MaybeNull<T>, item: T) => item,
+    update: (state: MaybeNull<T>, partial: Partial<T>) => (state ? { ...state, ...partial } : state),
+    remove: (state: MaybeNull<T>) => (state !== null ? null : state),
 
     wire: (bound, action, actions) => {
         if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
@@ -25,7 +27,7 @@ export const singularState = <T extends object>({
         return undefined;
     },
 
-    merge: (existing: T | null, incoming: T | null) => {
+    merge: (existing: MaybeNull<T>, incoming: MaybeNull<T>) => {
         if (existing === incoming) throw OptimisticMergeResult.SKIP;
 
         /** null → null is referentially equal (caught above).

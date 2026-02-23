@@ -8,6 +8,7 @@ import { buildTransitionState } from '~state/factory';
 import type { TransitionState } from '~state/types';
 import { singularState } from '~state/singular';
 import { toStaged, updateTransition } from '~transitions';
+import type { MaybeNull } from '~/utils/types';
 
 type Profile = { id: string; name: string; revision: number };
 
@@ -23,9 +24,9 @@ const handler = singularState<Profile>({
 const create = createTransitions('profile::create')((item: Profile) => ({ payload: { item } }));
 const edit = createTransitions('profile::edit')((partial: Partial<Profile>) => ({ payload: { partial } }));
 const remove = createTransitions('profile::remove')(() => ({ payload: {} }));
-const sync = (profile: Profile | null) => ({ type: 'sync', payload: { profile } });
+const sync = (profile: MaybeNull<Profile>) => ({ type: 'sync', payload: { profile } });
 
-const reducer: HandlerReducer<Profile | null, [item: Profile], [partial: Partial<Profile>], []> = (
+const reducer: HandlerReducer<MaybeNull<Profile>, [item: Profile], [partial: Partial<Profile>], []> = (
     { getState, create: c, update, remove: r },
     action,
 ) => {
@@ -36,7 +37,7 @@ const reducer: HandlerReducer<Profile | null, [item: Profile], [partial: Partial
     return getState();
 };
 
-const selectState = ({ state }: TransitionState<Profile | null>) => state;
+const selectState = ({ state }: TransitionState<MaybeNull<Profile>>) => state;
 
 describe('optimistron', () => {
     const { reducer: optimisticReducer, selectOptimistic } = optimistron('profile', null, handler, reducer);
@@ -54,7 +55,7 @@ describe('optimistron', () => {
             const commit = create.commit('1');
             const conflict = create.stage('1', conflictItem);
 
-            const initial = buildTransitionState<Profile | null>(null, []);
+            const initial = buildTransitionState<MaybeNull<Profile>>(null, []);
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage without modifying state', () => {
@@ -117,7 +118,7 @@ describe('optimistron', () => {
             const commit = remove.commit('1');
             const stash = remove.stash('1');
 
-            const initial = buildTransitionState<Profile | null>(item, []);
+            const initial = buildTransitionState<MaybeNull<Profile>>(item, []);
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage deletion without modifying state', () => {
@@ -161,7 +162,7 @@ describe('optimistron', () => {
             const stash = edit.stash('1');
             const fail = edit.fail('1', new Error());
 
-            const initial = buildTransitionState<Profile | null>(item, []);
+            const initial = buildTransitionState<MaybeNull<Profile>>(item, []);
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage update without modifying state', () => {
