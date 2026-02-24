@@ -28798,12 +28798,6 @@ var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transit
 var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
 var selectAllFailedTransitions = (...states) => states.flatMap(selectFailedTransitions);
 
-// src/utils/logger.ts
-var warn = (...args) => {
-  if (true)
-    console.warn(...args);
-};
-
 // src/reducer.ts
 var resolveReducer = (handler, config) => {
   if (typeof config === "function")
@@ -28824,6 +28818,12 @@ var resolveReducer = (handler, config) => {
 };
 var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
 
+// src/utils/logger.ts
+var warn = (...args) => {
+  if (true)
+    console.warn(...args);
+};
+
 // src/selectors/internal.ts
 var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) => {
   if (!state.transitions.length)
@@ -28842,16 +28842,20 @@ var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) 
 
 // src/state/factory.ts
 var bindStateFactory = (handler) => (state) => ({
-  create: (...args) => handler.create(state, ...args),
-  update: (...args) => handler.update(state, ...args),
-  remove: (...args) => handler.remove(state, ...args),
+  create: (dto) => handler.create(state, dto),
+  update: (dto) => handler.update(state, dto),
+  remove: (dto) => handler.remove(state, dto),
   merge: (incoming) => handler.merge(state, incoming),
   getState: () => state
 });
 var buildTransitionState = (state, transitions) => {
   const transitionState = { state };
   Object.defineProperties(transitionState, {
-    transitions: { value: transitions, enumerable: false, writable: true }
+    transitions: {
+      value: transitions,
+      enumerable: false,
+      writable: true
+    }
   });
   return transitionState;
 };
@@ -28915,27 +28919,29 @@ var listState = ({
       return state;
     return [...state, item];
   },
-  update: (state, itemId, partial) => {
+  update: (state, dto) => {
+    const itemId = String(dto[key]);
     const idx = state.findIndex((entry) => entry[key] === itemId);
     if (idx === -1)
       return state;
     const next = [...state];
-    next[idx] = { ...state[idx], ...partial };
+    next[idx] = { ...state[idx], ...dto };
     return next;
   },
-  remove: (state, itemId) => {
+  remove: (state, dto) => {
+    const itemId = String(dto[key]);
     const idx = state.findIndex((entry) => entry[key] === itemId);
     if (idx === -1)
       return state;
     return state.filter((_, i) => i !== idx);
   },
   wire: (bound, action, actions) => {
-    if (actions.create && actions.create.match(action))
-      return bound.create(action.payload.item);
-    if (actions.update && actions.update.match(action))
-      return bound.update(action.payload.id, action.payload.item);
-    if (actions.remove && actions.remove.match(action))
-      return bound.remove(action.payload.id);
+    if (actions.create?.match(action))
+      return bound.create(action.payload);
+    if (actions.update?.match(action))
+      return bound.update(action.payload);
+    if (actions.remove?.match(action))
+      return bound.remove(action.payload);
     return;
   },
   merge: (existing, incoming) => {
@@ -29010,24 +29016,23 @@ var createTransitions = (type, mode = 0 /* DEFAULT */) => (options) => {
 function crudPrepare(key) {
   if (key !== undefined) {
     return {
-      create: (item) => ({ payload: { item }, transitionId: String(item[key]) }),
-      update: (id, item) => ({ payload: { id, item }, transitionId: id }),
-      remove: (id) => ({ payload: { id }, transitionId: id })
+      create: (item) => ({ payload: item, transitionId: String(item[key]) }),
+      update: (dto) => ({ payload: dto, transitionId: String(dto[key]) }),
+      remove: (dto) => ({ payload: dto, transitionId: String(dto[key]) })
     };
   }
   return (keys) => ({
     create: (item) => ({
-      payload: { item },
+      payload: item,
       transitionId: keys.map((k) => String(item[k])).join("/")
     }),
-    update: (...args) => {
-      const path = args.slice(0, keys.length);
-      const item = args[keys.length];
-      return { payload: { path, item }, transitionId: path.join("/") };
-    },
-    remove: (...args) => ({
-      payload: { path: args },
-      transitionId: args.join("/")
+    update: (dto) => ({
+      payload: dto,
+      transitionId: keys.map((k) => String(dto[k])).join("/")
+    }),
+    remove: (dto) => ({
+      payload: dto,
+      transitionId: keys.map((k) => String(dto[k])).join("/")
     })
   });
 }
@@ -29256,12 +29261,12 @@ var singularState = ({
   update: (state, partial) => state ? { ...state, ...partial } : state,
   remove: (state) => state !== null ? null : state,
   wire: (bound, action, actions) => {
-    if (actions.create && actions.create.match(action))
-      return bound.create(action.payload.item);
-    if (actions.update && actions.update.match(action))
-      return bound.update(action.payload.item);
-    if (actions.remove && actions.remove.match(action))
-      return bound.remove();
+    if (actions.create?.match(action))
+      return bound.create(action.payload);
+    if (actions.update?.match(action))
+      return bound.update(action.payload);
+    if (actions.remove?.match(action))
+      return bound.remove(undefined);
     return;
   },
   merge: (existing, incoming) => {
@@ -29283,8 +29288,8 @@ var singularState = ({
 });
 
 // usecases/lib/store/profile/actions.ts
-var updatePrepare = (item) => ({ payload: { item }, transitionId: "profile" });
-var clearPrepare = () => ({ payload: {}, transitionId: "profile" });
+var updatePrepare = (item) => ({ payload: item, transitionId: "profile" });
+var clearPrepare = () => ({ payload: undefined, transitionId: "profile" });
 var updateProfile = createTransitions("profile::update")(updatePrepare);
 var clearProfile = createTransitions("profile::clear")(clearPrepare);
 
@@ -29510,7 +29515,7 @@ var nestedRecordState = () => ({
   compare: compare3,
   eq: eq3
 }) => {
-  const extractPath = (item) => keys.map((k) => item[k]);
+  const extractPath = (dto) => keys.map((k) => String(dto[k]));
   const mergeAtDepth = (existing, incoming, depth) => {
     let merged;
     for (const id in existing) {
@@ -29561,26 +29566,22 @@ var nestedRecordState = () => ({
   };
   return {
     create: (state, item) => setAt(state, extractPath(item), item),
-    update: (state, ...args) => {
-      const ids = args.slice(0, keys.length);
-      const partial = args[keys.length];
-      const existing = getAt(state, ids);
+    update: (state, dto) => {
+      const path = extractPath(dto);
+      const existing = getAt(state, path);
       if (!existing)
         return state;
-      return setAt(state, ids, { ...existing, ...partial });
+      return setAt(state, path, { ...existing, ...dto });
     },
-    remove: (state, ...args) => {
-      const ids = args.slice(0, keys.length);
-      return removeAt(state, ids);
-    },
+    remove: (state, dto) => removeAt(state, extractPath(dto)),
     merge: (existing, incoming) => mergeAtDepth(existing, incoming, keys.length),
     wire: (bound, action, actions) => {
-      if (actions.create && actions.create.match(action))
-        return bound.create(action.payload.item);
-      if (actions.update && actions.update.match(action))
-        return bound.update(...action.payload.path, action.payload.item);
-      if (actions.remove && actions.remove.match(action))
-        return bound.remove(...action.payload.path);
+      if (actions.create?.match(action))
+        return bound.create(action.payload);
+      if (actions.update?.match(action))
+        return bound.update(action.payload);
+      if (actions.remove?.match(action))
+        return bound.remove(action.payload);
       return;
     }
   };
@@ -29594,15 +29595,15 @@ var recordState = ({
   return {
     create: nested.create,
     merge: nested.merge,
-    update: (state, itemId, partialItem) => nested.update(state, itemId, partialItem),
-    remove: (state, itemId) => nested.remove(state, itemId),
+    update: (state, dto) => nested.update(state, dto),
+    remove: (state, dto) => nested.remove(state, dto),
     wire: (bound, action, actions) => {
-      if (actions.create && actions.create.match(action))
-        return bound.create(action.payload.item);
-      if (actions.update && actions.update.match(action))
-        return bound.update(action.payload.id, action.payload.item);
-      if (actions.remove && actions.remove.match(action))
-        return bound.remove(action.payload.id);
+      if (actions.create?.match(action))
+        return bound.create(action.payload);
+      if (actions.update?.match(action))
+        return bound.update(action.payload);
+      if (actions.remove?.match(action))
+        return bound.remove(action.payload);
       return;
     }
   };
@@ -30757,7 +30758,7 @@ var App = () => {
   const handleEditEpic = async (epic) => {
     const transitionId = epic.id;
     try {
-      dispatch(editEpic.stage(epic.id, epic));
+      dispatch(editEpic.stage(epic));
       await simulateAPIRequest();
       dispatch(editEpic.commit(transitionId));
     } catch (error) {
@@ -30767,7 +30768,7 @@ var App = () => {
   const handleDeleteEpic = async (epic) => {
     const transitionId = epic.id;
     try {
-      dispatch(deleteEpic.stage(epic.id));
+      dispatch(deleteEpic.stage({ id: epic.id }));
       await simulateAPIRequest();
       dispatch(deleteEpic.commit(transitionId));
     } catch (error) {
@@ -30797,7 +30798,7 @@ var App = () => {
   const handleEditProjectTodo = async (todo) => {
     const transitionId = `${todo.projectId}/${todo.id}`;
     try {
-      dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+      dispatch(editProjectTodo.stage(todo));
       await simulateAPIRequest();
       dispatch(editProjectTodo.commit(transitionId));
     } catch (error) {
@@ -30807,7 +30808,7 @@ var App = () => {
   const handleDeleteProjectTodo = async (todo) => {
     const transitionId = `${todo.projectId}/${todo.id}`;
     try {
-      dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+      dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
       await simulateAPIRequest();
       dispatch(deleteProjectTodo.commit(transitionId));
     } catch (error) {
@@ -30828,7 +30829,7 @@ var App = () => {
   const handleEditActivity = async (entry) => {
     const transitionId = entry.id;
     try {
-      dispatch(editActivity.stage(entry.id, entry));
+      dispatch(editActivity.stage(entry));
       await simulateAPIRequest();
       dispatch(editActivity.commit(transitionId));
     } catch (error) {
@@ -30838,7 +30839,7 @@ var App = () => {
   const handleDismissActivity = async (entry) => {
     const transitionId = entry.id;
     try {
-      dispatch(dismissActivity.stage(entry.id));
+      dispatch(dismissActivity.stage({ id: entry.id }));
       await simulateAPIRequest();
       dispatch(dismissActivity.commit(transitionId));
     } catch (error) {
@@ -30847,19 +30848,19 @@ var App = () => {
   };
   const retryTransition = (action) => {
     if (createEpic.stage.match(action))
-      return handleCreateEpic(action.payload.item);
+      return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
-      return handleEditEpic(action.payload.item);
+      return handleEditEpic(action.payload);
     if (updateProfile.stage.match(action))
-      return handleUpdateProfile(action.payload.item);
+      return handleUpdateProfile(action.payload);
     if (createProjectTodo.stage.match(action))
-      return handleCreateProjectTodo(action.payload.item);
+      return handleCreateProjectTodo(action.payload);
     if (editProjectTodo.stage.match(action))
-      return handleEditProjectTodo(action.payload.item);
+      return handleEditProjectTodo(action.payload);
     if (logActivity.stage.match(action))
-      return handleLogActivity(action.payload.item);
+      return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
-      return handleEditActivity(action.payload.item);
+      return handleEditActivity(action.payload);
   };
   useAutoRetry(retryTransition);
   return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
@@ -32566,15 +32567,15 @@ var description2 = {
 var App2 = () => {
   const dispatch = useDispatch();
   const handleCreateEpic = (epic) => dispatch(createEpic.stage(epic));
-  const handleEditEpic = (epic) => dispatch(editEpic.stage(epic.id, epic));
-  const handleDeleteEpic = (epic) => dispatch(deleteEpic.stage(epic.id));
+  const handleEditEpic = (epic) => dispatch(editEpic.stage(epic));
+  const handleDeleteEpic = (epic) => dispatch(deleteEpic.stage({ id: epic.id }));
   const handleUpdateProfile = (update) => dispatch(updateProfile.stage(update));
   const handleCreateProjectTodo = (todo) => dispatch(createProjectTodo.stage(todo));
-  const handleEditProjectTodo = (todo) => dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
-  const handleDeleteProjectTodo = (todo) => dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+  const handleEditProjectTodo = (todo) => dispatch(editProjectTodo.stage(todo));
+  const handleDeleteProjectTodo = (todo) => dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
   const handleLogActivity = (entry) => dispatch(logActivity.stage(entry));
-  const handleEditActivity = (entry) => dispatch(editActivity.stage(entry.id, entry));
-  const handleDismissActivity = (entry) => dispatch(dismissActivity.stage(entry.id));
+  const handleEditActivity = (entry) => dispatch(editActivity.stage(entry));
+  const handleDismissActivity = (entry) => dispatch(dismissActivity.stage({ id: entry.id }));
   const retryTransition = (action) => dispatch(action);
   useAutoRetry(retryTransition);
   return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Layout, {
@@ -32711,7 +32712,7 @@ function* rootSaga() {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(createEpic.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(createEpic.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(createEpic.commit(transitionId));
     } catch (error) {
       yield put(createEpic.fail(transitionId, error));
@@ -32748,7 +32749,7 @@ function* rootSaga() {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(createProjectTodo.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(createProjectTodo.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(createProjectTodo.commit(transitionId));
     } catch (error) {
       yield put(createProjectTodo.fail(transitionId, error));
@@ -32776,7 +32777,7 @@ function* rootSaga() {
     const transitionId = getTransitionMeta(action).id;
     try {
       yield simulateAPIRequest();
-      yield put(logActivity.amend(transitionId, { ...action.payload.item, id: generateId() }));
+      yield put(logActivity.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(logActivity.commit(transitionId));
     } catch (error) {
       yield put(logActivity.fail(transitionId, error));
@@ -32835,10 +32836,10 @@ var createEpicThunk = (epic) => async (dispatch) => {
     dispatch(createEpic.fail(transitionId, error));
   }
 };
-var editEpicThunk = (id, update) => async (dispatch) => {
-  const transitionId = id;
+var editEpicThunk = (epic) => async (dispatch) => {
+  const transitionId = epic.id;
   try {
-    dispatch(editEpic.stage(id, update));
+    dispatch(editEpic.stage(epic));
     await simulateAPIRequest();
     dispatch(editEpic.commit(transitionId));
   } catch (error) {
@@ -32848,7 +32849,7 @@ var editEpicThunk = (id, update) => async (dispatch) => {
 var deleteEpicThunk = (id) => async (dispatch) => {
   const transitionId = id;
   try {
-    dispatch(deleteEpic.stage(id));
+    dispatch(deleteEpic.stage({ id }));
     await simulateAPIRequest();
     dispatch(deleteEpic.commit(transitionId));
   } catch {
@@ -32878,7 +32879,7 @@ var createProjectTodoThunk = (todo) => async (dispatch) => {
 var editProjectTodoThunk = (todo) => async (dispatch) => {
   const transitionId = `${todo.projectId}/${todo.id}`;
   try {
-    dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+    dispatch(editProjectTodo.stage(todo));
     await simulateAPIRequest();
     dispatch(editProjectTodo.commit(transitionId));
   } catch (error) {
@@ -32888,7 +32889,7 @@ var editProjectTodoThunk = (todo) => async (dispatch) => {
 var deleteProjectTodoThunk = (todo) => async (dispatch) => {
   const transitionId = `${todo.projectId}/${todo.id}`;
   try {
-    dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+    dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
     await simulateAPIRequest();
     dispatch(deleteProjectTodo.commit(transitionId));
   } catch {
@@ -32909,7 +32910,7 @@ var logActivityThunk = (entry) => async (dispatch) => {
 var editActivityThunk = (entry) => async (dispatch) => {
   const transitionId = entry.id;
   try {
-    dispatch(editActivity.stage(entry.id, entry));
+    dispatch(editActivity.stage(entry));
     await simulateAPIRequest();
     dispatch(editActivity.commit(transitionId));
   } catch (error) {
@@ -32919,7 +32920,7 @@ var editActivityThunk = (entry) => async (dispatch) => {
 var dismissActivityThunk = (entry) => async (dispatch) => {
   const transitionId = entry.id;
   try {
-    dispatch(dismissActivity.stage(entry.id));
+    dispatch(dismissActivity.stage({ id: entry.id }));
     await simulateAPIRequest();
     dispatch(dismissActivity.commit(transitionId));
   } catch {
@@ -32974,7 +32975,7 @@ var description3 = {
 var App3 = () => {
   const dispatch = useDispatch();
   const handleCreateEpic = async (epic) => dispatch(createEpicThunk(epic));
-  const handleEditEpic = async (epic) => dispatch(editEpicThunk(epic.id, epic));
+  const handleEditEpic = async (epic) => dispatch(editEpicThunk(epic));
   const handleDeleteEpic = async ({ id }) => dispatch(deleteEpicThunk(id));
   const handleUpdateProfile = async (update) => dispatch(updateProfileThunk(update));
   const handleCreateProjectTodo = async (todo) => dispatch(createProjectTodoThunk(todo));
@@ -32985,19 +32986,19 @@ var App3 = () => {
   const handleDismissActivity = async (entry) => dispatch(dismissActivityThunk(entry));
   const retryTransition = (action) => {
     if (createEpic.stage.match(action))
-      return handleCreateEpic(action.payload.item);
+      return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
-      return handleEditEpic(action.payload.item);
+      return handleEditEpic(action.payload);
     if (updateProfile.stage.match(action))
-      return handleUpdateProfile(action.payload.item);
+      return handleUpdateProfile(action.payload);
     if (createProjectTodo.stage.match(action))
-      return handleCreateProjectTodo(action.payload.item);
+      return handleCreateProjectTodo(action.payload);
     if (editProjectTodo.stage.match(action))
-      return handleEditProjectTodo(action.payload.item);
+      return handleEditProjectTodo(action.payload);
     if (logActivity.stage.match(action))
-      return handleLogActivity(action.payload.item);
+      return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
-      return handleEditActivity(action.payload.item);
+      return handleEditActivity(action.payload);
   };
   useAutoRetry(retryTransition);
   return /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(Layout, {

@@ -12,7 +12,7 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
         try {
             yield simulateAPIRequest();
-            yield put(createEpic.amend(transitionId, { ...action.payload.item, id: generateId() }));
+            yield put(createEpic.amend(transitionId, { ...action.payload, id: generateId() }));
             yield put(createEpic.commit(transitionId));
         } catch (error) {
             yield put(createEpic.fail(transitionId, error));
@@ -53,7 +53,7 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
         try {
             yield simulateAPIRequest();
-            yield put(createProjectTodo.amend(transitionId, { ...action.payload.item, id: generateId() }));
+            yield put(createProjectTodo.amend(transitionId, { ...action.payload, id: generateId() }));
             yield put(createProjectTodo.commit(transitionId));
         } catch (error) {
             yield put(createProjectTodo.fail(transitionId, error));
@@ -84,7 +84,7 @@ export function* rootSaga() {
         const transitionId = getTransitionMeta(action).id;
         try {
             yield simulateAPIRequest();
-            yield put(logActivity.amend(transitionId, { ...action.payload.item, id: generateId() }));
+            yield put(logActivity.amend(transitionId, { ...action.payload, id: generateId() }));
             yield put(logActivity.commit(transitionId));
         } catch (error) {
             yield put(logActivity.fail(transitionId, error));

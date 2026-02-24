@@ -44,7 +44,7 @@ export const App: FC = () => {
     const dispatch = useDispatch() as typeof store.dispatch;
 
     const handleCreateEpic = async (epic: Epic) => dispatch(createEpicThunk(epic));
-    const handleEditEpic = async (epic: Epic) => dispatch(editEpicThunk(epic.id, epic));
+    const handleEditEpic = async (epic: Epic) => dispatch(editEpicThunk(epic));
     const handleDeleteEpic = async ({ id }: Epic) => dispatch(deleteEpicThunk(id));
     const handleUpdateProfile = async (update: Partial<Profile>) => dispatch(updateProfileThunk(update));
     const handleCreateProjectTodo = async (todo: ProjectTodo) => dispatch(createProjectTodoThunk(todo));
@@ -58,13 +58,13 @@ export const App: FC = () => {
      * CRUD update payloads are `Partial<T>` — cast to full type since
      * failed stage actions always carry the complete entity. */
     const retryTransition = (action: StagedAction) => {
-        if (createEpic.stage.match(action)) return handleCreateEpic(action.payload.item);
-        if (editEpic.stage.match(action)) return handleEditEpic(action.payload.item as Epic);
-        if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload.item);
-        if (createProjectTodo.stage.match(action)) return handleCreateProjectTodo(action.payload.item);
-        if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload.item as ProjectTodo);
-        if (logActivity.stage.match(action)) return handleLogActivity(action.payload.item);
-        if (editActivity.stage.match(action)) return handleEditActivity(action.payload.item as ActivityEntry);
+        if (createEpic.stage.match(action)) return handleCreateEpic(action.payload);
+        if (editEpic.stage.match(action)) return handleEditEpic(action.payload as Epic);
+        if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload);
+        if (createProjectTodo.stage.match(action)) return handleCreateProjectTodo(action.payload);
+        if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload as ProjectTodo);
+        if (logActivity.stage.match(action)) return handleLogActivity(action.payload);
+        if (editActivity.stage.match(action)) return handleEditActivity(action.payload as ActivityEntry);
     };
 
     useAutoRetry(retryTransition);
