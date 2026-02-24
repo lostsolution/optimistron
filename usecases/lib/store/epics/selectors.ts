@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import {
+    selectAllFailedTransitions as selectAllFailed,
     selectFailedTransition,
-    selectFailedTransitions,
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
@@ -46,10 +46,5 @@ export const selectAllFailedTransitions = createSelector(
     (state: State) => state.profile,
     (state: State) => state.projects,
     (state: State) => state.activity,
-    (epics, profile, projects, activity) => [
-        ...selectFailedTransitions(epics),
-        ...selectFailedTransitions(profile),
-        ...selectFailedTransitions(projects),
-        ...selectFailedTransitions(activity),
-    ],
+    (epics, profile, projects, activity) => selectAllFailed(epics, profile, projects, activity),
 );

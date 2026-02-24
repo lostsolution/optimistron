@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { useMockApi } from '~usecases/lib/components/mocks/MockApiProvider';
 import { selectAllFailedTransitions } from '~usecases/lib/store/epics/selectors';
@@ -10,7 +10,7 @@ import { selectAllFailedTransitions } from '~usecases/lib/store/epics/selectors'
  *  `retry` is called with each failed stage action — the App-level
  *  handler routes it through the correct lifecycle (component async,
  *  thunk, or saga re-dispatch). */
-export const useAutoRetry = (retry: (action: TransitionAction) => void) => {
+export const useAutoRetry = (retry: (action: StagedAction) => void) => {
     const { online } = useMockApi();
     const failedTransitions = useSelector(selectAllFailedTransitions);
     const retryRef = useRef(retry);

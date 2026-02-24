@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { useDispatch } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { ActivityFeed } from '~usecases/lib/components/activity/ActivityFeed';
 import { ProfileCard } from '~usecases/lib/components/profile/ProfileCard';
@@ -143,8 +143,10 @@ export const App: FC = () => {
         }
     };
 
-    /** Route a failed stage action through the correct lifecycle handler */
-    const retryTransition = (action: TransitionAction) => {
+    /** Route a failed stage action through the correct lifecycle handler.
+     * CRUD update payloads are `Partial<T>` — cast to full type since
+     * failed stage actions always carry the complete entity. */
+    const retryTransition = (action: StagedAction) => {
         if (createEpic.stage.match(action)) return handleCreateEpic(action.payload.item);
         if (editEpic.stage.match(action)) return handleEditEpic(action.payload.item as Epic);
         if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload.item);

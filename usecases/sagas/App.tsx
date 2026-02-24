@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { useDispatch } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { ActivityFeed } from '~usecases/lib/components/activity/ActivityFeed';
 import { ProfileCard } from '~usecases/lib/components/profile/ProfileCard';
@@ -42,7 +42,7 @@ export const App: FC = () => {
     const handleDismissActivity = (entry: ActivityEntry) => dispatch(dismissActivity.stage(entry.id));
 
     /** Sagas observe stage actions — retry is just a re-dispatch */
-    const retryTransition = (action: TransitionAction) => dispatch(action);
+    const retryTransition = (action: StagedAction) => dispatch(action);
 
     useAutoRetry(retryTransition);
 

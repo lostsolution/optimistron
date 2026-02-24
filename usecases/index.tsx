@@ -42,6 +42,7 @@ const BannerSvg: FC = () => (
         <circle cx="28" cy="20" r="5.5" fill="#ff5f57" />
         <circle cx="46" cy="20" r="5.5" fill="#febc2e" />
         <circle cx="64" cy="20" r="5.5" fill="#28c840" />
+        {/* prettier-ignore */}
         <g fill="url(#bn-title-grad)">
             <text fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" fontSize="12.5" xmlSpace="preserve">
                 <tspan x="85" y="62"> ██████╗ ██████╗ ████████╗██╗███╗   ███╗██╗███████╗████████╗██████╗  ██████╗ ███╗   ██╗</tspan>
@@ -85,6 +86,7 @@ const LifecycleSvg: FC = () => (
         </defs>
         <rect width="850" height="150" rx="12" fill="#0d1117" />
         <rect x="1" y="1" width="848" height="148" rx="11" fill="none" stroke="url(#lc-border-grad)" strokeWidth="1.5" />
+        {/* prettier-ignore */}
         <text fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" fontSize="13" xmlSpace="preserve">
             <tspan x="30" y="40" fill="#4ade80">  stage</tspan><tspan fill="#484f58"> ───▶ </tspan><tspan fill="#38bdf8">commit</tspan><tspan fill="#484f58">   ✓  stage optimistically, commit on success</tspan>
             <tspan x="30" y="65" fill="#484f58">    ├──────▶ </tspan><tspan fill="#c4b5fd">amend</tspan><tspan fill="#484f58">    ↻  update staged transition before committing</tspan>
