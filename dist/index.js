@@ -30645,9 +30645,12 @@ var useAutoRetry = (retry) => {
   const failedTransitions = useSelector(selectAllFailedTransitions2);
   const retryRef = import_react13.useRef(retry);
   retryRef.current = retry;
+  const wasOnline = import_react13.useRef(online);
   import_react13.useEffect(() => {
-    if (online)
+    if (online && !wasOnline.current) {
       failedTransitions.forEach((a) => retryRef.current(a));
+    }
+    wasOnline.current = online;
   }, [online, failedTransitions]);
 };
 
