@@ -28717,11 +28717,10 @@ var processTransition = (transition, transitions) => {
       const nextTransitions = [...transitions];
       const existingMeta = getTransitionMeta(existing);
       const trailing = existing.type === transition.type ? existingMeta.trailing : existing;
-      const retryMeta = existingMeta.failed ? { retryCount: (existingMeta.retryCount ?? 0) + 1, lastRetry: Date.now() } : {};
       if (mode === 2 /* REVERTIBLE */) {
-        nextTransitions[matchIdx] = updateTransition(stage, { ...retryMeta, trailing });
+        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
       } else
-        nextTransitions[matchIdx] = updateTransition(stage, retryMeta);
+        nextTransitions[matchIdx] = stage;
       return nextTransitions;
     }
     case "fail" /* FAIL */: {
