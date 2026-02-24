@@ -10,7 +10,7 @@ Internals, API, and advanced patterns. For quick start, see [README.md](./README
 - [Sanitization](#sanitization)
 - [Data Flow](#data-flow)
 - [Custom Handlers](#custom-handlers)
-- [TRAILING Mode](#trailing-mode)
+- [Transition Modes](#transition-modes)
 - [Async Patterns](#async-patterns)
 - [API Reference](#api-reference)
 
@@ -192,19 +192,23 @@ For shapes not covered by the built-ins, implement `StateHandler` directly.
 
 ---
 
-## TRAILING Mode
+## Transition Modes
 
-`DedupeMode.TRAILING` — undo-on-failure for destructive ops:
+`TransitionMode` controls re-staging and failure behavior per action type:
+
+| Mode | On re-stage | On fail | Use case |
+|------|-------------|---------|----------|
+| `DEFAULT` | Overwrite | Flag as failed | Edits |
+| `DISPOSABLE` | Overwrite | Drop transition | Creates |
+| `REVERTIBLE` | Store trailing | Stash (revert) | Deletes |
 
 ```typescript
-const crud = crudPrepare<Todo>('id');
-const deleteTodo = createTransitions('todos::delete', DedupeMode.TRAILING)(crud.remove);
-
-dispatch(deleteTodo.stage(id));   // gone from UI (transitionId auto-detected)
-dispatch(deleteTodo.stash(id));   // back — restored from trailing
+const createTodo  = createTransitions('todos::add', TransitionMode.DISPOSABLE)(crud.create);
+const editTodo    = createTransitions('todos::edit')(crud.update);
+const deleteTodo  = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
 ```
 
-Replaced transitions are stored as fallback. `stash` restores instead of dropping.
+`REVERTIBLE` stores the replaced transition as a trailing fallback. On fail or explicit stash, the previous transition is restored.
 
 ---
 
@@ -312,7 +316,11 @@ const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
 // crud.remove(projectId, id) → { payload: { path }, transitionId: "projectId/id" }
 ```
 
-### `createTransitions(type, dedupe?)(prepare)`
+### `retryTransition(action)`
+
+Strips `failed` and `conflict` flags from a `StagedAction`, returning a clean action ready for re-dispatch.
+
+### `createTransitions(type, mode?)(prepare)`
 
 Creates `.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`.
 
@@ -335,6 +343,8 @@ createTransitions('todos::add')({
 | `selectFailedTransition(id)` | `StagedAction \| undefined` |
 | `selectConflictingTransition(id)` | `StagedAction \| undefined` |
 | `selectFailedTransitions` | `StagedAction[]` |
+| `selectAllFailedTransitions(...states)` | `StagedAction[]` — aggregated across slices |
+| `selectRetryCount(id)` | `number` — retry count (0 if none) |
 
 ### State Handler Factories
 
@@ -349,6 +359,6 @@ createTransitions('todos::add')({
 
 ```typescript
 Operation.STAGE | .AMEND | .COMMIT | .STASH | .FAIL
-DedupeMode.OVERWRITE | .TRAILING
+TransitionMode.DEFAULT | .DISPOSABLE | .REVERTIBLE
 OptimisticMergeResult.SKIP | .CONFLICT
 ```

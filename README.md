@@ -50,14 +50,14 @@ No `isLoading`, `error`, `isOptimistic` flags. A pending transition means loadin
 
 ```typescript
 import { configureStore, createSelector } from '@reduxjs/toolkit';
-import { optimistron, createTransitions, crudPrepare, recordState } from '@lostsolution/optimistron';
+import { optimistron, createTransitions, crudPrepare, recordState, TransitionMode } from '@lostsolution/optimistron';
 
 type Todo = { id: string; value: string; done: boolean; revision: number };
 
 const crud = crudPrepare<Todo>('id');
-const createTodo = createTransitions('todos::add')(crud.create);
+const createTodo = createTransitions('todos::add', TransitionMode.DISPOSABLE)(crud.create);
 const editTodo = createTransitions('todos::edit')(crud.update);
-const deleteTodo = createTransitions('todos::delete')(crud.remove);
+const deleteTodo = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
 
 const { reducer: todos, selectOptimistic } = optimistron(
     'todos',
@@ -225,13 +225,103 @@ All three modes are fully backwards compatible. The CRUD map only requires `{ ma
 
 ---
 
+## Selectors
+
+### `selectOptimistic`
+
+Returned from `optimistron()`. Replays pending transitions onto committed state at read-time. Wrap with `createSelector` for memoization:
+
+```typescript
+import { createSelector } from '@reduxjs/toolkit';
+
+const selectTodos = createSelector(
+    (state: RootState) => state.todos,
+    selectOptimistic((todos) => Object.values(todos.state)),
+);
+```
+
+### Per-entity status
+
+All transition selectors take a `transitionId` and a `TransitionState` — no global store shape required:
+
+```typescript
+import {
+    selectIsOptimistic,
+    selectIsFailed,
+    selectIsConflicting,
+    selectFailedTransition,
+    selectConflictingTransition,
+    selectRetryCount,
+} from '@lostsolution/optimistron';
+
+selectIsOptimistic(id)(state.todos)          // true if transition is pending
+selectIsFailed(id)(state.todos)              // true if transition has failed
+selectIsConflicting(id)(state.todos)         // true if transition conflicts with committed state
+
+selectFailedTransition(id)(state.todos)      // StagedAction | undefined
+selectConflictingTransition(id)(state.todos) // StagedAction | undefined
+selectRetryCount(id)(state.todos)            // number of times this transition was re-staged after failure
+```
+
+### Aggregate selectors
+
+```typescript
+import { selectFailedTransitions, selectAllFailedTransitions } from '@lostsolution/optimistron';
+
+selectFailedTransitions(state.todos)                                // all failed in one slice
+selectAllFailedTransitions(state.todos, state.projects, state.activity) // all failed across slices
+```
+
+---
+
+## Transition Modes
+
+`TransitionMode` controls re-staging and failure behavior per action type — declared at the `createTransitions` site:
+
+```typescript
+import { createTransitions, TransitionMode } from '@lostsolution/optimistron';
+
+const createTodo  = createTransitions('todos::add', TransitionMode.DISPOSABLE)(crud.create);
+const editTodo    = createTransitions('todos::edit')(crud.update);  // DEFAULT
+const deleteTodo  = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
+```
+
+| Mode | On re-stage | On fail | Use case |
+|------|-------------|---------|----------|
+| **`DEFAULT`** | Overwrite | Flag as failed | Edits — consumer retries manually |
+| **`DISPOSABLE`** | Overwrite | Drop transition | Creates — entity never existed server-side |
+| **`REVERTIBLE`** | Store trailing | Stash (revert to trailing) | Deletes — undo on failure |
+
+### Retry
+
+Retry is a consumer concern — timing, backoff, and reconnect logic belong in your app layer. The library provides the building blocks:
+
+```typescript
+import { retryTransition, selectFailedTransition, selectRetryCount } from '@lostsolution/optimistron';
+
+const failed = selectFailedTransition(id)(state.todos);
+if (failed) {
+    const retries = selectRetryCount(id)(state.todos);
+    if (retries < 3) dispatch(retryTransition(failed));  // strips failure flags, re-stages
+}
+```
+
+### Multi-slice failure aggregation
+
+```typescript
+import { selectAllFailedTransitions } from '@lostsolution/optimistron';
+
+const allFailed = selectAllFailedTransitions(state.todos, state.projects, state.activity);
+```
+
+---
+
 ## Roadmap
 
 - **Batch transitions** — stage multiple entities under a single correlation ID. Commit/fail/stash the batch atomically.
-- **Retry strategies** — configurable retry policies for failed transitions (exponential backoff, max attempts) built into the transition lifecycle.
 - **Devtools integration** — Redux DevTools timeline visualization for transitions, sanitization events, and conflict detection.
 - **Persistence adapters** — serialize/rehydrate pending transitions across page reloads (localStorage, IndexedDB).
-- **Middleware hooks** — `onConflict`, `onStale`, `onSanitize` callbacks for custom side-effects without reducer coupling.
+- **Transition expiry / TTL** — automatic cleanup of stale failed transitions after a configurable time window.
 
 ---
 
