@@ -97,19 +97,19 @@ describe('singularState', () => {
         const bound = bindStateFactory(handler)(item);
 
         const actions = {
-            create: matcher<{ item: Profile }>('create'),
-            update: matcher<{ item: Partial<Profile> }>('update'),
-            remove: matcher<Record<string, never>>('remove'),
+            create: matcher<Profile>('create'),
+            update: matcher<Partial<Profile>>('update'),
+            remove: matcher<void>('remove'),
         };
 
         test('should wire create action', () => {
             const newItem: Profile = { id: '2', name: 'Bob', revision: 0 };
-            const result = handler.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            const result = handler.wire(bound, { type: 'create', payload: newItem }, actions);
             expect(result).toEqual(newItem);
         });
 
         test('should wire update action', () => {
-            const result = handler.wire(bound, { type: 'update', payload: { item: { name: 'Updated' } } }, actions);
+            const result = handler.wire(bound, { type: 'update', payload: { name: 'Updated' } }, actions);
             expect(result).toEqual({ ...item, name: 'Updated' });
         });
 

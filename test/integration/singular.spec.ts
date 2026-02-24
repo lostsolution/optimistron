@@ -21,15 +21,15 @@ const handler = singularState<Profile>({
     eq: (a) => (b) => a.id === b.id && a.name === b.name,
 });
 
-const create = createTransitions('profile::create')((item: Profile) => ({ payload: { item } }));
-const edit = createTransitions('profile::edit')((partial: Partial<Profile>) => ({ payload: { partial } }));
-const remove = createTransitions('profile::remove')(() => ({ payload: {} }));
+const create = createTransitions('profile::create')((item: Profile) => ({ payload: item, transitionId: item.id }));
+const edit = createTransitions('profile::edit')((partial: Partial<Profile>) => ({ payload: partial, transitionId: 'profile' }));
+const remove = createTransitions('profile::remove')(() => ({ payload: undefined as void, transitionId: 'profile' }));
 const sync = (profile: MaybeNull<Profile>) => ({ type: 'sync', payload: { profile } });
 
-const reducer: HandlerReducer<MaybeNull<Profile>, [item: Profile], [partial: Partial<Profile>], []> = ({ getState, create: c, update, remove: r }, action) => {
-    if (create.match(action)) return c(action.payload.item);
-    if (edit.match(action)) return update(action.payload.partial);
-    if (remove.match(action)) return r();
+const reducer: HandlerReducer<MaybeNull<Profile>, Profile, Partial<Profile>, void> = ({ getState, create: c, update, remove: r }, action) => {
+    if (create.match(action)) return c(action.payload);
+    if (edit.match(action)) return update(action.payload);
+    if (remove.match(action)) return r(undefined as void);
     if (action.type === 'sync') return (action as ReturnType<typeof sync>).payload.profile;
     return getState();
 };
@@ -45,12 +45,12 @@ describe('optimistron', () => {
             const amendedItem: Profile = { ...item, name: 'Amended' };
             const conflictItem: Profile = { ...item, revision: -1 };
 
-            const stage = create.stage('1', item);
+            const stage = create.stage(item);
             const amend = create.amend('1', amendedItem);
             const fail = create.fail('1', new Error());
             const stash = create.stash('1');
             const commit = create.commit('1');
-            const conflict = create.stage('1', conflictItem);
+            const conflict = create.stage(conflictItem);
 
             const initial = buildTransitionState<MaybeNull<Profile>>(null, []);
             const state = optimisticReducer(initial, stage);
@@ -111,9 +111,9 @@ describe('optimistron', () => {
         describe('delete', () => {
             const item: Profile = { id: '1', name: 'Alice', revision: 0 };
 
-            const stage = remove.stage('1');
-            const commit = remove.commit('1');
-            const stash = remove.stash('1');
+            const stage = remove.stage();
+            const commit = remove.commit('profile');
+            const stash = remove.stash('profile');
 
             const initial = buildTransitionState<MaybeNull<Profile>>(item, []);
             const state = optimisticReducer(initial, stage);
@@ -122,7 +122,7 @@ describe('optimistron', () => {
                 expect(state.state).toEqual(item);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toBeNull();
-                expect(selectIsOptimistic('1')(state)).toBe(true);
+                expect(selectIsOptimistic('profile')(state)).toBe(true);
             });
 
             test('commit', () => {
@@ -154,10 +154,10 @@ describe('optimistron', () => {
             const updatedPartial: Partial<Profile> = { name: 'Updated', revision: 2 };
             const updatedItem: Profile = { ...item, ...updatedPartial };
 
-            const stage = edit.stage('1', updatedPartial);
-            const commit = edit.commit('1');
-            const stash = edit.stash('1');
-            const fail = edit.fail('1', new Error());
+            const stage = edit.stage(updatedPartial);
+            const commit = edit.commit('profile');
+            const stash = edit.stash('profile');
+            const fail = edit.fail('profile', new Error());
 
             const initial = buildTransitionState<MaybeNull<Profile>>(item, []);
             const state = optimisticReducer(initial, stage);
@@ -166,7 +166,7 @@ describe('optimistron', () => {
                 expect(state.state).toEqual(item);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual(updatedItem);
-                expect(selectIsOptimistic('1')(state)).toBe(true);
+                expect(selectIsOptimistic('profile')(state)).toBe(true);
             });
 
             test('commit', () => {
@@ -188,7 +188,7 @@ describe('optimistron', () => {
 
                 expect(next.state).toEqual(item);
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
-                expect(selectIsFailed('1')(next)).toBe(true);
+                expect(selectIsFailed('profile')(next)).toBe(true);
             });
         });
     });

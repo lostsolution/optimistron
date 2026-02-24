@@ -1,11 +1,8 @@
+import { OptimisticMergeResult } from '~/transitions';
 import type { MaybeNull } from '~/utils/types';
 import type { CrudActionMap, VersioningOptions, WiredStateHandler } from './types';
-import { OptimisticMergeResult } from '~/transitions';
 
 export type SingularStateOptions<T> = VersioningOptions<T>;
-
-/** Typed CRUD action map for singular state */
-type SingularCrudMap<T> = CrudActionMap<{ item: T }, { item: Partial<T> }, Record<string, never>>;
 
 /**
  * Creates a `StateHandler` for single-object state (`MaybeNull<T>`).
@@ -15,15 +12,15 @@ type SingularCrudMap<T> = CrudActionMap<{ item: T }, { item: Partial<T> }, Recor
 export const singularState = <T extends object>({
     compare,
     eq,
-}: SingularStateOptions<T>): WiredStateHandler<MaybeNull<T>, [item: T], [partial: Partial<T>], [], SingularCrudMap<T>> => ({
+}: SingularStateOptions<T>): WiredStateHandler<MaybeNull<T>, T, Partial<T>, void, CrudActionMap<T, Partial<T>, void>> => ({
     create: (_: MaybeNull<T>, item: T) => item,
     update: (state: MaybeNull<T>, partial: Partial<T>) => (state ? { ...state, ...partial } : state),
     remove: (state: MaybeNull<T>) => (state !== null ? null : state),
 
     wire: (bound, action, actions) => {
-        if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
-        if (actions.update && actions.update.match(action)) return bound.update(action.payload.item);
-        if (actions.remove && actions.remove.match(action)) return bound.remove();
+        if (actions.create?.match(action)) return bound.create(action.payload);
+        if (actions.update?.match(action)) return bound.update(action.payload);
+        if (actions.remove?.match(action)) return bound.remove(undefined as void);
         return undefined;
     },
 

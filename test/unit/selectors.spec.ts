@@ -15,7 +15,7 @@ import { updateTransition } from '~transitions';
 
 describe('selectors', () => {
     const item = createItem();
-    const stage = create.stage(item.id, item);
+    const stage = create.stage(item);
 
     describe('selectOptimistic', () => {
         const state = createIndexedState([stage]);

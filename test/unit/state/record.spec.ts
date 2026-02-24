@@ -15,29 +15,29 @@ describe('recordState', () => {
     });
 
     describe('update', () => {
-        const update: Partial<TestItem> = { value: 'newvalue', revision: 1 };
+        const update = { id: item.id, value: 'newvalue', revision: 1 };
 
         test('should edit entry if it exists', () => {
-            const next = indexedState.update({ [item.id]: item }, item.id, update);
+            const next = indexedState.update({ [item.id]: item }, update);
             expect(next[item.id]).toEqual({ ...item, ...update });
         });
 
         test('should return state in-place otherwise', () => {
             const initial = { [item.id]: item };
-            const next = indexedState.update(initial, 'unknown', update);
+            const next = indexedState.update(initial, { id: 'unknown', value: 'newvalue', revision: 1 });
             expect(next).toEqual(initial);
         });
     });
 
     describe('remove', () => {
         test('should delete entry if it exists', () => {
-            const next = indexedState.remove({ [item.id]: item }, item.id);
+            const next = indexedState.remove({ [item.id]: item }, { id: item.id });
             expect(next).toEqual({});
         });
 
         test('should return state in-place otherwise', () => {
             const state = { [item.id]: item };
-            const next = indexedState.remove(state, 'non-existing');
+            const next = indexedState.remove(state, { id: 'non-existing' });
             expect(next).toEqual(state);
         });
     });
@@ -91,19 +91,19 @@ describe('recordState', () => {
         const bound = bindStateFactory(indexedState)(state);
 
         const actions = {
-            create: matcher<{ item: TestItem }>('create'),
-            update: matcher<{ id: string; item: Partial<TestItem> }>('update'),
-            remove: matcher<{ id: string }>('remove'),
+            create: matcher<TestItem>('create'),
+            update: matcher<Partial<TestItem>>('update'),
+            remove: matcher<Partial<TestItem>>('remove'),
         };
 
         test('should wire create action', () => {
             const newItem = createItem({ id: 'new' });
-            const result = indexedState.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            const result = indexedState.wire(bound, { type: 'create', payload: newItem }, actions);
             expect(result).toEqual({ ...state, new: newItem });
         });
 
         test('should wire update action', () => {
-            const result = indexedState.wire(bound, { type: 'update', payload: { id: item.id, item: { value: 'updated' } } }, actions);
+            const result = indexedState.wire(bound, { type: 'update', payload: { id: item.id, value: 'updated' } }, actions);
             expect(result![item.id]).toEqual({ ...item, value: 'updated' });
         });
 

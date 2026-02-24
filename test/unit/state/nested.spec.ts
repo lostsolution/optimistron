@@ -44,17 +44,17 @@ describe('nestedRecordState', () => {
         const state: State = { g1: { i1: item } };
 
         test('should update existing item', () => {
-            const next = handler.update(state, ['g1', 'i1'], { value: 'updated' });
+            const next = handler.update(state, { groupId: 'g1', itemId: 'i1', value: 'updated' });
             expect(next.g1.i1).toEqual({ ...item, value: 'updated' });
         });
 
         test('should return state in-place if item does not exist', () => {
-            const next = handler.update(state, ['g1', 'missing'], { value: 'nope' });
+            const next = handler.update(state, { groupId: 'g1', itemId: 'missing', value: 'nope' });
             expect(next).toBe(state);
         });
 
         test('should return state in-place if group does not exist', () => {
-            const next = handler.update(state, ['missing', 'i1'], { value: 'nope' });
+            const next = handler.update(state, { groupId: 'missing', itemId: 'i1', value: 'nope' });
             expect(next).toBe(state);
         });
     });
@@ -63,17 +63,17 @@ describe('nestedRecordState', () => {
         const state: State = { g1: { i1: item } };
 
         test('should remove existing item', () => {
-            const next = handler.remove(state, ['g1', 'i1']);
+            const next = handler.remove(state, { groupId: 'g1', itemId: 'i1' });
             expect(next).toEqual({ g1: {} });
         });
 
         test('should return state in-place if item does not exist', () => {
-            const next = handler.remove(state, ['g1', 'missing']);
+            const next = handler.remove(state, { groupId: 'g1', itemId: 'missing' });
             expect(next).toBe(state);
         });
 
         test('should return state in-place if group does not exist', () => {
-            const next = handler.remove(state, ['missing', 'i1']);
+            const next = handler.remove(state, { groupId: 'missing', itemId: 'i1' });
             expect(next).toBe(state);
         });
     });
@@ -149,24 +149,24 @@ describe('nestedRecordState', () => {
         const bound = bindStateFactory(handler)(state);
 
         const actions = {
-            create: matcher<{ item: Item }>('create'),
-            update: matcher<{ path: [string, string]; item: Partial<Item> }>('update'),
-            remove: matcher<{ path: [string, string] }>('remove'),
+            create: matcher<Item>('create'),
+            update: matcher<Partial<Item> & Pick<Item, 'groupId' | 'itemId'>>('update'),
+            remove: matcher<Pick<Item, 'groupId' | 'itemId'>>('remove'),
         };
 
         test('should wire create action', () => {
             const newItem: Item = { groupId: 'g2', itemId: 'i2', value: 'new', revision: 0 };
-            const result = handler.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            const result = handler.wire(bound, { type: 'create', payload: newItem }, actions);
             expect(result).toEqual({ ...state, g2: { i2: newItem } });
         });
 
-        test('should wire update action with path spread', () => {
-            const result = handler.wire(bound, { type: 'update', payload: { path: ['g1', 'i1'], item: { value: 'updated' } } }, actions);
+        test('should wire update action', () => {
+            const result = handler.wire(bound, { type: 'update', payload: { groupId: 'g1', itemId: 'i1', value: 'updated' } }, actions);
             expect((result as any).g1.i1).toEqual({ ...item, value: 'updated' });
         });
 
-        test('should wire remove action with path spread', () => {
-            const result = handler.wire(bound, { type: 'remove', payload: { path: ['g1', 'i1'] } }, actions);
+        test('should wire remove action', () => {
+            const result = handler.wire(bound, { type: 'remove', payload: { groupId: 'g1', itemId: 'i1' } }, actions);
             expect(result).toEqual({ g1: {} });
         });
 

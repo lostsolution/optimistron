@@ -44,13 +44,13 @@ describe('listState', () => {
     describe('update', () => {
         test('should merge partial into matching item', () => {
             const state = [item];
-            const result = handler.update(state, '1', { name: 'Updated' });
+            const result = handler.update(state, { id: '1', name: 'Updated' });
             expect(result).toEqual([{ ...item, name: 'Updated' }]);
         });
 
         test('should return same reference if item not found', () => {
             const state = [item];
-            const result = handler.update(state, 'nonexistent', { name: 'Updated' });
+            const result = handler.update(state, { id: 'nonexistent', name: 'Updated' });
             expect(result).toBe(state);
         });
 
@@ -59,7 +59,7 @@ describe('listState', () => {
             const b: Item = { id: '2', name: 'B', revision: 0 };
             const c: Item = { id: '3', name: 'C', revision: 0 };
             const state = [a, b, c];
-            const result = handler.update(state, '2', { name: 'Updated' });
+            const result = handler.update(state, { id: '2', name: 'Updated' });
             expect(result).toEqual([a, { ...b, name: 'Updated' }, c]);
         });
     });
@@ -67,13 +67,13 @@ describe('listState', () => {
     describe('remove', () => {
         test('should remove item by key', () => {
             const state = [item];
-            const result = handler.remove(state, '1');
+            const result = handler.remove(state, { id: '1' });
             expect(result).toEqual([]);
         });
 
         test('should return same reference if item not found', () => {
             const state = [item];
-            const result = handler.remove(state, 'nonexistent');
+            const result = handler.remove(state, { id: 'nonexistent' });
             expect(result).toBe(state);
         });
 
@@ -82,7 +82,7 @@ describe('listState', () => {
             const b: Item = { id: '2', name: 'B', revision: 0 };
             const c: Item = { id: '3', name: 'C', revision: 0 };
             const state = [a, b, c];
-            const result = handler.remove(state, '2');
+            const result = handler.remove(state, { id: '2' });
             expect(result).toEqual([a, c]);
         });
     });
@@ -148,19 +148,19 @@ describe('listState', () => {
         const bound = bindStateFactory(handler)(state);
 
         const actions = {
-            create: matcher<{ item: Item }>('create'),
-            update: matcher<{ id: string; item: Partial<Item> }>('update'),
-            remove: matcher<{ id: string }>('remove'),
+            create: matcher<Item>('create'),
+            update: matcher<Partial<Item>>('update'),
+            remove: matcher<Partial<Item>>('remove'),
         };
 
         test('should wire create action', () => {
             const newItem: Item = { id: '2', name: 'Bob', revision: 0 };
-            const result = handler.wire(bound, { type: 'create', payload: { item: newItem } }, actions);
+            const result = handler.wire(bound, { type: 'create', payload: newItem }, actions);
             expect(result).toEqual([item, newItem]);
         });
 
         test('should wire update action', () => {
-            const result = handler.wire(bound, { type: 'update', payload: { id: '1', item: { name: 'Updated' } } }, actions);
+            const result = handler.wire(bound, { type: 'update', payload: { id: '1', name: 'Updated' } }, actions);
             expect(result).toEqual([{ ...item, name: 'Updated' }]);
         });
 

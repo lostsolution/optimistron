@@ -1,46 +1,49 @@
-import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
-import type { StringKeys } from '~/utils/types';
 import { OptimisticMergeResult } from '~/transitions';
+import type { StringKeys } from '~/utils/types';
+import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
 
 export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
-
-/** Typed CRUD action map for list state */
-type ListCrudMap<T> = CrudActionMap<{ item: T }, { id: string; item: Partial<T> }, { id: string }>;
 
 /**
  * Creates a `StateHandler` for ordered list state (`T[]`).
  * Items are identified by a string key property on `T`.
  * Useful when insertion order matters or consumers need array semantics.
+ * Handler types use `Partial<T>` for update/remove DTOs — narrower types
+ * are enforced at dispatch time via `crudPrepare`.
  * - `compare` determines if an incoming item is newer/conflicting
- * - `eq` checks deep equality beyond versioning */
+ * - `eq` checks deep equality beyond versioning
+ */
 export const listState = <T extends Record<string, any>>({
     key,
     compare,
     eq,
-}: ListStateOptions<T>): WiredStateHandler<T[], [item: T], [itemId: string, partial: Partial<T>], [itemId: string], ListCrudMap<T>> => ({
+}: ListStateOptions<T>): WiredStateHandler<T[], T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => ({
     create: (state: T[], item: T) => {
         if (state.some((entry) => entry[key] === item[key])) return state;
         return [...state, item];
     },
 
-    update: (state: T[], itemId: string, partial: Partial<T>) => {
-        const idx = state.findIndex((entry) => entry[key as StringKeys<T>] === itemId);
+    update: (state: T[], dto: Partial<T>) => {
+        const itemId = String(dto[key]);
+        const idx = state.findIndex((entry) => entry[key] === itemId);
         if (idx === -1) return state;
+
         const next = [...state];
-        next[idx] = { ...state[idx], ...partial };
+        next[idx] = { ...state[idx], ...dto };
         return next;
     },
 
-    remove: (state: T[], itemId: string) => {
-        const idx = state.findIndex((entry) => entry[key as StringKeys<T>] === itemId);
+    remove: (state: T[], dto: Partial<T>) => {
+        const itemId = String(dto[key]);
+        const idx = state.findIndex((entry) => entry[key] === itemId);
         if (idx === -1) return state;
         return state.filter((_, i) => i !== idx);
     },
 
     wire: (bound, action, actions) => {
-        if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
-        if (actions.update && actions.update.match(action)) return bound.update(action.payload.id, action.payload.item);
-        if (actions.remove && actions.remove.match(action)) return bound.remove(action.payload.id);
+        if (actions.create?.match(action)) return bound.create(action.payload);
+        if (actions.update?.match(action)) return bound.update(action.payload);
+        if (actions.remove?.match(action)) return bound.remove(action.payload);
         return undefined;
     },
 

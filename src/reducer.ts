@@ -3,19 +3,19 @@ import type { BoundStateHandler, CrudActionMap, StateHandler, TransitionState, W
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 
-export type HandlerReducer<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> = (
-    boundStateHandler: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>,
+export type HandlerReducer<State, C = any, U = any, D = any> = (
+    boundStateHandler: BoundStateHandler<State, C, U, D>,
     action: Action,
 ) => State;
 
 /** Consumer-facing reducer config: either a function (manual) or a CRUD map (auto-wired) */
-export type ReducerConfig<S, C extends unknown[], U extends unknown[], D extends unknown[]> =
+export type ReducerConfig<S, C = any, U = any, D = any> =
     | HandlerReducer<S, C, U, D>
     | (CrudActionMap & { reducer?: HandlerReducer<S, C, U, D> });
 
 /** Runtime shape of the CRUD config branch — matches ActionMatcher's runtime interface.
  * Type-level safety is enforced at `optimistron()` call sites via overloads. */
-type CrudConfigRuntime<S, C extends unknown[], U extends unknown[], D extends unknown[]> = {
+type CrudConfigRuntime<S, C, U, D> = {
     create?: { match(action: { type: string; [key: string]: unknown }): boolean };
     update?: { match(action: { type: string; [key: string]: unknown }): boolean };
     remove?: { match(action: { type: string; [key: string]: unknown }): boolean };
@@ -24,10 +24,10 @@ type CrudConfigRuntime<S, C extends unknown[], U extends unknown[], D extends un
 
 /** Narrows CrudConfigRuntime into the WiredStateHandler's Actions param
  * after the `'wire' in handler` runtime check */
-type WiredHandler<S, C extends unknown[], U extends unknown[], D extends unknown[]> = WiredStateHandler<S, C, U, D, CrudConfigRuntime<S, C, U, D>>;
+type WiredHandler<S, C, U, D> = WiredStateHandler<S, C, U, D, CrudConfigRuntime<S, C, U, D>>;
 
 /** Resolves a `ReducerConfig` to a `HandlerReducer` — auto-wires CRUD maps via the handler's `wire` method */
-export const resolveReducer = <S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+export const resolveReducer = <S, C, U, D>(
     handler: StateHandler<S, C, U, D>,
     config: ReducerConfig<S, C, U, D>,
 ): HandlerReducer<S, C, U, D> => {
@@ -49,7 +49,7 @@ export const resolveReducer = <S, C extends unknown[], U extends unknown[], D ex
 };
 
 export const bindReducer =
-    <S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+    <S, C, U, D>(
         reducer: HandlerReducer<S, C, U, D>,
         bindState: (state: S) => BoundStateHandler<S, C, U, D>,
     ): BoundReducer<S> =>

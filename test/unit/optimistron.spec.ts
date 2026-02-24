@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from 'bun:test';
 
 import { createTransitions } from '~actions';
 import { optimistron } from '~optimistron';
-import { create, createItem, indexedState, reducer } from '~test/utils';
+import { create, createItem, indexedState, reducer, remove, type TestItem } from '~test/utils';
 import { TransitionMode, getTransitionMeta, toCommit } from '~transitions';
 
 describe('optimistron', () => {
@@ -22,7 +22,7 @@ describe('optimistron', () => {
         const sanitizeAction = mock((action) => action);
         const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer, { sanitizeAction });
         const initial = optimisticReducer(undefined, { type: 'init' });
-        const stage = create.stage(item.id, item);
+        const stage = create.stage(item);
 
         optimisticReducer(initial, stage);
         expect(sanitizeAction).toHaveBeenCalledWith(stage);
@@ -51,7 +51,7 @@ describe('optimistron', () => {
         const testReducerSpy = mock(reducer);
         const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, testReducerSpy);
         const initial = optimisticReducer(undefined, { type: 'init' });
-        const staged = create.stage(item.id, item);
+        const staged = create.stage(item);
         const commit = create.commit(item.id);
         [staged, commit].reduce(optimisticReducer, initial);
 
@@ -64,13 +64,16 @@ describe('optimistron', () => {
     });
 
     describe('TransitionMode.DISPOSABLE', () => {
-        const disposableCreate = createTransitions('test::add', TransitionMode.DISPOSABLE)((item: any) => ({ payload: { item } }));
+        const disposableCreate = createTransitions('test::add', TransitionMode.DISPOSABLE)((item: TestItem) => ({
+            payload: item,
+            transitionId: item.id,
+        }));
 
         test('should drop transition on FAIL', () => {
             const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
             const initial = optimisticReducer(undefined, { type: 'init' });
 
-            const stage = disposableCreate.stage(item.id, item);
+            const stage = disposableCreate.stage(item);
             const afterStage = optimisticReducer(initial, stage);
             expect(afterStage.transitions.length).toBe(1);
 
@@ -87,7 +90,7 @@ describe('optimistron', () => {
             const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
             const initial = optimisticReducer(undefined, { type: 'init' });
 
-            const stage = create.stage(item.id, item);
+            const stage = create.stage(item);
             const afterStage = optimisticReducer(initial, stage);
             const fail = create.fail(item.id, new Error('test'));
             const afterFail = optimisticReducer(afterStage, fail);
@@ -98,22 +101,25 @@ describe('optimistron', () => {
     });
 
     describe('TransitionMode.REVERTIBLE', () => {
-        const revertibleDelete = createTransitions('test::remove', TransitionMode.REVERTIBLE)((id: string) => ({ payload: { itemId: id } }));
+        const revertibleDelete = createTransitions('test::remove', TransitionMode.REVERTIBLE)((dto: Pick<TestItem, 'id'>) => ({
+            payload: dto,
+            transitionId: dto.id,
+        }));
 
         test('should stash transition on FAIL and revert to trailing', () => {
             const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
             const initial = optimisticReducer(undefined, { type: 'init' });
 
             /* Create and commit so the item exists in committed state */
-            const createStage = create.stage(item.id, item);
+            const createStage = create.stage(item);
             const afterCreate = optimisticReducer(initial, createStage);
             const afterCommit = optimisticReducer(afterCreate, create.commit(item.id));
 
             /* Stage an edit, then a revertible delete on the same ID */
-            const editStage = create.stage(item.id, { ...item, value: 'edited', revision: item.revision + 1 });
+            const editStage = create.stage({ ...item, value: 'edited', revision: item.revision + 1 });
             const afterEdit = optimisticReducer(afterCommit, editStage);
 
-            const deleteStage = revertibleDelete.stage(item.id, item.id);
+            const deleteStage = revertibleDelete.stage({ id: item.id });
             const afterDelete = optimisticReducer(afterEdit, deleteStage);
             expect(afterDelete.transitions.length).toBe(1);
             expect(getTransitionMeta(afterDelete.transitions[0]).trailing).toEqual(editStage);

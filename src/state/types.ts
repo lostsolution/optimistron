@@ -31,34 +31,31 @@ export type CrudActionMap<CP = unknown, UP = unknown, RP = unknown> = {
     remove?: ActionMatcher<RP>;
 };
 
-export interface StateHandler<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> {
-    create: (state: State, ...args: CreateParams) => State;
-    update: (state: State, ...args: UpdateParams) => State;
-    remove: (state: State, ...args: DeleteParams) => State;
-    merge: (current: State, incoming: State) => State;
+export interface StateHandler<S, C = any, U = any, D = any> {
+    create: (state: S, dto: C) => S;
+    update: (state: S, dto: U) => S;
+    remove: (state: S, dto: D) => S;
+    merge: (current: S, incoming: S) => S;
 }
 
 /** StateHandler extended with auto-wired CRUD support.
  * `wire` receives the fully-typed `BoundStateHandler` — all type params
  * are inherited from `StateHandler`, so inference works at call sites. */
-export interface WiredStateHandler<
-    State,
-    CreateParams extends unknown[],
-    UpdateParams extends unknown[],
-    DeleteParams extends unknown[],
-    Actions,
-> extends StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
+export interface WiredStateHandler<S, C = any, U = any, D = any, Actions = any> extends StateHandler<S, C, U, D> {
     wire: (
-        bound: BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams>,
-        action: { type: string; [key: string]: unknown },
+        bound: BoundStateHandler<S, C, U, D>,
+        action: {
+            type: string;
+            [key: string]: unknown;
+        },
         actions: Actions,
-    ) => Maybe<State>;
+    ) => Maybe<S>;
 }
 
-export interface BoundStateHandler<State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]> {
-    create: (...args: CreateParams) => State;
-    update: (...args: UpdateParams) => State;
-    remove: (...args: DeleteParams) => State;
-    merge: (incoming: State) => State;
-    getState: () => State;
+export interface BoundStateHandler<S, C = any, U = any, D = any> {
+    create: (dto: C) => S;
+    update: (dto: U) => S;
+    remove: (dto: D) => S;
+    merge: (incoming: S) => S;
+    getState: () => S;
 }

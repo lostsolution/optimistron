@@ -6,33 +6,33 @@ import { create, createIndexedState, createItem } from '~test/utils';
 describe('state', () => {
     describe('bindStateFactory', () => {
         describe('should bind', () => {
-            const create = mock();
+            const createFn = mock();
             const update = mock();
             const remove = mock();
             const merge = mock();
 
-            const handler: StateHandler<any, any, any, any> = { create, update, remove, merge };
+            const handler: StateHandler<any, any, any, any> = { create: createFn, update, remove, merge };
             const bindState = bindStateFactory(handler);
 
             const state = Symbol('state');
             const nextState = Symbol('next_state');
             const boundState = bindState(state);
 
-            const mockParams = Array.from({ length: 5 }, () => Math.random());
+            const mockDto = { id: 'test', value: Math.random() };
 
             test('create', () => {
-                boundState.create(...mockParams);
-                expect(create).toHaveBeenCalledWith(state, ...mockParams);
+                boundState.create(mockDto);
+                expect(createFn).toHaveBeenCalledWith(state, mockDto);
             });
 
             test('update', () => {
-                boundState.update(...mockParams);
-                expect(update).toHaveBeenCalledWith(state, ...mockParams);
+                boundState.update(mockDto);
+                expect(update).toHaveBeenCalledWith(state, mockDto);
             });
 
             test('remove', () => {
-                boundState.remove(...mockParams);
-                expect(remove).toHaveBeenCalledWith(state, ...mockParams);
+                boundState.remove(mockDto);
+                expect(remove).toHaveBeenCalledWith(state, mockDto);
             });
 
             test('merge', () => {
@@ -79,10 +79,10 @@ describe('state', () => {
         test('should return updated copy if transitions changed', () => {
             const item = createItem();
             const state = createIndexedState();
-            const next = transitionStateFactory(state)({}, [create.stage(item.id, item)]);
+            const next = transitionStateFactory(state)({}, [create.stage(item)]);
 
             expect(state !== next).toBe(true);
-            expect(next.transitions).toEqual([create.stage(item.id, item)]);
+            expect(next.transitions).toEqual([create.stage(item)]);
         });
     });
 });

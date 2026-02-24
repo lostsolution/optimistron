@@ -8,6 +8,7 @@ import { buildTransitionState } from '~state/factory';
 import type { TransitionState } from '~state/types';
 import { nestedRecordState } from '~state/record';
 import type { RecursiveRecordState } from '~state/record';
+import type { UpdateDTO, DeleteDTO } from '~actions/types';
 import { updateTransition } from '~transitions';
 
 type Item = { groupId: string; itemId: string; value: string; revision: number };
@@ -29,13 +30,15 @@ const add = createTransitions('nested::add')(crud.create);
 const edit = createTransitions('nested::edit')(crud.update);
 const remove = createTransitions('nested::remove')(crud.remove);
 
-const reducer: HandlerReducer<State, [item: Item], [path: string[], item: Partial<Item>], [path: string[]]> = (
+type Keys = ['groupId', 'itemId'];
+
+const reducer: HandlerReducer<State, Item, UpdateDTO<Item, Keys>, DeleteDTO<Item, Keys>> = (
     { getState, create, update, remove: r },
     action,
 ) => {
-    if (add.match(action)) return create(action.payload.item);
-    if (edit.match(action)) return update(action.payload.path, action.payload.item);
-    if (remove.match(action)) return r(action.payload.path);
+    if (add.match(action)) return create(action.payload);
+    if (edit.match(action)) return update(action.payload);
+    if (remove.match(action)) return r(action.payload);
     return getState();
 };
 
@@ -96,10 +99,10 @@ describe('optimistron', () => {
 
         describe('update', () => {
             const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test', revision: 0 };
-            const updatedPartial: Partial<Item> = { value: 'updated', revision: 2 };
+            const updatedPartial = { groupId: 'g1', itemId: 'i1', value: 'updated', revision: 2 };
             const updatedItem: Item = { ...item, ...updatedPartial };
 
-            const stage = edit.stage(['g1', 'i1'], updatedPartial);
+            const stage = edit.stage(updatedPartial);
             const commit = edit.commit('g1/i1');
             const stash = edit.stash('g1/i1');
 
@@ -128,7 +131,7 @@ describe('optimistron', () => {
         describe('delete', () => {
             const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test', revision: 0 };
 
-            const stage = remove.stage(['g1', 'i1']);
+            const stage = remove.stage({ groupId: 'g1', itemId: 'i1' });
             const commit = remove.commit('g1/i1');
             const stash = remove.stash('g1/i1');
 

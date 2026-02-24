@@ -60,17 +60,17 @@ describe('resolveReducer', () => {
     });
 
     test('should auto-wire CRUD actions via handler.wire', () => {
-        const resolved = resolveReducer(indexedState, { create: matcher<{ item: TestItem }>('create') });
+        const resolved = resolveReducer(indexedState, { create: matcher<TestItem>('create') });
         const newItem = createItem({ id: 'new' });
         const bound = bindState(state);
-        const result = resolved(bound, { type: 'create', payload: { item: newItem } } as any);
+        const result = resolved(bound, { type: 'create', payload: newItem } as any);
         expect(result).toEqual({ ...state, new: newItem });
     });
 
     test('should fall through to fallback reducer for unmatched actions', () => {
         const fallback = mock(() => ({ fallback: true }));
         const resolved = resolveReducer(indexedState, {
-            create: matcher<{ item: TestItem }>('__nomatch__'),
+            create: matcher<TestItem>('__nomatch__'),
             reducer: fallback as any,
         });
         const bound = bindState(state);
@@ -80,7 +80,7 @@ describe('resolveReducer', () => {
 
     test('should return getState() when no match and no fallback', () => {
         const resolved = resolveReducer(indexedState, {
-            create: matcher<{ item: TestItem }>('__nomatch__'),
+            create: matcher<TestItem>('__nomatch__'),
         });
         const bound = bindState(state);
         const result = resolved(bound, { type: 'unknown' } as any);
