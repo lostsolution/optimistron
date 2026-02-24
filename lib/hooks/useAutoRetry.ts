@@ -7,9 +7,9 @@ import { useMockApi } from '~usecases/lib/components/mocks/MockApiProvider';
 import { selectAllFailedTransitions } from '~usecases/lib/store/epics/selectors';
 
 /** Retries all failed transitions when coming back online.
- *  `retry` is called with each failed stage action — the App-level
- *  handler routes it through the correct lifecycle (component async,
- *  thunk, or saga re-dispatch). */
+ *  The `retry` callback is pattern-specific:
+ *  - Basic/Thunks: routes each action to the correct handler/thunk
+ *  - Sagas: re-dispatches the stage action (saga watcher picks it up) */
 export const useAutoRetry = (retry: (action: StagedAction) => void) => {
     const { online } = useMockApi();
     const failedTransitions = useSelector(selectAllFailedTransitions);

@@ -36,7 +36,7 @@ const description: UsecaseDescription = {
         <>Component dispatches a thunk — no transition management in the component at all.</>,
         <>Each thunk encapsulates the full lifecycle: <O>stage</O> → API → <O>amend</O> → <C>commit</C> / <F>fail</F>.</>,
         <>Same optimistic behavior as Basic — components only call <code className="text-gray-400 text-[11px]">dispatch(thunk(item))</code>.</>,
-        <>Retry routes the failed stage action through the matching thunk — same pattern, thinner component.</>,
+        <>Failed transitions can be edited in-place — a new <O>stage</O> overwrites the failed one, restarting the lifecycle.</>,
     ],
 };
 
@@ -54,10 +54,8 @@ export const App: FC = () => {
     const handleEditActivity = async (entry: ActivityEntry) => dispatch(editActivityThunk(entry));
     const handleDismissActivity = async (entry: ActivityEntry) => dispatch(dismissActivityThunk(entry));
 
-    /** Route a failed stage action through the correct thunk.
-     * CRUD update payloads are `Partial<T>` — cast to full type since
-     * failed stage actions always carry the complete entity. */
-    const retryTransition = (action: StagedAction) => {
+    /** Route failed transitions through the correct thunk on reconnect */
+    useAutoRetry((action: StagedAction) => {
         if (createEpic.stage.match(action)) return handleCreateEpic(action.payload);
         if (editEpic.stage.match(action)) return handleEditEpic(action.payload as Epic);
         if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload);
@@ -65,15 +63,13 @@ export const App: FC = () => {
         if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload as ProjectTodo);
         if (logActivity.stage.match(action)) return handleLogActivity(action.payload);
         if (editActivity.stage.match(action)) return handleEditActivity(action.payload as ActivityEntry);
-    };
-
-    useAutoRetry(retryTransition);
+    });
 
     return (
         <Layout title="Thunks" description={description}>
             <ProfileCard onUpdate={handleUpdateProfile} />
             <div className="grad-h my-1" />
-            <TodoApp onCreateTodo={handleCreateEpic} onEditTodo={handleEditEpic} onDeleteTodo={handleDeleteEpic} onRetry={retryTransition} />
+            <TodoApp onCreateTodo={handleCreateEpic} onEditTodo={handleEditEpic} onDeleteTodo={handleDeleteEpic} />
             <div className="grad-h my-1" />
             <ProjectBoard
                 onCreateTodo={handleCreateProjectTodo}
@@ -85,7 +81,6 @@ export const App: FC = () => {
                 onLogActivity={handleLogActivity}
                 onEditActivity={handleEditActivity}
                 onDismissActivity={handleDismissActivity}
-                onRetry={retryTransition}
             />
             <div className="h-4" />
         </Layout>

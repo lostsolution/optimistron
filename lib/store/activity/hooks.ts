@@ -11,9 +11,8 @@ export const useActivityState = (entry: ActivityEntry) => {
         () => ({
             conflict: state.conflict,
             failed: state.failed,
-            failedAction: state.retry,
             loading: state.optimistic && !state.failed,
         }),
-        [state.optimistic, state.retry, state.failed, state.conflict],
+        [state.optimistic, state.failed, state.conflict],
     );
 };

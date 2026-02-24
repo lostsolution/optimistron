@@ -2,8 +2,6 @@ import { clsx } from 'clsx';
 import { type FC, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { StagedAction } from '~transitions';
-
 import { Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import { useActivityState } from '~usecases/lib/store/activity/hooks';
 import { selectOptimisticActivity } from '~usecases/lib/store/activity/selectors';
@@ -22,25 +20,17 @@ type ActivityItemProps = {
     entry: ActivityEntry;
     onEdit: (entry: ActivityEntry) => void;
     onDismiss: (entry: ActivityEntry) => void;
-    onRetry: (action: StagedAction) => void;
 };
 
-const ActivityItem: FC<ActivityItemProps> = ({ entry, onEdit, onDismiss, onRetry }) => {
-    const { loading, failed, conflict, failedAction } = useActivityState(entry);
+const ActivityItem: FC<ActivityItemProps> = ({ entry, onEdit, onDismiss }) => {
+    const { loading, failed, conflict } = useActivityState(entry);
     const ref = useRef<HTMLInputElement>(null);
     const error = failed || conflict;
 
     const handleCommit = () => {
         const message = ref.current?.value.trim();
         if (!message || message === entry.message) return;
-
-        if (failedAction) {
-            const { payload } = failedAction as StagedAction<{ item: ActivityEntry }>;
-            const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, message } } };
-            onRetry(retry);
-        } else {
-            onEdit({ ...entry, message, revision: entry.revision + 1 });
-        }
+        onEdit({ ...entry, message, revision: entry.revision + 1 });
     };
 
     const ts = new Date(entry.timestamp);
@@ -99,10 +89,9 @@ type Props = {
     onLogActivity: (entry: ActivityEntry) => void;
     onEditActivity: (entry: ActivityEntry) => void;
     onDismissActivity: (entry: ActivityEntry) => void;
-    onRetry: (action: StagedAction) => void;
 };
 
-export const ActivityFeed: FC<Props> = ({ onLogActivity, onEditActivity, onDismissActivity, onRetry }) => {
+export const ActivityFeed: FC<Props> = ({ onLogActivity, onEditActivity, onDismissActivity }) => {
     const entries = useSelector(selectOptimisticActivity);
     const [message, setMessage] = useState('');
     const [category, setCategory] = useState<ActivityEntry['category']>('user');
@@ -151,7 +140,6 @@ export const ActivityFeed: FC<Props> = ({ onLogActivity, onEditActivity, onDismi
                         entry={entry}
                         onEdit={onEditActivity}
                         onDismiss={onDismissActivity}
-                        onRetry={onRetry}
                     />
                 ))}
                 {entries.length === 0 && (

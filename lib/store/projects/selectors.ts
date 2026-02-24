@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic, selectFailedTransition } from '~selectors/selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
 import { selectOptimistic } from '~usecases/lib/store/projects/reducer';
 import type { State } from '~usecases/lib/store/store';
 import type { ProjectTodo } from '~usecases/lib/store/types';
@@ -20,7 +20,6 @@ export const selectOptimisticProjectTodoState = (projectId: string, todoId: stri
         (projects) => ({
             optimistic: selectIsOptimistic(transitionId)(projects),
             failed: selectIsFailed(transitionId)(projects),
-            retry: selectFailedTransition(transitionId)(projects),
             conflict: selectIsConflicting(transitionId)(projects),
         }),
     );

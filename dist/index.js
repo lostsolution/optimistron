@@ -29074,7 +29074,6 @@ var selectOptimisticActivity = createSelector((state) => state.activity, selectO
 var selectOptimisticActivityState = (id) => createSelector((state) => state.activity, (activity2) => ({
   optimistic: selectIsOptimistic(id)(activity2),
   failed: selectIsFailed(id)(activity2),
-  retry: selectFailedTransition(id)(activity2),
   conflict: selectIsConflicting(id)(activity2)
 }));
 
@@ -29084,9 +29083,8 @@ var useActivityState = (entry) => {
   return import_react.useMemo(() => ({
     conflict: state.conflict,
     failed: state.failed,
-    failedAction: state.retry,
     loading: state.optimistic && !state.failed
-  }), [state.optimistic, state.retry, state.failed, state.conflict]);
+  }), [state.optimistic, state.failed, state.conflict]);
 };
 
 // usecases/lib/utils/mock-api.ts
@@ -29113,21 +29111,15 @@ var CATEGORY_COLORS = {
   user: "bg-emerald-500/15 text-emerald-400",
   error: "bg-rose-500/15 text-rose-400"
 };
-var ActivityItem = ({ entry, onEdit, onDismiss, onRetry }) => {
-  const { loading, failed, conflict, failedAction } = useActivityState(entry);
+var ActivityItem = ({ entry, onEdit, onDismiss }) => {
+  const { loading, failed, conflict } = useActivityState(entry);
   const ref = import_react2.useRef(null);
   const error = failed || conflict;
   const handleCommit = () => {
     const message = ref.current?.value.trim();
     if (!message || message === entry.message)
       return;
-    if (failedAction) {
-      const { payload } = failedAction;
-      const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, message } } };
-      onRetry(retry);
-    } else {
-      onEdit({ ...entry, message, revision: entry.revision + 1 });
-    }
+    onEdit({ ...entry, message, revision: entry.revision + 1 });
   };
   const ts = new Date(entry.timestamp);
   const time = `${ts.getHours().toString().padStart(2, "0")}:${ts.getMinutes().toString().padStart(2, "0")}:${ts.getSeconds().toString().padStart(2, "0")}`;
@@ -29177,7 +29169,7 @@ var ActivityItem = ({ entry, onEdit, onDismiss, onRetry }) => {
     ]
   }, undefined, true, undefined, this);
 };
-var ActivityFeed = ({ onLogActivity, onEditActivity, onDismissActivity, onRetry }) => {
+var ActivityFeed = ({ onLogActivity, onEditActivity, onDismissActivity }) => {
   const entries = useSelector(selectOptimisticActivity);
   const [message, setMessage] = import_react2.useState("");
   const [category, setCategory] = import_react2.useState("user");
@@ -29232,8 +29224,7 @@ var ActivityFeed = ({ onLogActivity, onEditActivity, onDismissActivity, onRetry 
           entries.map((entry) => /* @__PURE__ */ jsx_dev_runtime2.jsxDEV(ActivityItem, {
             entry,
             onEdit: onEditActivity,
-            onDismiss: onDismissActivity,
-            onRetry
+            onDismiss: onDismissActivity
           }, entry.id, false, undefined, this)),
           entries.length === 0 && /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("p", {
             className: "px-3 py-2 text-[10px] text-gray-700 italic",
@@ -29319,7 +29310,6 @@ var selectOptimisticProfile = createSelector((state) => state.profile, selectOpt
 var selectOptimisticProfileState = createSelector((state) => state.profile, (profile2) => ({
   optimistic: selectIsOptimistic("profile")(profile2),
   failed: selectIsFailed("profile")(profile2),
-  retry: selectFailedTransition("profile")(profile2),
   conflict: selectIsConflicting("profile")(profile2)
 }));
 
@@ -29329,9 +29319,8 @@ var useProfileState = () => {
   return import_react3.useMemo(() => ({
     conflict: state.conflict,
     failed: state.failed,
-    failedAction: state.retry,
     loading: state.optimistic && !state.failed
-  }), [state.optimistic, state.retry, state.failed, state.conflict]);
+  }), [state.optimistic, state.failed, state.conflict]);
 };
 
 // usecases/lib/components/profile/ProfileCard.tsx
@@ -29667,7 +29656,6 @@ var selectOptimisticProjectTodoState = (projectId, todoId) => {
   return createSelector((state) => state.projects, (projects2) => ({
     optimistic: selectIsOptimistic(transitionId)(projects2),
     failed: selectIsFailed(transitionId)(projects2),
-    retry: selectFailedTransition(transitionId)(projects2),
     conflict: selectIsConflicting(transitionId)(projects2)
   }));
 };
@@ -29684,10 +29672,9 @@ var useProjectTodoState = (todo) => {
   return import_react5.useMemo(() => ({
     conflict: state.conflict,
     failed: state.failed,
-    failedAction: state.retry,
     loading: state.optimistic && !state.failed,
     stashed
-  }), [state.optimistic, state.retry, state.failed, state.conflict, stashed]);
+  }), [state.optimistic, state.failed, state.conflict, stashed]);
 };
 
 // usecases/lib/components/projects/ProjectBoard.tsx
@@ -29868,11 +29855,10 @@ var selectOptimisticEpics = createSelector((state) => state.epics, selectOptimis
 var selectOptimisticEpicState = (id) => createSelector((state) => state.epics, (epics2) => ({
   optimistic: selectIsOptimistic(id)(epics2),
   failed: selectIsFailed(id)(epics2),
-  retry: selectFailedTransition(id)(epics2),
   conflict: selectIsConflicting(id)(epics2)
 }));
-var selectAllTransitions = createSelector((state) => state.epics.transitions, (state) => state.profile.transitions, (state) => state.projects.transitions, (state) => state.activity.transitions, (...lists) => lists.flat());
 var selectAllFailedTransitions2 = createSelector((state) => state.epics, (state) => state.profile, (state) => state.projects, (state) => state.activity, (epics2, profile2, projects2, activity2) => selectAllFailedTransitions(epics2, profile2, projects2, activity2));
+var selectAllTransitions = createSelector((state) => state.epics.transitions, (state) => state.profile.transitions, (state) => state.projects.transitions, (state) => state.activity.transitions, (...lists) => lists.flat());
 
 // usecases/lib/components/graph/TransitionHistoryProvider.tsx
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
@@ -30424,10 +30410,9 @@ var useEpicState = (epic) => {
   return import_react9.useMemo(() => ({
     conflict: state.conflict,
     failed: state.failed,
-    failedAction: state.retry,
     loading: state.optimistic && !state.failed,
     stashed
-  }), [state.optimistic, state.retry, state.failed, state.conflict, stashed]);
+  }), [state.optimistic, state.failed, state.conflict, stashed]);
 };
 
 // usecases/lib/components/todo/TodoItem.tsx
@@ -30450,20 +30435,15 @@ var EpicConflict = ({ id }) => {
     ]
   }, undefined, true, undefined, this);
 };
-var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
+var TodoItem = ({ todo, onEdit, onDelete }) => {
   const id = `todo-${todo.id}`;
-  const { loading, stashed, failed, conflict, failedAction } = useEpicState(todo);
+  const { loading, stashed, failed, conflict } = useEpicState(todo);
   const [editable, setEditable] = import_react10.useState(false);
   const error = failed || conflict;
   const handleMutation = (mutation) => {
     if (loading)
       return;
-    if (failedAction) {
-      const { payload } = failedAction;
-      const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, ...mutation } } };
-      onRetry(retry);
-    } else
-      onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
+    onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
   };
   const icon = import_react10.useMemo(() => {
     if (loading)
@@ -30567,7 +30547,7 @@ var TodoItem = ({ todo, onEdit, onRetry, onDelete }) => {
 
 // usecases/lib/components/todo/TodoApp.tsx
 var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
-var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo, onRetry }) => {
+var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo }) => {
   const epics2 = useSelector(selectOptimisticEpics);
   const [value, setValue] = import_react11.useState("");
   const handleAdd = (value2) => {
@@ -30622,7 +30602,6 @@ var TodoApp = ({ onCreateTodo, onDeleteTodo, onEditTodo, onRetry }) => {
       epics2.map((todo) => /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TodoItem, {
         todo,
         onEdit: onEditTodo,
-        onRetry,
         onDelete: onDeleteTodo
       }, todo.id, false, undefined, this))
     ]
@@ -30731,12 +30710,11 @@ var description = {
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
-        "Retry routes the failed stage action back through the same handler — pattern matching on ",
-        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("code", {
-          className: "text-gray-400 text-[11px]",
-          children: "action.match()"
+        "Failed transitions can be edited in-place — a new ",
+        /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(O, {
+          children: "stage"
         }, undefined, false, undefined, this),
-        "."
+        " overwrites the failed one, restarting the lifecycle."
       ]
     }, undefined, true, undefined, this)
   ]
@@ -30845,7 +30823,7 @@ var App = () => {
       dispatch(dismissActivity.stash(transitionId));
     }
   };
-  const retryTransition = (action) => {
+  useAutoRetry((action) => {
     if (createEpic.stage.match(action))
       return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
@@ -30860,8 +30838,7 @@ var App = () => {
       return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
       return handleEditActivity(action.payload);
-  };
-  useAutoRetry(retryTransition);
+  });
   return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
     title: "Basic",
     description,
@@ -30875,8 +30852,7 @@ var App = () => {
       /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(TodoApp, {
         onCreateTodo: handleCreateEpic,
         onEditTodo: handleEditEpic,
-        onDeleteTodo: handleDeleteEpic,
-        onRetry: retryTransition
+        onDeleteTodo: handleDeleteEpic
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
         className: "grad-h my-1"
@@ -30892,8 +30868,7 @@ var App = () => {
       /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(ActivityFeed, {
         onLogActivity: handleLogActivity,
         onEditActivity: handleEditActivity,
-        onDismissActivity: handleDismissActivity,
-        onRetry: retryTransition
+        onDismissActivity: handleDismissActivity
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
         className: "h-4"
@@ -32553,12 +32528,11 @@ var description2 = {
     }, undefined, false, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
-        "Retry is a one-liner: ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
-          className: "text-gray-400 text-[11px]",
-          children: "dispatch(action)"
+        "Failed transitions can be edited in-place — a new ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
+          children: "stage"
         }, undefined, false, undefined, this),
-        " — the saga picks it up automatically."
+        " overwrites the failed one, the saga picks it up automatically."
       ]
     }, undefined, true, undefined, this)
   ]
@@ -32575,8 +32549,7 @@ var App2 = () => {
   const handleLogActivity = (entry) => dispatch(logActivity.stage(entry));
   const handleEditActivity = (entry) => dispatch(editActivity.stage(entry));
   const handleDismissActivity = (entry) => dispatch(dismissActivity.stage({ id: entry.id }));
-  const retryTransition = (action) => dispatch(action);
-  useAutoRetry(retryTransition);
+  useAutoRetry((action) => dispatch(action));
   return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Layout, {
     title: "Sagas",
     description: description2,
@@ -32590,8 +32563,7 @@ var App2 = () => {
       /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TodoApp, {
         onCreateTodo: handleCreateEpic,
         onEditTodo: handleEditEpic,
-        onDeleteTodo: handleDeleteEpic,
-        onRetry: retryTransition
+        onDeleteTodo: handleDeleteEpic
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
         className: "grad-h my-1"
@@ -32607,8 +32579,7 @@ var App2 = () => {
       /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ActivityFeed, {
         onLogActivity: handleLogActivity,
         onEditActivity: handleEditActivity,
-        onDismissActivity: handleDismissActivity,
-        onRetry: retryTransition
+        onDismissActivity: handleDismissActivity
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
         className: "h-4"
@@ -32967,8 +32938,14 @@ var description3 = {
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
-      children: "Retry routes the failed stage action through the matching thunk — same pattern, thinner component."
-    }, undefined, false, undefined, this)
+      children: [
+        "Failed transitions can be edited in-place — a new ",
+        /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " overwrites the failed one, restarting the lifecycle."
+      ]
+    }, undefined, true, undefined, this)
   ]
 };
 var App3 = () => {
@@ -32983,7 +32960,7 @@ var App3 = () => {
   const handleLogActivity = async (entry) => dispatch(logActivityThunk(entry));
   const handleEditActivity = async (entry) => dispatch(editActivityThunk(entry));
   const handleDismissActivity = async (entry) => dispatch(dismissActivityThunk(entry));
-  const retryTransition = (action) => {
+  useAutoRetry((action) => {
     if (createEpic.stage.match(action))
       return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
@@ -32998,8 +32975,7 @@ var App3 = () => {
       return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
       return handleEditActivity(action.payload);
-  };
-  useAutoRetry(retryTransition);
+  });
   return /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(Layout, {
     title: "Thunks",
     description: description3,
@@ -33013,8 +32989,7 @@ var App3 = () => {
       /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(TodoApp, {
         onCreateTodo: handleCreateEpic,
         onEditTodo: handleEditEpic,
-        onDeleteTodo: handleDeleteEpic,
-        onRetry: retryTransition
+        onDeleteTodo: handleDeleteEpic
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
         className: "grad-h my-1"
@@ -33030,8 +33005,7 @@ var App3 = () => {
       /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(ActivityFeed, {
         onLogActivity: handleLogActivity,
         onEditActivity: handleEditActivity,
-        onDismissActivity: handleDismissActivity,
-        onRetry: retryTransition
+        onDismissActivity: handleDismissActivity
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("div", {
         className: "h-4"
