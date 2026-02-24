@@ -24,13 +24,7 @@ type CrudConfigRuntime<S, C extends unknown[], U extends unknown[], D extends un
 
 /** Narrows CrudConfigRuntime into the WiredStateHandler's Actions param
  * after the `'wire' in handler` runtime check */
-type WiredHandler<S, C extends unknown[], U extends unknown[], D extends unknown[]> = WiredStateHandler<
-    S,
-    C,
-    U,
-    D,
-    CrudConfigRuntime<S, C, U, D>
->;
+type WiredHandler<S, C extends unknown[], U extends unknown[], D extends unknown[]> = WiredStateHandler<S, C, U, D, CrudConfigRuntime<S, C, U, D>>;
 
 /** Resolves a `ReducerConfig` to a `HandlerReducer` — auto-wires CRUD maps via the handler's `wire` method */
 export const resolveReducer = <S, C extends unknown[], U extends unknown[], D extends unknown[]>(

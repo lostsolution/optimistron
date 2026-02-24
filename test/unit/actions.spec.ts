@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import { createTransitions, crudPrepare, resolveTransition } from '~actions';
 import { META_KEY } from '~constants';
-import { DedupeMode, Operation } from '~transitions';
+import { TransitionMode, Operation } from '~transitions';
 
 describe('resolveTransition', () => {
     const prepare = (id: string, value: string) => ({
@@ -11,18 +11,18 @@ describe('resolveTransition', () => {
     });
 
     describe('STAGE operation', () => {
-        const resolve = resolveTransition(Operation.STAGE, DedupeMode.OVERWRITE)(prepare);
+        const resolve = resolveTransition(Operation.STAGE, TransitionMode.DEFAULT)(prepare);
 
         test('auto-detects transitionId from prepare result', () => {
             const result = resolve('item-1', 'hello');
 
             expect(result.payload).toEqual({ id: 'item-1', value: 'hello' });
-            expect(result.meta[META_KEY]).toEqual({ id: 'item-1', operation: Operation.STAGE, dedupe: DedupeMode.OVERWRITE });
+            expect(result.meta[META_KEY]).toEqual({ id: 'item-1', operation: Operation.STAGE, mode: TransitionMode.DEFAULT });
         });
 
         test('falls back to explicit transitionId when prepare omits it', () => {
             const plainPrepare = (value: string) => ({ payload: { value } });
-            const resolve = resolveTransition(Operation.STAGE, DedupeMode.OVERWRITE)(plainPrepare);
+            const resolve = resolveTransition(Operation.STAGE, TransitionMode.DEFAULT)(plainPrepare);
             const result = resolve('tid-1', 'hello');
 
             expect(result.payload).toEqual({ value: 'hello' });
@@ -32,16 +32,16 @@ describe('resolveTransition', () => {
 
     describe('non-STAGE operations', () => {
         test('AMEND always uses explicit transitionId even when prepare returns transitionId', () => {
-            const resolve = resolveTransition(Operation.AMEND, DedupeMode.OVERWRITE)(prepare);
+            const resolve = resolveTransition(Operation.AMEND, TransitionMode.DEFAULT)(prepare);
             const result = resolve('original-tid', 'server-id', 'hello');
 
             expect(result.payload).toEqual({ id: 'server-id', value: 'hello' });
-            expect(result.meta[META_KEY]).toEqual({ id: 'original-tid', operation: Operation.AMEND, dedupe: DedupeMode.OVERWRITE });
+            expect(result.meta[META_KEY]).toEqual({ id: 'original-tid', operation: Operation.AMEND, mode: TransitionMode.DEFAULT });
         });
 
         test('COMMIT always uses explicit transitionId', () => {
             const commitPrepare = () => ({ payload: {} });
-            const resolve = resolveTransition(Operation.COMMIT, DedupeMode.OVERWRITE)(commitPrepare);
+            const resolve = resolveTransition(Operation.COMMIT, TransitionMode.DEFAULT)(commitPrepare);
             const result = resolve('tid-1');
 
             expect(result.meta[META_KEY].id).toBe('tid-1');
@@ -50,7 +50,7 @@ describe('resolveTransition', () => {
 
         test('FAIL always uses explicit transitionId', () => {
             const failPrepare = (error: unknown) => ({ payload: {}, error });
-            const resolve = resolveTransition(Operation.FAIL, DedupeMode.OVERWRITE)(failPrepare);
+            const resolve = resolveTransition(Operation.FAIL, TransitionMode.DEFAULT)(failPrepare);
             const result = resolve('tid-1', new Error('test'));
 
             expect(result.meta[META_KEY].id).toBe('tid-1');
@@ -58,11 +58,11 @@ describe('resolveTransition', () => {
         });
     });
 
-    test('respects dedupe mode', () => {
-        const resolve = resolveTransition(Operation.STAGE, DedupeMode.TRAILING)(prepare);
+    test('respects transition mode', () => {
+        const resolve = resolveTransition(Operation.STAGE, TransitionMode.REVERTIBLE)(prepare);
         const result = resolve('item-1', 'hello');
 
-        expect(result.meta[META_KEY].dedupe).toBe(DedupeMode.TRAILING);
+        expect(result.meta[META_KEY].mode).toBe(TransitionMode.REVERTIBLE);
     });
 });
 
@@ -186,13 +186,13 @@ describe('crudPrepare', () => {
             expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
         });
 
-        test('composes with createTransitions using TRAILING dedupe', () => {
-            const actions = createTransitions('items::del', DedupeMode.TRAILING)(crud.remove);
+        test('composes with createTransitions using REVERTIBLE mode', () => {
+            const actions = createTransitions('items::del', TransitionMode.REVERTIBLE)(crud.remove);
             const result = actions.stage('i1');
 
             expect(result.payload).toEqual({ id: 'i1' });
             expect(result.meta[META_KEY].id).toBe('i1');
-            expect(result.meta[META_KEY].dedupe).toBe(DedupeMode.TRAILING);
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.REVERTIBLE);
         });
 
         test('uses numeric id key converted to string', () => {

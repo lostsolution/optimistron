@@ -49,3 +49,14 @@ export const selectIsConflicting =
     (transitionId: string) =>
     <State>(state: TransitionState<State>): boolean =>
         selectConflictingTransition(transitionId)(state) !== undefined;
+
+/** Returns all failed transitions across multiple transition states */
+export const selectAllFailedTransitions = (...states: TransitionState<any>[]): StagedAction[] => states.flatMap(selectFailedTransitions);
+
+/** Returns the retry count for a transition, or 0 if not found */
+export const selectRetryCount =
+    (transitionId: string) =>
+    <State>({ transitions }: TransitionState<State>): number => {
+        const action = transitions.find((a) => getTransitionMeta(a).id === transitionId);
+        return action ? (getTransitionMeta(action).retryCount ?? 0) : 0;
+    };

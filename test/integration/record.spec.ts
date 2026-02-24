@@ -5,7 +5,7 @@ import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~select
 import { buildTransitionState } from '~state/factory';
 import type { TestIndexedState } from '~test/utils';
 import { create, createItem, edit, indexedState, reducer, remove, selectState, sync, throwAction } from '~test/utils';
-import { toStaged, updateTransition } from '~transitions';
+import { getTransitionMeta, toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
     const { reducer: optimisticReducer, selectOptimistic } = optimistron('test', {}, indexedState, reducer);
@@ -96,7 +96,9 @@ describe('optimistron', () => {
                         const nextAfterRestage = optimisticReducer(next, stage);
 
                         expect(nextAfterRestage.state).toStrictEqual(initial.state);
-                        expect(nextAfterRestage.transitions).toStrictEqual([stage]);
+                        expect(nextAfterRestage.transitions.length).toBe(1);
+                        expect(getTransitionMeta(nextAfterRestage.transitions[0]).retryCount).toBe(1);
+                        expect(getTransitionMeta(nextAfterRestage.transitions[0]).lastRetry).toBeNumber();
                         expect(selectOptimistic(selectState)(nextAfterRestage)).toStrictEqual({ [item.id]: item });
                         expect(selectIsOptimistic(item.id)(nextAfterRestage)).toBe(true);
                         expect(selectIsFailed(item.id)(nextAfterRestage)).toBe(false);
@@ -107,7 +109,10 @@ describe('optimistron', () => {
                         const nextAfterAmend = optimisticReducer(next, amend);
 
                         expect(nextAfterAmend.state).toStrictEqual(initial.state);
-                        expect(nextAfterAmend.transitions).toStrictEqual([toStaged(amend, { failed: true })]);
+                        expect(nextAfterAmend.transitions.length).toBe(1);
+                        expect(getTransitionMeta(nextAfterAmend.transitions[0]).failed).toBe(true);
+                        expect(getTransitionMeta(nextAfterAmend.transitions[0]).retryCount).toBe(1);
+                        expect(getTransitionMeta(nextAfterAmend.transitions[0]).lastRetry).toBeNumber();
                         expect(selectOptimistic(selectState)(nextAfterAmend)).toStrictEqual({ [item.id]: amendedItem });
                         expect(selectIsOptimistic(item.id)(nextAfterAmend)).toBe(true);
                         expect(selectIsFailed(item.id)(nextAfterAmend)).toBe(true);

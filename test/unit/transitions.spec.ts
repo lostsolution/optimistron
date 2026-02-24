@@ -5,10 +5,11 @@ import { bindStateFactory } from '~state/factory';
 import { create, createIndexedState, createItem, edit, indexedState, reducer } from '~test/utils';
 import type { StagedAction, TransitionAction } from '~transitions';
 import {
-    DedupeMode,
+    TransitionMode,
     OptimisticMergeResult,
     getTransitionMeta,
     processTransition,
+    retryTransition,
     sanitizeTransitions,
     toCommit,
     updateTransition,
@@ -16,17 +17,16 @@ import {
 
 const TestTransitionID = `${Math.random()}`;
 
-const transition = createTransitions('test::transition', DedupeMode.OVERWRITE)((revision: number) => ({ payload: { revision } }));
+const transition = createTransitions('test::transition', TransitionMode.DEFAULT)((revision: number) => ({ payload: { revision } }));
 
 const transitionTrailing = createTransitions(
     'test::transition_with_history',
-    DedupeMode.TRAILING,
+    TransitionMode.REVERTIBLE,
 )((revision: number) => ({
     payload: { revision },
 }));
 
-const applyTransitions = (...tansitions: TransitionAction[]) =>
-    tansitions.reduce<StagedAction[]>((next, curr) => processTransition(curr, next), []);
+const applyTransitions = (...tansitions: TransitionAction[]) => tansitions.reduce<StagedAction[]>((next, curr) => processTransition(curr, next), []);
 
 describe('processTransition', () => {
     describe('stage', () => {
@@ -82,7 +82,7 @@ describe('processTransition', () => {
     });
 
     describe('fail', () => {
-        test('should flag transition as failed', () => {
+        test('should flag DEFAULT transition as failed', () => {
             const stage = transition.stage(TestTransitionID, 1);
             const fail = transition.fail(TestTransitionID, new Error());
             const processed = applyTransitions(stage, fail);
@@ -91,6 +91,33 @@ describe('processTransition', () => {
             expect(getTransitionMeta(processed[0]).failed).toEqual(true);
             expect(processed[0].type).toEqual(stage.type);
             expect('payload' in processed[0] && processed[0].payload).toEqual(stage.payload);
+        });
+
+        test('should drop DISPOSABLE transition on fail', () => {
+            const disposable = createTransitions('test::disposable', TransitionMode.DISPOSABLE)((revision: number) => ({ payload: { revision } }));
+            const stage = disposable.stage(TestTransitionID, 1);
+            const fail = disposable.fail(TestTransitionID, new Error());
+            const processed = applyTransitions(stage, fail);
+
+            expect(processed).toEqual([]);
+        });
+
+        test('should stash REVERTIBLE transition on fail', () => {
+            const stage = transition.stage(TestTransitionID, 1);
+            const stageRevertible = transitionTrailing.stage(TestTransitionID, 2);
+            const fail = transitionTrailing.fail(TestTransitionID, new Error());
+            const processed = applyTransitions(stage, stageRevertible, fail);
+
+            /** Should revert to the trailing transition */
+            expect(processed).toEqual([stage]);
+        });
+
+        test('should remove REVERTIBLE transition on fail when no trailing', () => {
+            const stageRevertible = transitionTrailing.stage(TestTransitionID, 1);
+            const fail = transitionTrailing.fail(TestTransitionID, new Error());
+            const processed = applyTransitions(stageRevertible, fail);
+
+            expect(processed).toEqual([]);
         });
 
         test('should noop if no matching transition to fail', () => {
@@ -138,6 +165,61 @@ describe('processTransition', () => {
 
             expect(processed).toEqual([stageB]);
         });
+    });
+});
+
+describe('retryTransition', () => {
+    test('should strip failed and conflict flags', () => {
+        const stage = transition.stage(TestTransitionID, 1);
+        const failed = updateTransition(stage, { failed: true, conflict: true });
+        const retried = retryTransition(failed);
+
+        expect(getTransitionMeta(retried).failed).toBeUndefined();
+        expect(getTransitionMeta(retried).conflict).toBeUndefined();
+        expect(getTransitionMeta(retried).id).toBe(TestTransitionID);
+        expect(retried.payload).toEqual(stage.payload);
+    });
+
+    test('should preserve other meta fields', () => {
+        const stage = transition.stage(TestTransitionID, 1);
+        const withRetry = updateTransition(stage, { failed: true, retryCount: 3, lastRetry: 12345 });
+        const retried = retryTransition(withRetry);
+
+        expect(getTransitionMeta(retried).retryCount).toBe(3);
+        expect(getTransitionMeta(retried).lastRetry).toBe(12345);
+    });
+});
+
+describe('processTransition retry metadata', () => {
+    test('should increment retryCount when overwriting a failed transition', () => {
+        const stage = transition.stage(TestTransitionID, 1);
+        const fail = transition.fail(TestTransitionID, new Error());
+        const restage = transition.stage(TestTransitionID, 2);
+
+        const afterFail = applyTransitions(stage, fail);
+        const afterRestage = processTransition(restage, afterFail);
+
+        expect(getTransitionMeta(afterRestage[0]).retryCount).toBe(1);
+        expect(getTransitionMeta(afterRestage[0]).lastRetry).toBeNumber();
+    });
+
+    test('should accumulate retryCount across multiple retries', () => {
+        const stage = transition.stage(TestTransitionID, 1);
+        const fail1 = transition.fail(TestTransitionID, new Error());
+        const restage1 = transition.stage(TestTransitionID, 2);
+        const fail2 = transition.fail(TestTransitionID, new Error());
+        const restage2 = transition.stage(TestTransitionID, 3);
+
+        const result = applyTransitions(stage, fail1, restage1, fail2, restage2);
+        expect(getTransitionMeta(result[0]).retryCount).toBe(2);
+    });
+
+    test('should not add retryCount when overwriting a non-failed transition', () => {
+        const stage1 = transition.stage(TestTransitionID, 1);
+        const stage2 = transition.stage(TestTransitionID, 2);
+
+        const result = applyTransitions(stage1, stage2);
+        expect(getTransitionMeta(result[0]).retryCount).toBeUndefined();
     });
 });
 

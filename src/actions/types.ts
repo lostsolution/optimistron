@@ -14,8 +14,7 @@ export type PreparePayload<PA extends PrepareAction<any>> = ReturnType<PA>['payl
 export type PrepareError<PA extends PrepareAction<any>> = ReturnType<PA> extends { error: infer E } ? E : never;
 
 /** Merges transition meta with any extra meta from a PrepareAction */
-export type ActionMeta<Op extends Operation, PA extends PrepareAction<any>> = TransitionMeta<Op> &
-    (ReturnType<PA> extends { meta: infer M } ? M : object);
+export type ActionMeta<Op extends Operation, PA extends PrepareAction<any>> = TransitionMeta<Op> & (ReturnType<PA> extends { meta: infer M } ? M : object);
 
 /** Resolves the arguments signature for a transition action creator.
  * STAGE auto-detects transitionId when prepare returns it;

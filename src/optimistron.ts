@@ -19,12 +19,7 @@ import type { Maybe } from './utils/types';
 
 /** Applies a staged transition as a commit via the bound reducer.
  * Returns undefined if no matching staged action exists. */
-const commitTransition = <S>(
-    boundReducer: BoundReducer<S>,
-    transitionState: TransitionState<S>,
-    transitions: StagedAction[],
-    id: string,
-): Maybe<S> => {
+const commitTransition = <S>(boundReducer: BoundReducer<S>, transitionState: TransitionState<S>, transitions: StagedAction[], id: string): Maybe<S> => {
     const staged = transitions.find((entry) => id === getTransitionID(entry));
     if (!staged) return undefined;
     return boundReducer(transitionState, toCommit(staged));
@@ -35,7 +30,9 @@ type OptimistronResult<S> = {
     selectOptimistic: ReturnType<typeof createSelectOptimistic<S>>;
 };
 
-type OptimistronOptions = { sanitizeAction: <T extends Action>(action: T) => T };
+type OptimistronOptions = {
+    sanitizeAction?: <T extends Action>(action: T) => T;
+};
 
 /** Manual mode — full control via a reducer function */
 export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[]>(
@@ -79,8 +76,8 @@ export function optimistron<S, C extends unknown[], U extends unknown[], D exten
 
             try {
                 if (isTransitionForNamespace(action, namespace)) {
-                    const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
                     const { operation, id } = getTransitionMeta(action);
+                    const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
 
                     if (operation === Operation.COMMIT) {
                         const committed = commitTransition(boundReducer, transitionState, transitions, id);

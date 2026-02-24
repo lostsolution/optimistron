@@ -23,11 +23,7 @@ export type RecursiveRecordState<Keys extends readonly string[], T> = Keys exten
 export type PathOf<Keys extends readonly string[]> = { [K in Keys[number]]: string };
 
 /** Typed CRUD action map for nested record state */
-type NestedRecordCrudMap<T, Keys extends readonly string[]> = CrudActionMap<
-    { item: T },
-    { path: PathMap<Keys>; item: Partial<T> },
-    { path: PathMap<Keys> }
->;
+type NestedRecordCrudMap<T, Keys extends readonly string[]> = CrudActionMap<{ item: T }, { path: PathMap<Keys>; item: Partial<T> }, { path: PathMap<Keys> }>;
 
 /** Typed CRUD action map for flat record state */
 type RecordCrudMap<T> = CrudActionMap<{ item: T }, { id: string; item: Partial<T> }, { id: string }>;
@@ -151,13 +147,7 @@ export const recordState = <T extends Record<string, any>>({
     key,
     compare,
     eq,
-}: RecordStateOptions<T>): WiredStateHandler<
-    RecordState<T>,
-    [item: T],
-    [itemId: string, partialItem: Partial<T>],
-    [itemId: string],
-    RecordCrudMap<T>
-> => {
+}: RecordStateOptions<T>): WiredStateHandler<RecordState<T>, [item: T], [itemId: string, partialItem: Partial<T>], [itemId: string], RecordCrudMap<T>> => {
     const nested = nestedRecordState<T>()({ keys: [key], compare, eq });
 
     return {

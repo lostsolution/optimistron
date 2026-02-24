@@ -1,8 +1,9 @@
 import { describe, expect, mock, test } from 'bun:test';
 
+import { createTransitions } from '~actions';
 import { optimistron } from '~optimistron';
 import { create, createItem, indexedState, reducer } from '~test/utils';
-import { toCommit } from '~transitions';
+import { TransitionMode, getTransitionMeta, toCommit } from '~transitions';
 
 describe('optimistron', () => {
     const item = createItem();
@@ -60,5 +61,69 @@ describe('optimistron', () => {
          * - Once when sanitizing the transition state to check for conflicts.
          *   (This re-application of the reducer ensures conflict detection.) */
         expect(testReducerSpy.mock.calls[1][1]).toEqual(toCommit(staged));
+    });
+
+    describe('TransitionMode.DISPOSABLE', () => {
+        const disposableCreate = createTransitions('test::add', TransitionMode.DISPOSABLE)((item: any) => ({ payload: { item } }));
+
+        test('should drop transition on FAIL', () => {
+            const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
+            const initial = optimisticReducer(undefined, { type: 'init' });
+
+            const stage = disposableCreate.stage(item.id, item);
+            const afterStage = optimisticReducer(initial, stage);
+            expect(afterStage.transitions.length).toBe(1);
+
+            const fail = disposableCreate.fail(item.id, new Error('test'));
+            const afterFail = optimisticReducer(afterStage, fail);
+
+            expect(afterFail.transitions).toEqual([]);
+            expect(afterFail.state).toStrictEqual(initial.state);
+        });
+    });
+
+    describe('TransitionMode.DEFAULT', () => {
+        test('should keep failed transition for consumer retry', () => {
+            const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
+            const initial = optimisticReducer(undefined, { type: 'init' });
+
+            const stage = create.stage(item.id, item);
+            const afterStage = optimisticReducer(initial, stage);
+            const fail = create.fail(item.id, new Error('test'));
+            const afterFail = optimisticReducer(afterStage, fail);
+
+            expect(afterFail.transitions.length).toBe(1);
+            expect(getTransitionMeta(afterFail.transitions[0]).failed).toBe(true);
+        });
+    });
+
+    describe('TransitionMode.REVERTIBLE', () => {
+        const revertibleDelete = createTransitions('test::remove', TransitionMode.REVERTIBLE)((id: string) => ({ payload: { itemId: id } }));
+
+        test('should stash transition on FAIL and revert to trailing', () => {
+            const { reducer: optimisticReducer } = optimistron('test', {}, indexedState, reducer);
+            const initial = optimisticReducer(undefined, { type: 'init' });
+
+            /* Create and commit so the item exists in committed state */
+            const createStage = create.stage(item.id, item);
+            const afterCreate = optimisticReducer(initial, createStage);
+            const afterCommit = optimisticReducer(afterCreate, create.commit(item.id));
+
+            /* Stage an edit, then a revertible delete on the same ID */
+            const editStage = create.stage(item.id, { ...item, value: 'edited', revision: item.revision + 1 });
+            const afterEdit = optimisticReducer(afterCommit, editStage);
+
+            const deleteStage = revertibleDelete.stage(item.id, item.id);
+            const afterDelete = optimisticReducer(afterEdit, deleteStage);
+            expect(afterDelete.transitions.length).toBe(1);
+            expect(getTransitionMeta(afterDelete.transitions[0]).trailing).toEqual(editStage);
+
+            const fail = revertibleDelete.fail(item.id, new Error('test'));
+            const afterFail = optimisticReducer(afterDelete, fail);
+
+            /** Should revert to the trailing edit transition */
+            expect(afterFail.transitions.length).toBe(1);
+            expect(afterFail.transitions[0]).toEqual(editStage);
+        });
     });
 });

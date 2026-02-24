@@ -17,25 +17,33 @@ export enum Operation {
     STASH = 'stash',
 }
 
-export enum DedupeMode {
-    OVERWRITE,
-    TRAILING,
+export enum TransitionMode {
+    /** Overwrite on re-stage, keep on fail. Default for edits. */
+    DEFAULT,
+    /** Overwrite on re-stage, drop on fail. For creates — entity never existed server-side. */
+    DISPOSABLE,
+    /** Trailing on re-stage, stash on fail. For deletes — undo via trailing reversion. */
+    REVERTIBLE,
 }
 
 export type TransitionNamespace<T extends Operation = Operation> = `${string}::${T}`;
 export type WithTransition<A, T = Operation> = A & { meta: TransitionMeta<T> };
 export type TransitionMeta<T = Operation> = { [META_KEY]: Transition<T> };
-export type TransitionAction<T extends Operation = Operation> = WithTransition<Action<TransitionNamespace<T>>>;
-export type StagedAction = TransitionAction<Operation.STAGE>;
-export type CommittedAction = TransitionAction<Operation.COMMIT>;
+export type TransitionAction<T extends Operation = Operation, P = unknown> = WithTransition<Action<TransitionNamespace<T>>, T> & {
+    payload: P;
+};
+export type StagedAction<P = unknown> = TransitionAction<Operation.STAGE, P>;
+export type CommittedAction<P = unknown> = TransitionAction<Operation.COMMIT, P>;
 
 export type Transition<T = Operation> = {
     id: string;
     operation: T;
-    dedupe: DedupeMode;
+    mode: TransitionMode;
     conflict?: boolean;
     failed?: boolean;
     trailing?: StagedAction;
+    retryCount?: number;
+    lastRetry?: number;
 };
 
 /** Extracts the transition meta definitions on an action */
@@ -52,12 +60,11 @@ export const isTransitionForNamespace = (action: Action, namespace: string): act
 export const toType = <T extends Operation>(type: TransitionNamespace, operation: T): TransitionNamespace<T> => {
     const parts = type.split('::');
     const base = parts.slice(0, parts.length - 1).join('::');
-
     return `${base}::${operation}`;
 };
 
 /** Updates the transition meta of a transition action */
-export const updateTransition = <A extends TransitionAction, T extends Partial<Transition>>(action: A, update: T) =>
+export const updateTransition = <A extends TransitionAction<Operation, any>, T extends Partial<Transition>>(action: A, update: T) =>
     ({
         ...action,
         meta: {
@@ -67,18 +74,21 @@ export const updateTransition = <A extends TransitionAction, T extends Partial<T
                 ...update,
             },
         },
-    }) satisfies TransitionAction as T['operation'] extends Operation ? TransitionAction<T['operation']> : A;
+    }) satisfies TransitionAction<Operation, any> as T['operation'] extends Operation ? TransitionAction<T['operation'], A['payload']> : A;
 
 /** Maps a transition to a staged transition */
-export const toStaged = (action: TransitionAction, update: Partial<Transition> = {}): StagedAction =>
+export const toStaged = <P>(action: TransitionAction<Operation, P>, update: Partial<Transition> = {}): StagedAction<P> =>
     updateTransition({ ...action, type: toType(action.type, Operation.STAGE) }, { ...update, operation: Operation.STAGE });
 
 /** Maps a transition to a committed transition */
-export const toCommit = (action: TransitionAction, update: Partial<Transition> = {}): CommittedAction =>
+export const toCommit = <P>(action: TransitionAction<Operation, P>, update: Partial<Transition> = {}): CommittedAction<P> =>
     updateTransition({ ...action, type: toType(action.type, Operation.COMMIT) }, { ...update, operation: Operation.COMMIT });
 
+/** Strips failure/conflict flags from a staged action, making it ready for re-dispatch */
+export const retryTransition = <P>(action: StagedAction<P>): StagedAction<P> => updateTransition(action, { failed: undefined, conflict: undefined });
+
 export const processTransition = (transition: TransitionAction, transitions: StagedAction[]): StagedAction[] => {
-    const { operation, id, dedupe } = getTransitionMeta(transition);
+    const { operation, id, mode } = getTransitionMeta(transition);
     const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
     const existing = transitions[matchIdx];
 
@@ -97,21 +107,38 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
 
             /** Existing transition: copy and replace in-place */
             const nextTransitions = [...transitions];
-            const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
+            const existingMeta = getTransitionMeta(existing);
+            const trailing = existing.type === transition.type ? existingMeta.trailing : existing;
 
-            /* When dedupe mode is set to `TRAILING`, store the previous transition as a
-             * trailing transition. This helps in handling reversion to the previous
-             * transition when stashing the current one. */
-            if (dedupe === DedupeMode.TRAILING) {
-                nextTransitions[matchIdx] = updateTransition(stage, { trailing });
-            } else nextTransitions[matchIdx] = stage;
+            /** When overwriting a failed transition, track retry metadata */
+            const retryMeta: Partial<Transition> = existingMeta.failed ? { retryCount: (existingMeta.retryCount ?? 0) + 1, lastRetry: Date.now() } : {};
+
+            /* REVERTIBLE mode stores the previous transition as a trailing transition.
+             * This enables reversion to the previous state when stashing. */
+            if (mode === TransitionMode.REVERTIBLE) {
+                nextTransitions[matchIdx] = updateTransition(stage, { ...retryMeta, trailing });
+            } else nextTransitions[matchIdx] = updateTransition(stage, retryMeta);
 
             return nextTransitions;
         }
 
-        /* During the 'fail' transition, we flag the matching transition as failed */
+        /* During the 'fail' transition, resolve based on the staged transition's mode:
+         * - DISPOSABLE: drop the transition entirely
+         * - REVERTIBLE: stash the transition (triggers trailing reversion)
+         * - DEFAULT: flag as failed, consumer decides */
         case Operation.FAIL: {
             if (matchIdx === -1) return transitions;
+
+            const stagedMode = getTransitionMeta(existing).mode;
+
+            if (stagedMode === TransitionMode.DISPOSABLE) {
+                return transitions.filter((entry) => getTransitionID(entry) !== id);
+            }
+
+            if (stagedMode === TransitionMode.REVERTIBLE) {
+                const { trailing } = getTransitionMeta(existing);
+                return [...transitions.slice(0, matchIdx), ...(trailing ? [trailing] : []), ...transitions.slice(matchIdx + 1)];
+            }
 
             return transitions.map((entry) => (getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry));
         }

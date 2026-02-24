@@ -37,10 +37,7 @@ export const indexedState = recordState<TestItem>({
     eq: (a: TestItem) => (b: TestItem) => a.id === b.id && a.value === b.value,
 });
 
-export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: string, item: TestItem], [itemId: string]> = (
-    handler,
-    action,
-) => {
+export const reducer: HandlerReducer<TestIndexedState, [item: TestItem], [id: string, item: TestItem], [itemId: string]> = (handler, action) => {
     if (action.type === throwAction.type) throw new Error('test error');
     if (action.type === 'sync') return (action as ReturnType<typeof sync>).payload.items;
     if (create.match(action)) return handler.create(action.payload.item);

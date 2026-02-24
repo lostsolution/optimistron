@@ -1,12 +1,14 @@
 import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 import { optimistron } from '~optimistron';
 import {
+    selectAllFailedTransitions,
     selectConflictingTransition,
     selectFailedTransition,
     selectFailedTransitions,
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
+    selectRetryCount,
 } from '~selectors/selectors';
 import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
 import { updateTransition } from '~transitions';
@@ -55,19 +57,16 @@ describe('selectors', () => {
         const failed = updateTransition(stage, { failed: true });
         const state = createIndexedState([failed]);
 
-        test('should return transition flagged as `failed` for `transitionId`', () =>
-            expect(selectFailedTransition(item.id)(state)).toEqual(failed));
+        test('should return transition flagged as `failed` for `transitionId`', () => expect(selectFailedTransition(item.id)(state)).toEqual(failed));
 
-        test('should return empty if no failed transitions matching `transitionId`', () =>
-            expect(selectFailedTransition('unknown')(state)).toBeUndefined());
+        test('should return empty if no failed transitions matching `transitionId`', () => expect(selectFailedTransition('unknown')(state)).toBeUndefined());
     });
 
     describe('selectConflictingTransition', () => {
         const conflict = updateTransition(stage, { conflict: true });
         const state = createIndexedState([conflict]);
 
-        test('should return transitions flagged as `conflict` for `transitionId`', () =>
-            expect(selectConflictingTransition(item.id)(state)).toEqual(conflict));
+        test('should return transitions flagged as `conflict` for `transitionId`', () => expect(selectConflictingTransition(item.id)(state)).toEqual(conflict));
 
         test('should return empty if no conflicting transitions matching `transitionId`', () =>
             expect(selectConflictingTransition('unknown')(state)).toBeUndefined());
@@ -92,8 +91,7 @@ describe('selectors', () => {
         const state = createIndexedState([stage]);
         const failedState = createIndexedState([failed]);
 
-        test('should return `true` if failed transition for `transitionId` exists', () =>
-            expect(selectIsFailed(item.id)(failedState)).toEqual(true));
+        test('should return `true` if failed transition for `transitionId` exists', () => expect(selectIsFailed(item.id)(failedState)).toEqual(true));
 
         test('should return `false` if not', () => {
             expect(selectIsFailed('unknown')(failedState)).toEqual(false);
@@ -112,6 +110,42 @@ describe('selectors', () => {
         test('should return `false` if not', () => {
             expect(selectIsConflicting('unknown')(conflictingState)).toEqual(false);
             expect(selectIsConflicting(item.id)(state)).toEqual(false);
+        });
+    });
+
+    describe('selectAllFailedTransitions', () => {
+        const failed = updateTransition(stage, { failed: true });
+        const stateA = createIndexedState([stage, failed]);
+        const stateB = createIndexedState([failed]);
+        const stateC = createIndexedState([stage]);
+
+        test('should aggregate failed transitions from multiple states', () => {
+            expect(selectAllFailedTransitions(stateA, stateB, stateC)).toEqual([failed, failed]);
+        });
+
+        test('should return empty array when no failed transitions', () => {
+            expect(selectAllFailedTransitions(stateC)).toEqual([]);
+        });
+
+        test('should handle zero states', () => {
+            expect(selectAllFailedTransitions()).toEqual([]);
+        });
+    });
+
+    describe('selectRetryCount', () => {
+        test('should return 0 for non-existent transition', () => {
+            expect(selectRetryCount('unknown')(createIndexedState())).toBe(0);
+        });
+
+        test('should return 0 for transition without retryCount', () => {
+            const state = createIndexedState([stage]);
+            expect(selectRetryCount(item.id)(state)).toBe(0);
+        });
+
+        test('should return retryCount from transition meta', () => {
+            const retried = updateTransition(stage, { retryCount: 3 });
+            const state = createIndexedState([retried]);
+            expect(selectRetryCount(item.id)(state)).toBe(3);
         });
     });
 });

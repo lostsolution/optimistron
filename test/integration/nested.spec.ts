@@ -29,10 +29,7 @@ const add = createTransitions('nested::add')(crud.create);
 const edit = createTransitions('nested::edit')(crud.update);
 const remove = createTransitions('nested::remove')(crud.remove);
 
-const reducer: HandlerReducer<State, [item: Item], [string, string, Partial<Item>], [string, string]> = (
-    { getState, create, update, remove: r },
-    action,
-) => {
+const reducer: HandlerReducer<State, [item: Item], [string, string, Partial<Item>], [string, string]> = ({ getState, create, update, remove: r }, action) => {
     if (add.match(action)) return create(action.payload.item);
     if (edit.match(action)) return update(action.payload.path[0], action.payload.path[1], action.payload.item);
     if (remove.match(action)) return r(action.payload.path[0], action.payload.path[1]);

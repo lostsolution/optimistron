@@ -4,7 +4,7 @@ import { createAction } from '@reduxjs/toolkit';
 import type { PA_Empty, PA_Error, TransitionPayloadAction, TransitionWithPreparedPayload } from './types';
 import { META_KEY } from '~/constants';
 import type { Transition, TransitionNamespace, WithTransition } from '~/transitions';
-import { DedupeMode, Operation, getTransitionMeta, isTransitionForNamespace } from '~/transitions';
+import { TransitionMode, Operation, getTransitionMeta, isTransitionForNamespace } from '~/transitions';
 
 const emptyPA = () => ({ payload: {} });
 const errorPA = (error: unknown) => ({ error: error instanceof Error ? error.message : error, payload: {} });
@@ -17,10 +17,7 @@ export const createCommitMatcher =
         isTransitionForNamespace(action, namespace) && getTransitionMeta(action).operation === Operation.COMMIT;
 
 /** Hydrates an action's transition meta definition */
-export const prepareTransition = <PA extends PrepareAction<any>>(
-    action: ReturnType<PA>,
-    options: Transition,
-): WithTransition<typeof action> => ({
+export const prepareTransition = <PA extends PrepareAction<any>>(action: ReturnType<PA>, options: Transition): WithTransition<typeof action> => ({
     ...action,
     meta: {
         ...('meta' in action ? action.meta : {}),
@@ -41,36 +38,36 @@ export const prepareTransition = <PA extends PrepareAction<any>>(
  * omit `transitionId` from the prepare return — the explicit path works for
  * all operations including STAGE. */
 export const resolveTransition =
-    (operation: Operation, dedupe: DedupeMode) =>
+    (operation: Operation, mode: TransitionMode) =>
     <PA extends PrepareAction<any>>(prepare: PA) =>
     (...args: any[]) => {
         if (operation === Operation.STAGE) {
             const result = prepare(...args);
             if (result && 'transitionId' in result) {
                 const id = String(result.transitionId);
-                return prepareTransition(result, { id, operation, dedupe });
+                return prepareTransition(result, { id, operation, mode });
             }
         }
 
         const [transitionId, ...rest] = args;
-        return prepareTransition(prepare(...rest), { id: transitionId as string, operation, dedupe });
+        return prepareTransition(prepare(...rest), { id: transitionId as string, operation, mode });
     };
 
 /** Creates a transition action creator by wrapping RTK's `createAction`.
  * Type-cast required due to RTK's `PrepareAction` not supporting the variadic
  * `[transitionId, ...prepareArgs]` signature inference. */
 export const createTransition =
-    <Type extends TransitionNamespace, Op extends Operation>(type: Type, operation: Op, dedupe: DedupeMode = DedupeMode.OVERWRITE) =>
+    <Type extends TransitionNamespace, Op extends Operation>(type: Type, operation: Op, mode: TransitionMode = TransitionMode.DEFAULT) =>
     <PA extends PrepareAction<any>>(prepare: PA): TransitionWithPreparedPayload<Type, Op, PA> =>
-        createAction(type, resolveTransition(operation, dedupe)(prepare));
+        createAction(type, resolveTransition(operation, mode)(prepare));
 
-/** Generates transition actions for a specified transition type. By default, it uses the
- * `OVERWRITE` dedupe strategy, which overwrites transitions with the same `transitionId` in
- * the transition list. You can provide an action preparator or a configuration object of
- * action preparators for more granular control over the internal transition actions.
- * The resulting matching function will exclusively match COMMIT operations. */
+/** Generates transition actions for a specified transition type. The `mode` parameter
+ * controls re-staging and failure behavior:
+ * - `DEFAULT`: overwrite on re-stage, keep on fail (edits)
+ * - `DISPOSABLE`: overwrite on re-stage, drop on fail (creates)
+ * - `REVERTIBLE`: trailing on re-stage, stash on fail (deletes) */
 export const createTransitions =
-    <Type extends string>(type: Type, dedupe: DedupeMode = DedupeMode.OVERWRITE) =>
+    <Type extends string>(type: Type, mode: TransitionMode = TransitionMode.DEFAULT) =>
     <
         PA_Stage extends PrepareAction<any>,
         PA_Commit extends PrepareAction<any> = PA_Empty,
@@ -93,11 +90,11 @@ export const createTransitions =
         const stashPA = noOptions ? emptyPA : (options.stash ?? emptyPA);
 
         return {
-            amend: createTransition(`${type}::amend`, Operation.AMEND, dedupe)(stagePA),
-            stage: createTransition(`${type}::stage`, Operation.STAGE, dedupe)(stagePA),
-            commit: createTransition(`${type}::commit`, Operation.COMMIT, dedupe)(commitPA),
-            fail: createTransition(`${type}::fail`, Operation.FAIL, dedupe)(failPA),
-            stash: createTransition(`${type}::stash`, Operation.STASH, dedupe)(stashPA),
+            amend: createTransition(`${type}::amend`, Operation.AMEND, mode)(stagePA),
+            stage: createTransition(`${type}::stage`, Operation.STAGE, mode)(stagePA),
+            commit: createTransition(`${type}::commit`, Operation.COMMIT, mode)(commitPA),
+            fail: createTransition(`${type}::fail`, Operation.FAIL, mode)(failPA),
+            stash: createTransition(`${type}::stash`, Operation.STASH, mode)(stashPA),
             match: createCommitMatcher<Type, PA_Stage>(type),
         };
     };

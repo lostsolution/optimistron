@@ -26,10 +26,7 @@ const edit = createTransitions('profile::edit')((partial: Partial<Profile>) => (
 const remove = createTransitions('profile::remove')(() => ({ payload: {} }));
 const sync = (profile: MaybeNull<Profile>) => ({ type: 'sync', payload: { profile } });
 
-const reducer: HandlerReducer<MaybeNull<Profile>, [item: Profile], [partial: Partial<Profile>], []> = (
-    { getState, create: c, update, remove: r },
-    action,
-) => {
+const reducer: HandlerReducer<MaybeNull<Profile>, [item: Profile], [partial: Partial<Profile>], []> = ({ getState, create: c, update, remove: r }, action) => {
     if (create.match(action)) return c(action.payload.item);
     if (edit.match(action)) return update(action.payload.partial);
     if (remove.match(action)) return r();
