@@ -33593,7 +33593,7 @@ var Home = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                   className: "text-gray-200",
                   children: "project management app"
                 }, undefined, false, undefined, this),
-                " built to showcase Optimistron's four state handlers — each section uses a different state shape with full optimistic CRUD."
+                " built to showcase Optimistron — each section uses a different state shape with full optimistic CRUD."
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
@@ -33602,29 +33602,25 @@ var Home = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                   className: "text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "singularState"
                 }, undefined, false, undefined, this),
-                " ",
-                "powers the user profile,",
+                " powers the user profile,",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "nestedRecordState"
                 }, undefined, false, undefined, this),
-                " ",
-                "drives project-grouped tasks,",
+                " drives project-grouped tasks,",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "recordState"
                 }, undefined, false, undefined, this),
-                " ",
-                "backs the flat epic list, and",
+                " backs the flat epic list, and",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "listState"
                 }, undefined, false, undefined, this),
-                " ",
-                "powers the activity log."
+                " powers the activity log."
               ]
             }, undefined, true, undefined, this)
           ]

@@ -53,20 +53,56 @@ const BannerSvg: FC = () => (
                 <tspan x="85" y="132"> ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝</tspan>
             </text>
         </g>
-        <text x="22" y="55" fontFamily="monospace" fontSize="12" fill="#38bdf8" opacity="0.45">✦</text>
-        <text x="40" y="80" fontFamily="monospace" fontSize="7" fill="#8b5cf6" opacity="0.3">✦</text>
-        <text x="15" y="105" fontFamily="monospace" fontSize="5" fill="#d946ef" opacity="0.2">✦</text>
-        <text x="55" y="120" fontFamily="monospace" fontSize="9" fill="#06b6d4" opacity="0.25">✦</text>
-        <text x="30" y="145" fontFamily="monospace" fontSize="4" fill="#c4b5fd" opacity="0.18">✦</text>
-        <text x="68" y="48" fontFamily="monospace" fontSize="6" fill="#67e8f9" opacity="0.2">✦</text>
-        <text x="795" y="55" fontFamily="monospace" fontSize="14" fill="#38bdf8" opacity="0.55">✦</text>
-        <text x="825" y="80" fontFamily="monospace" fontSize="9" fill="#8b5cf6" opacity="0.35">✦</text>
-        <text x="778" y="100" fontFamily="monospace" fontSize="7" fill="#d946ef" opacity="0.25">✦</text>
-        <text x="830" y="120" fontFamily="monospace" fontSize="11" fill="#06b6d4" opacity="0.3">✦</text>
-        <text x="805" y="148" fontFamily="monospace" fontSize="6" fill="#c4b5fd" opacity="0.2">✦</text>
-        <text x="770" y="42" fontFamily="monospace" fontSize="5" fill="#67e8f9" opacity="0.18">✦</text>
-        <text x="815" y="45" fontFamily="monospace" fontSize="7" fill="#c4b5fd" opacity="0.2">✦</text>
-        <text x="838" y="150" fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" fontSize="11" fill="url(#bn-tagline-grad)" opacity="0.5" textAnchor="end">λς</text>
+        <text x="22" y="55" fontFamily="monospace" fontSize="12" fill="#38bdf8" opacity="0.45">
+            ✦
+        </text>
+        <text x="40" y="80" fontFamily="monospace" fontSize="7" fill="#8b5cf6" opacity="0.3">
+            ✦
+        </text>
+        <text x="15" y="105" fontFamily="monospace" fontSize="5" fill="#d946ef" opacity="0.2">
+            ✦
+        </text>
+        <text x="55" y="120" fontFamily="monospace" fontSize="9" fill="#06b6d4" opacity="0.25">
+            ✦
+        </text>
+        <text x="30" y="145" fontFamily="monospace" fontSize="4" fill="#c4b5fd" opacity="0.18">
+            ✦
+        </text>
+        <text x="68" y="48" fontFamily="monospace" fontSize="6" fill="#67e8f9" opacity="0.2">
+            ✦
+        </text>
+        <text x="795" y="55" fontFamily="monospace" fontSize="14" fill="#38bdf8" opacity="0.55">
+            ✦
+        </text>
+        <text x="825" y="80" fontFamily="monospace" fontSize="9" fill="#8b5cf6" opacity="0.35">
+            ✦
+        </text>
+        <text x="778" y="100" fontFamily="monospace" fontSize="7" fill="#d946ef" opacity="0.25">
+            ✦
+        </text>
+        <text x="830" y="120" fontFamily="monospace" fontSize="11" fill="#06b6d4" opacity="0.3">
+            ✦
+        </text>
+        <text x="805" y="148" fontFamily="monospace" fontSize="6" fill="#c4b5fd" opacity="0.2">
+            ✦
+        </text>
+        <text x="770" y="42" fontFamily="monospace" fontSize="5" fill="#67e8f9" opacity="0.18">
+            ✦
+        </text>
+        <text x="815" y="45" fontFamily="monospace" fontSize="7" fill="#c4b5fd" opacity="0.2">
+            ✦
+        </text>
+        <text
+            x="838"
+            y="150"
+            fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace"
+            fontSize="11"
+            fill="url(#bn-tagline-grad)"
+            opacity="0.5"
+            textAnchor="end"
+        >
+            λς
+        </text>
     </svg>
 );
 
@@ -93,16 +129,44 @@ const LifecycleSvg: FC = () => (
             <tspan x="30" y="90" fill="#484f58">    ├──────▶ </tspan><tspan fill="#f472b6">fail</tspan><tspan fill="#484f58">     ✗  flag as failed — keep for retry/UI feedback</tspan>
             <tspan x="30" y="115" fill="#484f58">    └──────▶ </tspan><tspan fill="#facc15">stash</tspan><tspan fill="#484f58">    ↩  revert — restore trailing if TRAILING dedupe</tspan>
         </text>
-        <text x="15" y="68" fontFamily="monospace" fontSize="5" fill="#d946ef" opacity="0.18">✦</text>
-        <text x="8" y="100" fontFamily="monospace" fontSize="4" fill="#06b6d4" opacity="0.15">✦</text>
-        <text x="795" y="32" fontFamily="monospace" fontSize="12" fill="#38bdf8" opacity="0.5">✦</text>
-        <text x="825" y="58" fontFamily="monospace" fontSize="8" fill="#8b5cf6" opacity="0.3">✦</text>
-        <text x="778" y="80" fontFamily="monospace" fontSize="6" fill="#d946ef" opacity="0.22">✦</text>
-        <text x="830" y="100" fontFamily="monospace" fontSize="10" fill="#06b6d4" opacity="0.28">✦</text>
-        <text x="805" y="130" fontFamily="monospace" fontSize="5" fill="#c4b5fd" opacity="0.18">✦</text>
-        <text x="770" y="115" fontFamily="monospace" fontSize="4" fill="#67e8f9" opacity="0.15">✦</text>
-        <text x="815" y="140" fontFamily="monospace" fontSize="7" fill="#f43f5e" opacity="0.16">✦</text>
-        <text x="838" y="142" fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace" fontSize="11" fill="url(#lc-tagline-grad)" opacity="0.5" textAnchor="end">λς</text>
+        <text x="15" y="68" fontFamily="monospace" fontSize="5" fill="#d946ef" opacity="0.18">
+            ✦
+        </text>
+        <text x="8" y="100" fontFamily="monospace" fontSize="4" fill="#06b6d4" opacity="0.15">
+            ✦
+        </text>
+        <text x="795" y="32" fontFamily="monospace" fontSize="12" fill="#38bdf8" opacity="0.5">
+            ✦
+        </text>
+        <text x="825" y="58" fontFamily="monospace" fontSize="8" fill="#8b5cf6" opacity="0.3">
+            ✦
+        </text>
+        <text x="778" y="80" fontFamily="monospace" fontSize="6" fill="#d946ef" opacity="0.22">
+            ✦
+        </text>
+        <text x="830" y="100" fontFamily="monospace" fontSize="10" fill="#06b6d4" opacity="0.28">
+            ✦
+        </text>
+        <text x="805" y="130" fontFamily="monospace" fontSize="5" fill="#c4b5fd" opacity="0.18">
+            ✦
+        </text>
+        <text x="770" y="115" fontFamily="monospace" fontSize="4" fill="#67e8f9" opacity="0.15">
+            ✦
+        </text>
+        <text x="815" y="140" fontFamily="monospace" fontSize="7" fill="#f43f5e" opacity="0.16">
+            ✦
+        </text>
+        <text
+            x="838"
+            y="142"
+            fontFamily="'SFMono-Regular','Consolas','Liberation Mono','Menlo',monospace"
+            fontSize="11"
+            fill="url(#lc-tagline-grad)"
+            opacity="0.5"
+            textAnchor="end"
+        >
+            λς
+        </text>
     </svg>
 );
 
@@ -117,18 +181,14 @@ const Home: FC = () => (
 
             <div className="text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8">
                 <p>
-                    This demo is a <span className="text-gray-200">project management app</span> built to showcase Optimistron's
-                    four state handlers — each section uses a different state shape with full optimistic CRUD.
+                    This demo is a <span className="text-gray-200">project management app</span> built to showcase Optimistron — each section uses a different
+                    state shape with full optimistic CRUD.
                 </p>
                 <p>
-                    <code className="text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded">singularState</code>{' '}
-                    powers the user profile,{' '}
-                    <code className="text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded">nestedRecordState</code>{' '}
-                    drives project-grouped tasks,{' '}
-                    <code className="text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded">recordState</code>{' '}
-                    backs the flat epic list, and{' '}
-                    <code className="text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded">listState</code>{' '}
-                    powers the activity log.
+                    <code className="text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded">singularState</code> powers the user profile,{' '}
+                    <code className="text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded">nestedRecordState</code> drives project-grouped tasks,{' '}
+                    <code className="text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded">recordState</code> backs the flat epic list, and{' '}
+                    <code className="text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded">listState</code> powers the activity log.
                 </p>
             </div>
 
@@ -138,12 +198,12 @@ const Home: FC = () => (
 
             <div className="p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed space-y-2 grad-wrap">
                 <p>
-                    Pick a usecase from the sidebar. Each one implements the <span className="text-gray-300">same store</span> with
-                    a different async pattern — component-level, thunks, or sagas.
+                    Pick a usecase from the sidebar. Each one implements the <span className="text-gray-300">same store</span> with a different async pattern —
+                    component-level, thunks, or sagas.
                 </p>
                 <p>
-                    Use the <span className="text-gray-300">Mock API</span> controls to toggle offline mode, adjust latency,
-                    and trigger a sync to see how Optimistron handles failures, retries, and conflict detection in real-time.
+                    Use the <span className="text-gray-300">Mock API</span> controls to toggle offline mode, adjust latency, and trigger a sync to see how
+                    Optimistron handles failures, retries, and conflict detection in real-time.
                 </p>
             </div>
         </div>
@@ -173,9 +233,7 @@ export const App: FC = () => (
                                 to={path}
                                 className={({ isActive }) =>
                                     `block px-3 py-2 rounded-md text-sm transition-colors ${
-                                        isActive
-                                            ? 'bg-surface-3 text-white'
-                                            : 'text-gray-400 hover:text-gray-200 hover:bg-surface-2'
+                                        isActive ? 'bg-surface-3 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-surface-2'
                                     }`
                                 }
                             >
