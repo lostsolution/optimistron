@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from 'bun:test';
 
 import { createTransitions } from '~actions';
 import { optimistron } from '~optimistron';
-import { create, createItem, indexedState, reducer, remove, type TestItem } from '~test/utils';
+import { create, createItem, indexedState, reducer, type TestItem } from '~test/utils';
 import { TransitionMode, getTransitionMeta, toCommit } from '~transitions';
 
 describe('optimistron', () => {
@@ -64,7 +64,10 @@ describe('optimistron', () => {
     });
 
     describe('TransitionMode.DISPOSABLE', () => {
-        const disposableCreate = createTransitions('test::add', TransitionMode.DISPOSABLE)((item: TestItem) => ({
+        const disposableCreate = createTransitions(
+            'test::add',
+            TransitionMode.DISPOSABLE,
+        )((item: TestItem) => ({
             payload: item,
             transitionId: item.id,
         }));
@@ -101,7 +104,10 @@ describe('optimistron', () => {
     });
 
     describe('TransitionMode.REVERTIBLE', () => {
-        const revertibleDelete = createTransitions('test::remove', TransitionMode.REVERTIBLE)((dto: Pick<TestItem, 'id'>) => ({
+        const revertibleDelete = createTransitions(
+            'test::remove',
+            TransitionMode.REVERTIBLE,
+        )((dto: Pick<TestItem, 'id'>) => ({
             payload: dto,
             transitionId: dto.id,
         }));

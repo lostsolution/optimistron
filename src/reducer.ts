@@ -3,15 +3,10 @@ import type { BoundStateHandler, CrudActionMap, StateHandler, TransitionState, W
 
 export type BoundReducer<State = any> = (state: TransitionState<State>, action: Action) => State;
 
-export type HandlerReducer<State, C = any, U = any, D = any> = (
-    boundStateHandler: BoundStateHandler<State, C, U, D>,
-    action: Action,
-) => State;
+export type HandlerReducer<State, C = any, U = any, D = any> = (boundStateHandler: BoundStateHandler<State, C, U, D>, action: Action) => State;
 
 /** Consumer-facing reducer config: either a function (manual) or a CRUD map (auto-wired) */
-export type ReducerConfig<S, C = any, U = any, D = any> =
-    | HandlerReducer<S, C, U, D>
-    | (CrudActionMap & { reducer?: HandlerReducer<S, C, U, D> });
+export type ReducerConfig<S, C = any, U = any, D = any> = HandlerReducer<S, C, U, D> | (CrudActionMap & { reducer?: HandlerReducer<S, C, U, D> });
 
 /** Runtime shape of the CRUD config branch — matches ActionMatcher's runtime interface.
  * Type-level safety is enforced at `optimistron()` call sites via overloads. */
@@ -27,10 +22,7 @@ type CrudConfigRuntime<S, C, U, D> = {
 type WiredHandler<S, C, U, D> = WiredStateHandler<S, C, U, D, CrudConfigRuntime<S, C, U, D>>;
 
 /** Resolves a `ReducerConfig` to a `HandlerReducer` — auto-wires CRUD maps via the handler's `wire` method */
-export const resolveReducer = <S, C, U, D>(
-    handler: StateHandler<S, C, U, D>,
-    config: ReducerConfig<S, C, U, D>,
-): HandlerReducer<S, C, U, D> => {
+export const resolveReducer = <S, C, U, D>(handler: StateHandler<S, C, U, D>, config: ReducerConfig<S, C, U, D>): HandlerReducer<S, C, U, D> => {
     if (typeof config === 'function') return config;
 
     if (!('wire' in handler) || typeof handler.wire !== 'function') {
@@ -49,9 +41,6 @@ export const resolveReducer = <S, C, U, D>(
 };
 
 export const bindReducer =
-    <S, C, U, D>(
-        reducer: HandlerReducer<S, C, U, D>,
-        bindState: (state: S) => BoundStateHandler<S, C, U, D>,
-    ): BoundReducer<S> =>
+    <S, C, U, D>(reducer: HandlerReducer<S, C, U, D>, bindState: (state: S) => BoundStateHandler<S, C, U, D>): BoundReducer<S> =>
     (transitionState, action) =>
         reducer(bindState(transitionState.state), action);

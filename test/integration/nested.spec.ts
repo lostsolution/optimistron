@@ -32,10 +32,7 @@ const remove = createTransitions('nested::remove')(crud.remove);
 
 type Keys = ['groupId', 'itemId'];
 
-const reducer: HandlerReducer<State, Item, UpdateDTO<Item, Keys>, DeleteDTO<Item, Keys>> = (
-    { getState, create, update, remove: r },
-    action,
-) => {
+const reducer: HandlerReducer<State, Item, UpdateDTO<Item, Keys>, DeleteDTO<Item, Keys>> = ({ getState, create, update, remove: r }, action) => {
     if (add.match(action)) return create(action.payload);
     if (edit.match(action)) return update(action.payload);
     if (remove.match(action)) return r(action.payload);
