@@ -29,10 +29,13 @@ const add = createTransitions('nested::add')(crud.create);
 const edit = createTransitions('nested::edit')(crud.update);
 const remove = createTransitions('nested::remove')(crud.remove);
 
-const reducer: HandlerReducer<State, [item: Item], [string, string, Partial<Item>], [string, string]> = ({ getState, create, update, remove: r }, action) => {
+const reducer: HandlerReducer<State, [item: Item], [path: string[], item: Partial<Item>], [path: string[]]> = (
+    { getState, create, update, remove: r },
+    action,
+) => {
     if (add.match(action)) return create(action.payload.item);
-    if (edit.match(action)) return update(action.payload.path[0], action.payload.path[1], action.payload.item);
-    if (remove.match(action)) return r(action.payload.path[0], action.payload.path[1]);
+    if (edit.match(action)) return update(action.payload.path, action.payload.item);
+    if (remove.match(action)) return r(action.payload.path);
     return getState();
 };
 
@@ -96,7 +99,7 @@ describe('optimistron', () => {
             const updatedPartial: Partial<Item> = { value: 'updated', revision: 2 };
             const updatedItem: Item = { ...item, ...updatedPartial };
 
-            const stage = edit.stage('g1', 'i1', updatedPartial);
+            const stage = edit.stage(['g1', 'i1'], updatedPartial);
             const commit = edit.commit('g1/i1');
             const stash = edit.stash('g1/i1');
 
@@ -125,7 +128,7 @@ describe('optimistron', () => {
         describe('delete', () => {
             const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test', revision: 0 };
 
-            const stage = remove.stage('g1', 'i1');
+            const stage = remove.stage(['g1', 'i1']);
             const commit = remove.commit('g1/i1');
             const stash = remove.stash('g1/i1');
 

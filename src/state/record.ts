@@ -47,8 +47,8 @@ export const nestedRecordState =
     }: NestedRecordStateOptions<T, Keys>): WiredStateHandler<
         RecursiveRecordState<Keys, T>,
         [item: T],
-        [...PathMap<Keys>, Partial<T>],
-        [...PathMap<Keys>],
+        [path: string[], item: Partial<T>],
+        [path: string[]],
         NestedRecordCrudMap<T, Keys>
     > => {
         type State = RecursiveRecordState<Keys, T>;
@@ -117,25 +117,20 @@ export const nestedRecordState =
         return {
             create: (state, item) => setAt(state, extractPath(item), item),
 
-            update: (state, ...args) => {
-                const ids = (args as unknown[]).slice(0, keys.length) as string[];
-                const partial = args[keys.length] as Partial<T>;
-                const existing = getAt(state, ids) as Maybe<T>;
+            update: (state, path, item) => {
+                const existing = getAt(state, path) as Maybe<T>;
                 if (!existing) return state;
-                return setAt(state, ids, { ...existing, ...partial });
+                return setAt(state, path, { ...existing, ...item });
             },
 
-            remove: (state, ...args) => {
-                const ids = (args as unknown[]).slice(0, keys.length) as string[];
-                return removeAt(state, ids);
-            },
+            remove: (state, path) => removeAt(state, path),
 
             merge: (existing, incoming) => mergeAtDepth(existing, incoming, keys.length) as State,
 
             wire: (bound, action, actions) => {
                 if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);
-                if (actions.update && actions.update.match(action)) return bound.update(...action.payload.path, action.payload.item);
-                if (actions.remove && actions.remove.match(action)) return bound.remove(...action.payload.path);
+                if (actions.update && actions.update.match(action)) return bound.update(action.payload.path, action.payload.item);
+                if (actions.remove && actions.remove.match(action)) return bound.remove(action.payload.path);
                 return undefined;
             },
         };
@@ -153,8 +148,8 @@ export const recordState = <T extends Record<string, any>>({
     return {
         create: nested.create,
         merge: nested.merge,
-        update: (state, itemId, partialItem) => nested.update(state, itemId, partialItem),
-        remove: (state, itemId) => nested.remove(state, itemId),
+        update: (state, itemId, partialItem) => nested.update(state, [itemId], partialItem),
+        remove: (state, itemId) => nested.remove(state, [itemId]),
 
         wire: (bound, action, actions) => {
             if (actions.create && actions.create.match(action)) return bound.create(action.payload.item);

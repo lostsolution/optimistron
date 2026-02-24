@@ -217,14 +217,14 @@ describe('crudPrepare', () => {
         });
 
         test('update returns payload with path and partial item', () => {
-            const result = crud.update('g1', 'i1', { value: 'updated' });
+            const result = crud.update(['g1', 'i1'], { value: 'updated' });
 
             expect(result.payload).toEqual({ path: ['g1', 'i1'], item: { value: 'updated' } });
             expect(result.transitionId).toBe('g1/i1');
         });
 
         test('remove returns payload with path', () => {
-            const result = crud.remove('g1', 'i1');
+            const result = crud.remove(['g1', 'i1']);
 
             expect(result.payload).toEqual({ path: ['g1', 'i1'] });
             expect(result.transitionId).toBe('g1/i1');
@@ -246,8 +246,8 @@ describe('crudPrepare', () => {
             const item: Deep = { a: 'x', b: 'y', c: 'z', val: 1 };
 
             expect(deepCrud.create(item).transitionId).toBe('x/y/z');
-            expect(deepCrud.update('x', 'y', 'z', { val: 2 }).transitionId).toBe('x/y/z');
-            expect(deepCrud.remove('x', 'y', 'z').transitionId).toBe('x/y/z');
+            expect(deepCrud.update(['x', 'y', 'z'], { val: 2 }).transitionId).toBe('x/y/z');
+            expect(deepCrud.remove(['x', 'y', 'z']).transitionId).toBe('x/y/z');
         });
     });
 });

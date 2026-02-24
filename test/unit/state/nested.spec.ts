@@ -44,17 +44,17 @@ describe('nestedRecordState', () => {
         const state: State = { g1: { i1: item } };
 
         test('should update existing item', () => {
-            const next = handler.update(state, 'g1', 'i1', { value: 'updated' });
+            const next = handler.update(state, ['g1', 'i1'], { value: 'updated' });
             expect(next.g1.i1).toEqual({ ...item, value: 'updated' });
         });
 
         test('should return state in-place if item does not exist', () => {
-            const next = handler.update(state, 'g1', 'missing', { value: 'nope' });
+            const next = handler.update(state, ['g1', 'missing'], { value: 'nope' });
             expect(next).toBe(state);
         });
 
         test('should return state in-place if group does not exist', () => {
-            const next = handler.update(state, 'missing', 'i1', { value: 'nope' });
+            const next = handler.update(state, ['missing', 'i1'], { value: 'nope' });
             expect(next).toBe(state);
         });
     });
@@ -63,17 +63,17 @@ describe('nestedRecordState', () => {
         const state: State = { g1: { i1: item } };
 
         test('should remove existing item', () => {
-            const next = handler.remove(state, 'g1', 'i1');
+            const next = handler.remove(state, ['g1', 'i1']);
             expect(next).toEqual({ g1: {} });
         });
 
         test('should return state in-place if item does not exist', () => {
-            const next = handler.remove(state, 'g1', 'missing');
+            const next = handler.remove(state, ['g1', 'missing']);
             expect(next).toBe(state);
         });
 
         test('should return state in-place if group does not exist', () => {
-            const next = handler.remove(state, 'missing', 'i1');
+            const next = handler.remove(state, ['missing', 'i1']);
             expect(next).toBe(state);
         });
     });
