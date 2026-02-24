@@ -1,133 +1,19 @@
 # Architecture
 
-Internals, API, and advanced patterns. For quick start, see [README.md](./README.md).
+Internals, design decisions, and the full API reference. For getting started, see [README.md](./README.md).
 
 ---
 
-- [Entity Identity](#entity-identity)
-- [Versioning & Conflicts](#versioning--conflicts)
-- [StateHandler](#statehandler)
-- [Sanitization](#sanitization)
 - [Data Flow](#data-flow)
-- [Custom Handlers](#custom-handlers)
-- [Transition Modes](#transition-modes)
+- [Entity Identity](#entity-identity)
+- [Versioning & Conflict Detection](#versioning--conflict-detection)
+- [Sanitization](#sanitization)
+- [StateHandler Interface](#statehandler-interface)
+- [Transition Modes In Depth](#transition-modes-in-depth)
 - [Async Patterns](#async-patterns)
+- [Module Map](#module-map)
+- [Performance Invariants](#performance-invariants)
 - [API Reference](#api-reference)
-
----
-
-## Entity Identity
-
-Every transition carries a string ID — the **stable link between a transition and its entity in state**. One ID, one entity. Because:
-
-- **Sanitization** replays by ID — shared IDs cause shadowing
-- **Selectors** look up by ID — ambiguous IDs break lookups
-- **Dedupe** matches on ID
-
-**The recommended default is `transitionId === entityId`.** Use `crudPrepare` to couple them:
-
-```typescript
-const crud = crudPrepare<Todo>('id');
-const createTodo = createTransitions('todos::add')(crud.create);
-
-dispatch(createTodo.stage(todo));           // transitionId auto-detected from todo.id
-dispatch(createTodo.amend(tid, amended));   // explicit — targets original transition
-dispatch(createTodo.commit(tid));           // explicit
-```
-
-**Why STAGE-only auto-detection:** `stage` initiates a new transition — the entity *is* the transition. But `amend`/`commit`/`fail`/`stash` target an *existing* transition the consumer already holds a reference to. Auto-detecting on `amend` is a pitfall: it shares `stagePA`, so an amended entity with a server-assigned ID would target the wrong transition.
-
-For edge-cases where `transitionId !== entityId` (batch ops, correlation IDs, server-assigned IDs with temp tokens), write custom prepare functions and pass transitionId as the first argument — the explicit path works for all operations including `stage`.
-
----
-
-## Versioning & Conflicts
-
-Conflict detection needs **version ordering**. Entities carry a monotonically increasing value — `revision`, `updatedAt`, sequence number.
-
-```typescript
-compare: (a: T) => (b: T) => 0 | 1 | -1  // version ordering
-eq:      (a: T) => (b: T) => boolean       // content equality at same version
-```
-
-During sanitization, `merge` runs `compare` per entity:
-
-| `compare` | Then | Outcome |
-|-----------|------|---------|
-| `1` (newer) | — | Valid update |
-| `0` (same) | `eq` → `true` | Skip (no-op) |
-| `0` (same) | `eq` → `false` | **Conflict** |
-| `-1` (older) | — | **Conflict** |
-
-Thrown as `OptimisticMergeResult.CONFLICT` / `.SKIP`, caught by `sanitizeTransitions`.
-
-Without versioning, conflict detection degrades to content equality — missing concurrent mutations from other clients.
-
----
-
-## StateHandler
-
-```typescript
-interface StateHandler<State, CreateParams, UpdateParams, DeleteParams> {
-    create: (state: State, ...args: CreateParams) => State;
-    update: (state: State, ...args: UpdateParams) => State;
-    remove: (state: State, ...args: DeleteParams) => State;
-    merge:  (current: State, incoming: State) => State;
-}
-```
-
-**Key invariant:** `update`/`remove` return the **same reference** on no-op. Sanitization uses `===` to detect effect.
-
-### Auto-wired CRUD
-
-Built-in handlers (`recordState`, `nestedRecordState`, `singularState`) expose a typed `wire` method as a structural extension — it is **not on the `StateHandler` interface** because each handler needs specifically typed `CrudActionMap<CP, UP, RP>` payloads. The `wire` method uses `ActionMatcher<P>` type guards to narrow action payloads without `as any` casts. When the consumer passes a CRUD action map instead of a function, `wire` handles the dispatch:
-
-```typescript
-// Zero boilerplate — handler.wire does the routing
-optimistron('todos', initial, handler, {
-    create: createTodo, update: editTodo, remove: deleteTodo,
-});
-
-// Hybrid — auto-wire CRUD + fallback for custom actions
-optimistron('todos', initial, handler, {
-    create: createTodo, update: editTodo, remove: deleteTodo,
-    reducer: ({ getState }, action) => { /* custom logic */ },
-});
-```
-
-The `wire` method is handler-specific because each handler needs typed payload shapes. `optimistron()` uses function overloads — the auto-wire overload infers the CRUD map type `A` from `WireMethod<A>` on the handler, enforcing that each action matcher produces the right payload shape at compile time:
-
-| Handler | `wire` unpacks payload as |
-|---------|--------------------------|
-| `recordState` | `create(item)`, `update(id, item)`, `remove(id)` |
-| `nestedRecordState` | `create(item)`, `update(...path, item)`, `remove(...path)` |
-| `singularState` | `create(item)`, `update(item)`, `remove()` |
-| `listState` | `create(item)`, `update(id, item)`, `remove(id)` |
-
-### Manual mode
-
-Pass a function for full control — the `BoundStateHandler` is the handler closed over current state:
-
-```typescript
-({ getState, create, update, remove }, action) => {
-    if (createTodo.match(action)) return create(action.payload.todo);
-    if (editTodo.match(action))   return update(action.payload.id, action.payload.todo);
-    if (deleteTodo.match(action)) return remove(action.payload.id);
-    return getState();
-}
-```
-
----
-
-## Sanitization
-
-After every state mutation, `sanitizeTransitions` replays pending transitions against committed state.
-
-<p align="center">
-  <img src=".github/sanitization.svg" alt="Sanitization Flow" width="100%"/>
-</p>
-
-For each transition: apply as-if-committed, check if state mutated, then `merge` to validate. Results: **keep**, **discard** (no-op/skip), or **flag** (conflict). Gated by `!==` — only runs when state actually changed.
 
 ---
 
@@ -137,98 +23,185 @@ For each transition: apply as-if-committed, check if state mutated, then `merge`
   <img src=".github/dataflow.svg" alt="Data Flow" width="100%"/>
 </p>
 
----
+Two paths through the system:
 
-## Built-in State Handlers
+**Write path** — dispatching actions:
+1. `stage`/`amend` dispatched — only the transitions list is updated, reducer state is untouched
+2. `commit` dispatched — reducer state is updated via the bound reducer, transition is removed
+3. After every mutation (gated by `===`), `sanitizeTransitions` replays all remaining transitions to detect no-ops and conflicts
 
-Four built-in handlers cover the common state shapes:
-
-### `recordState<T>` — flat key-value map
-
-`Record<string, T>` indexed by a single key. Depth-1 specialization of `nestedRecordState`.
-
-```typescript
-import { recordState, crudPrepare } from '@lostsolution/optimistron';
-const handler = recordState<Todo>({ key: 'id', compare, eq });
-const crud = crudPrepare<Todo>('id');
-```
-
-### `singularState<T>` — single object
-
-`T | null` for singletons (profile, settings). CRUD operates on the whole object.
-
-```typescript
-import { singularState } from '@lostsolution/optimistron';
-const handler = singularState<Profile>({ compare, eq });
-```
-
-### `nestedRecordState<T>()` — nested records
-
-`Record<string, Record<string, ... T>>` for multi-level grouping. Curried: fix `T`, infer keys. Multi-key `crudPrepare` joins path IDs with `/` for the transitionId.
-
-```typescript
-import { nestedRecordState, crudPrepare } from '@lostsolution/optimistron';
-const handler = nestedRecordState<ProjectTodo>()({ keys: ['projectId', 'id'], compare, eq });
-const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
-```
-
-### `listState<T>` — ordered list
-
-`T[]` for collections where insertion order matters. Items identified by a single key on `T`.
-
-```typescript
-import { listState, crudPrepare } from '@lostsolution/optimistron';
-const handler = listState<Todo>({ key: 'id', compare, eq });
-const crud = crudPrepare<Todo>('id');
-```
-
-## Custom Handlers
-
-For shapes not covered by the built-ins, implement `StateHandler` directly.
-
-**The contract:**
-1. `update`/`remove` → same reference on no-op
-2. `merge` → throw `SKIP` on redundant, `CONFLICT` on stale, return merged on valid
+**Read path** — selecting state:
+1. `selectOptimistic` replays pending transitions on top of committed state
+2. Returns the derived optimistic view — never stored, always computed
+3. Memoization is the consumer's responsibility via `createSelector`
 
 ---
 
-## Transition Modes
+## Entity Identity
 
-`TransitionMode` controls re-staging and failure behavior per action type:
+Every transition carries a string ID — the **stable link between a transition and its entity**. This ID is used everywhere: sanitization replays by ID, selectors look up by ID, deduplication matches on ID.
 
-| Mode | On re-stage | On fail | Use case |
-|------|-------------|---------|----------|
-| `DEFAULT` | Overwrite | Flag as failed | Edits |
-| `DISPOSABLE` | Overwrite | Drop transition | Creates |
-| `REVERTIBLE` | Store trailing | Stash (revert) | Deletes |
+**Default: `transitionId === entityId`.** Use `crudPrepare` to couple them automatically:
 
 ```typescript
-const createTodo  = createTransitions('todos::add', TransitionMode.DISPOSABLE)(crud.create);
-const editTodo    = createTransitions('todos::edit')(crud.update);
-const deleteTodo  = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
+const crud = crudPrepare<Todo>('id');
+const createTodo = createTransitions('todos::add')(crud.create);
+
+dispatch(createTodo.stage(todo));           // transitionId auto-detected from todo.id
+dispatch(createTodo.amend(tid, amended));   // explicit — targets existing transition
+dispatch(createTodo.commit(tid));           // explicit
 ```
 
-`REVERTIBLE` stores the replaced transition as a trailing fallback. On fail or explicit stash, the previous transition is restored.
+**Why only `stage` auto-detects:** `stage` initiates a new transition — the entity *is* the transition. `amend`/`commit`/`fail`/`stash` target an *existing* transition the consumer already holds a reference to. Auto-detecting on `amend` would be a footgun: an amended entity with a server-assigned ID would target the wrong transition.
+
+For edge-cases where `transitionId !== entityId` (batch ops, correlation IDs, temp-to-server ID mapping), write custom prepare functions.
+
+---
+
+## Versioning & Conflict Detection
+
+Entities must carry a **monotonically increasing version** — `revision`, `updatedAt`, sequence number — anything orderable. Two curried comparators drive conflict detection:
+
+```typescript
+compare: (a: T) => (b: T) => 0 | 1 | -1   // version ordering
+eq:      (a: T) => (b: T) => boolean       // content equality at same version
+```
+
+During sanitization, `merge` calls `compare` on each entity:
+
+| `compare` result | Then check | Outcome |
+|------------------|------------|---------|
+| `1` (transition is newer) | — | **Valid** — keep |
+| `0` (same version) | `eq` returns `true` | **Skip** — no-op, discard |
+| `0` (same version) | `eq` returns `false` | **Conflict** — flag |
+| `-1` (transition is older) | — | **Conflict** — flag |
+
+These are thrown as `OptimisticMergeResult.SKIP` / `.CONFLICT` and caught by `sanitizeTransitions`.
+
+Without versioning, conflict detection degrades to content equality — it can't distinguish concurrent mutations from different clients.
+
+---
+
+## Sanitization
+
+<p align="center">
+  <img src=".github/sanitization.svg" alt="Sanitization Flow" width="100%"/>
+</p>
+
+After every state mutation, `sanitizeTransitions` replays all pending transitions against committed state:
+
+1. Start with a shallow working copy of committed state (`Object.assign({}, state)` — the only copy in the system)
+2. For each transition: apply as-if-committed, check if state reference changed (`!==`), then `merge` to validate
+3. Result per transition: **keep** (valid), **discard** (no-op/skip), or **flag** (conflict)
+
+Sanitization only runs when state actually changes — gated by referential equality (`===`).
+
+---
+
+## StateHandler Interface
+
+```typescript
+interface StateHandler<State, C = any, U = any, D = any> {
+    create: (state: State, dto: C) => State;
+    update: (state: State, dto: U) => State;
+    remove: (state: State, dto: D) => State;
+    merge:  (current: State, incoming: State) => State;
+}
+```
+
+`C`, `U`, `D` are scalar DTO generics — each operation takes a single object argument (identity + data together).
+
+**Critical invariant:** `update` and `remove` must return the **same reference** when nothing changed. Sanitization uses `===` to detect whether a transition had any effect. If your handler returns a new object on no-op, sanitization breaks.
+
+### Built-in handlers
+
+| Handler | State shape | DTO types | Options |
+|---------|-------------|-----------|---------|
+| `recordState<T>` | `Record<string, T>` | `C=T`, `U=Partial<T>`, `D=Partial<T>` | `{ key, compare, eq }` |
+| `nestedRecordState<T>()` | `Record<string, Record<...T>>` | `C=T`, `U=UpdateDTO<T,Keys>`, `D=DeleteDTO<T,Keys>` | `{ keys, compare, eq }` |
+| `singularState<T>` | `T \| null` | `C=T`, `U=Partial<T>`, `D=void` | `{ compare, eq }` |
+| `listState<T>` | `T[]` | `C=T`, `U=Partial<T>`, `D=Partial<T>` | `{ key, compare, eq }` |
+
+### Auto-wired CRUD
+
+Built-in handlers expose a `wire` method via `WiredStateHandler`. When you pass a CRUD action map instead of a reducer function, `wire` handles action matching and payload routing:
+
+```typescript
+// wire does the routing — zero boilerplate
+optimistron('todos', initial, handler, {
+  create: createTodo, update: editTodo, remove: deleteTodo,
+});
+```
+
+`optimistron()` uses function overloads to infer the CRUD map type from the handler's `wire` method, enforcing that each action matcher produces the right payload shape **at compile time**.
+
+### Custom handlers
+
+Implement `StateHandler` for any shape. The contract:
+
+1. `update`/`remove` must return the same reference on no-op
+2. `merge` must throw `OptimisticMergeResult.SKIP` for redundant transitions
+3. `merge` must throw `OptimisticMergeResult.CONFLICT` for stale transitions
+4. `merge` must return the merged state for valid transitions
+
+---
+
+## Transition Modes In Depth
+
+`TransitionMode` is a single enum that controls both re-staging and failure behavior. Declared per action type at the `createTransitions` site — making invalid state combinations unrepresentable.
+
+### `DEFAULT` — edits
+
+- **Re-stage:** overwrites the existing transition
+- **Fail:** flags the transition as failed, keeps it in the list
+- **Use case:** user edits an entity, server rejects — show error, let user retry
+
+### `DISPOSABLE` — creates
+
+- **Re-stage:** overwrites the existing transition
+- **Fail:** drops the transition entirely
+- **Use case:** user creates an entity, server rejects — the entity never existed, remove it from view
+
+### `REVERTIBLE` — deletes
+
+- **Re-stage:** stores the replaced transition as a trailing fallback
+- **Fail:** stashes the transition (reverts to the trailing fallback)
+- **Use case:** user deletes an entity, server rejects — undo the deletion, restore the entity
+
+### Retry
+
+Retry is always a consumer concern — timing, backoff, and reconnect logic belong in your app. The library provides:
+
+```typescript
+import { retryTransition, selectFailedTransition, selectRetryCount } from '@lostsolution/optimistron';
+
+const failed = selectFailedTransition(id)(state.todos);
+if (failed) {
+  const retries = selectRetryCount(id)(state.todos);
+  if (retries < 3) dispatch(retryTransition(failed)); // strips failure flags, re-stages
+}
+```
+
+When `processTransition` overwrites a failed transition (re-stage or amend after fail), it increments `retryCount` and sets `lastRetry` (timestamp).
 
 ---
 
 ## Async Patterns
 
-Transport-agnostic. Works with anything:
+Optimistron is transport-agnostic. The pattern is always: stage, then resolve.
 
 <details>
-<summary><b>Component-level</b></summary>
+<summary><b>Component-level async</b></summary>
 
 ```typescript
 const handleCreate = async (todo: Todo) => {
-  const transitionId = todo.id;
-  dispatch(createTodo.stage(todo));                             // auto-detect transitionId
+  dispatch(createTodo.stage(todo));
   try {
-    await api.create(todo);
-    dispatch(createTodo.amend(transitionId, { ...todo, id: serverId })); // explicit
-    dispatch(createTodo.commit(transitionId));
+    const saved = await api.create(todo);
+    dispatch(createTodo.amend(todo.id, saved));
+    dispatch(createTodo.commit(todo.id));
   } catch (e) {
-    dispatch(createTodo.fail(transitionId, e));
+    dispatch(createTodo.fail(todo.id, e));
   }
 };
 ```
@@ -242,14 +215,13 @@ const handleCreate = async (todo: Todo) => {
 const createTodoThunk =
   (todo: Todo): ThunkAction<void, RootState, void, Action> =>
   async (dispatch) => {
-    const transitionId = todo.id;
     dispatch(createTodo.stage(todo));
     try {
-      await api.create(todo);
-      dispatch(createTodo.amend(transitionId, { ...todo, id: serverId }));
-      dispatch(createTodo.commit(transitionId));
+      const saved = await api.create(todo);
+      dispatch(createTodo.amend(todo.id, saved));
+      dispatch(createTodo.commit(todo.id));
     } catch (e) {
-      dispatch(createTodo.fail(transitionId, e));
+      dispatch(createTodo.fail(todo.id, e));
     }
   };
 ```
@@ -263,8 +235,8 @@ const createTodoThunk =
 function* createTodoSaga(action: ReturnType<typeof createTodo.stage>) {
   const transitionId = getTransitionMeta(action).id;
   try {
-    yield call(api.create, action.payload.item);
-    yield put(createTodo.amend(transitionId, { ...action.payload.item, id: serverId }));
+    const saved = yield call(api.create, action.payload);
+    yield put(createTodo.amend(transitionId, saved));
     yield put(createTodo.commit(transitionId));
   } catch (e) {
     yield put(createTodo.fail(transitionId, e));
@@ -276,84 +248,132 @@ function* createTodoSaga(action: ReturnType<typeof createTodo.stage>) {
 
 ---
 
+## Module Map
+
+```
+src/
+├── index.ts              # Public API surface (barrel export)
+├── optimistron.ts        # Factory: wraps reducers, returns { reducer, selectOptimistic }
+├── transitions.ts        # Transition operations, processTransition, sanitizeTransitions
+├── reducer.ts            # resolveReducer, bindReducer
+├── constants.ts          # META_KEY
+│
+├── actions/
+│   ├── index.ts          # Barrel: re-exports public API
+│   ├── transitions.ts    # createTransition, createTransitions, resolveTransition
+│   ├── crud.ts           # crudPrepare (single-key + multi-key overloads)
+│   └── types.ts          # PreparePayload, PrepareError, ActionMeta, ItemPath, UpdateDTO, DeleteDTO
+│
+├── selectors/
+│   ├── internal.ts       # createSelectOptimistic (returned from optimistron, not exported)
+│   └── selectors.ts      # selectIsFailed, selectIsOptimistic, selectIsConflicting, etc.
+│
+├── state/
+│   ├── types.ts          # TransitionState, StateHandler, WiredStateHandler, BoundStateHandler
+│   ├── factory.ts        # bindStateFactory, buildTransitionState, transitionStateFactory
+│   ├── record.ts         # recordState, nestedRecordState
+│   ├── singular.ts       # singularState
+│   └── list.ts           # listState
+│
+└── utils/
+    ├── path.ts           # getAt, setAt, removeAt — nested Record path traversal
+    ├── types.ts          # StringKeys, PathMap, Maybe, MaybeNull
+    └── logger.ts         # warn
+```
+
+Key implementation details:
+
+- **`TransitionState<T>`** wraps user state with a non-enumerable `transitions` list (via `Object.defineProperties` — hidden from serializers and spreads)
+- **`transitionStateFactory`** returns the previous state object when both `state` and `transitions` are referentially equal (preserves memoization)
+- **`selectOptimistic`** is closed over the bound reducer — no global state needed
+- **Action types** use `namespace::operation` format, matching uses `startsWith`
+
+---
+
+## Performance Invariants
+
+These are non-negotiable — the library design depends on them:
+
+1. **No full state copies.** The only shallow copy is `Object.assign({}, state)` in `sanitizeTransitions` — a mutable working copy, not a checkpoint.
+2. **`sanitizeTransitions` runs on every state mutation.** Keep it lean. No unnecessary allocations.
+3. **Referential equality (`===`) gates sanitization.** `transitionStateFactory` returns the previous state object when nothing changed.
+4. **`selectOptimistic` replays all transitions on every call.** Memoization is the consumer's job via `createSelector`. Fast-path returns early when `transitions.length === 0`.
+5. **Handler operations return the same reference on no-op.** This is how sanitization detects no-ops.
+
+---
+
 ## API Reference
 
 ### `optimistron(namespace, initialState, handler, config, options?)`
 
-Returns `{ reducer, selectOptimistic }`.
+Creates an optimistic reducer wrapper. Returns `{ reducer, selectOptimistic }`.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `namespace` | `string` | Action type prefix |
-| `initialState` | `S` | Initial state |
+| `namespace` | `string` | Action type prefix (`"namespace::operation"`) |
+| `initialState` | `S` | Initial state value |
 | `handler` | `StateHandler` | State handler implementation |
-| `config` | `ReducerConfig` | CRUD action map (auto-wired) or function (manual) |
-| `options.sanitizeAction` | `(action) => action` | Optional action transform |
+| `config` | `ReducerConfig` | CRUD action map or reducer function |
+| `options.sanitizeAction` | `(action) => action` | Optional action transform before sanitization |
 
 ### `selectOptimistic(selector)`
 
-Returned from `optimistron()`. Replays transitions before selecting. Memoize with `createSelector`.
+Returned from `optimistron()`. Replays pending transitions before applying the selector. Always wrap with `createSelector`:
 
 ```typescript
-selectOptimistic((todos) => Object.values(todos.state))
+const selectTodos = createSelector(
+  (state: RootState) => state.todos,
+  selectOptimistic((todos) => Object.values(todos.state)),
+);
 ```
-
-### `crudPrepare<T>(key)` / `crudPrepare<T>()(keys)`
-
-Factory for CRUD prepare functions that couple `transitionId === entityId`.
-
-```typescript
-// Single-key (recordState):
-const crud = crudPrepare<Todo>('id');
-// crud.create(item) → { payload: { item }, transitionId: item.id }
-// crud.update(id, partial) → { payload: { id, item: partial }, transitionId: id }
-// crud.remove(id) → { payload: { id }, transitionId: id }
-
-// Multi-key (nestedRecordState) — curried for key inference:
-const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
-// crud.create(item) → { payload: { item }, transitionId: "projectId/id" }
-// crud.update(projectId, id, partial) → { payload: { path, item }, transitionId: "projectId/id" }
-// crud.remove(projectId, id) → { payload: { path }, transitionId: "projectId/id" }
-```
-
-### `retryTransition(action)`
-
-Strips `failed` and `conflict` flags from a `StagedAction`, returning a clean action ready for re-dispatch.
 
 ### `createTransitions(type, mode?)(prepare)`
 
-Creates `.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`.
+Creates a full set of transition action creators: `.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`.
 
-`stage` auto-detects `transitionId` when prepare returns it (e.g. via `crudPrepare`). All other operations require explicit `transitionId` as first argument. Per-operation preparators supported:
+`prepare` can be a single prepare function (shared across operations) or an object with per-operation preparators:
 
 ```typescript
 createTransitions('todos::add')({
-  stage: (item: Todo) => ({ payload: { item }, transitionId: item.id }),
+  stage: (item: Todo) => ({ payload: item, transitionId: item.id }),
   commit: () => ({ payload: {} }),
 });
 ```
 
+### `crudPrepare<T>(key)` / `crudPrepare<T>()(keys)`
+
+Factory for CRUD prepare functions that couple `transitionId === entityId`:
+
+```typescript
+// Single-key (recordState, listState)
+const crud = crudPrepare<Todo>('id');
+// crud.create(todo)        → payload: todo,        transitionId: todo.id
+// crud.update({ id, done }) → payload: { id, done }, transitionId: id
+// crud.remove({ id })      → payload: { id },       transitionId: id
+
+// Multi-key (nestedRecordState) — curried for key inference
+const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
+// transitionId: "projectId-value/id-value"
+```
+
+### `retryTransition(action)`
+
+Strips `failed` and `conflict` flags from a `StagedAction`, returning a clean action for re-dispatch.
+
 ### Selectors
+
+All transition selectors are curried: `selector(id)(transitionState)`.
 
 | Selector | Returns |
 |----------|---------|
-| `selectIsOptimistic(id)` | `boolean` — pending |
-| `selectIsFailed(id)` | `boolean` — failed |
-| `selectIsConflicting(id)` | `boolean` — conflicting |
+| `selectIsOptimistic(id)` | `boolean` — transition is pending |
+| `selectIsFailed(id)` | `boolean` — transition has failed |
+| `selectIsConflicting(id)` | `boolean` — transition conflicts with committed state |
 | `selectFailedTransition(id)` | `StagedAction \| undefined` |
 | `selectConflictingTransition(id)` | `StagedAction \| undefined` |
-| `selectFailedTransitions` | `StagedAction[]` |
-| `selectAllFailedTransitions(...states)` | `StagedAction[]` — aggregated across slices |
-| `selectRetryCount(id)` | `number` — retry count (0 if none) |
-
-### State Handler Factories
-
-| Factory | Options | State shape |
-|---------|---------|-------------|
-| `recordState<T>` | `{ key, compare, eq }` | `Record<string, T>` |
-| `singularState<T>` | `{ compare, eq }` | `T \| null` |
-| `nestedRecordState<T>()(opts)` | `{ keys, compare, eq }` | Nested records |
-| `listState<T>` | `{ key, compare, eq }` | `T[]` |
+| `selectRetryCount(id)` | `number` — times re-staged after failure |
+| `selectFailedTransitions` | `(state) => StagedAction[]` — all failed in one slice |
+| `selectAllFailedTransitions` | `(...states) => StagedAction[]` — across slices |
 
 ### Enums
 
