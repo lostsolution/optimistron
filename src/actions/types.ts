@@ -39,3 +39,12 @@ export type TransitionPayloadAction<Type extends string, Op extends Operation, P
 >;
 
 export type { PathMap as PathIds } from '~/utils/types';
+
+/** Picks the identity keys from T — the "address" of an entity */
+export type ItemPath<T, Keys extends readonly (keyof T & string)[]> = Pick<T, Keys[number]>;
+
+/** Partial update DTO: all fields optional, identity keys required */
+export type UpdateDTO<T, Keys extends readonly (keyof T & string)[]> = Partial<T> & ItemPath<T, Keys>;
+
+/** Delete DTO: just the identity keys */
+export type DeleteDTO<T, Keys extends readonly (keyof T & string)[]> = ItemPath<T, Keys>;

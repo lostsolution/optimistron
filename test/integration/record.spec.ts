@@ -16,12 +16,12 @@ describe('optimistron', () => {
             const conflictItem = { ...item, revision: -1 };
             const amendedItem = { ...item, value: 'amended value' };
 
-            const stage = create.stage(item.id, item);
+            const stage = create.stage(item);
             const amend = create.amend(item.id, amendedItem);
             const fail = create.fail(item.id, new Error());
             const stash = create.stash(item.id);
             const commit = create.commit(item.id);
-            const conflict = create.stage(item.id, conflictItem);
+            const conflict = create.stage(conflictItem);
 
             const initial = buildTransitionState(<TestIndexedState>{}, []);
             const state = optimisticReducer(initial, stage);
@@ -159,7 +159,7 @@ describe('optimistron', () => {
     describe('delete', () => {
         const item = createItem();
 
-        const stage = remove.stage(item.id, item.id);
+        const stage = remove.stage({ id: item.id });
         const fail = remove.fail(item.id, new Error());
         const stash = remove.stash(item.id);
         const commit = remove.commit(item.id);
@@ -230,12 +230,12 @@ describe('optimistron', () => {
         const updatedItem = { ...item, revision: 2, value: 'updated value' };
         const amendedItem = { ...updatedItem, value: 'amended value' };
 
-        const stage = edit.stage(updatedItem.id, updatedItem);
+        const stage = edit.stage(updatedItem);
         const amend = edit.amend(updatedItem.id, amendedItem);
         const fail = edit.fail(updatedItem.id, new Error());
         const stash = edit.stash(updatedItem.id);
         const commit = edit.commit(updatedItem.id);
-        const conflict = edit.stage(updatedItem.id, conflictItem);
+        const conflict = edit.stage(conflictItem);
 
         const initial = buildTransitionState(<TestIndexedState>{ [item.id]: item }, []);
         const state = optimisticReducer(initial, stage);

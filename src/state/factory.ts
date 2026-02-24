@@ -2,32 +2,34 @@ import type { TransitionAction } from '~/transitions';
 import type { BoundStateHandler, StateHandler, TransitionState } from './types';
 
 export const bindStateFactory =
-    <State, CreateParams extends unknown[], UpdateParams extends unknown[], DeleteParams extends unknown[]>(
-        handler: StateHandler<State, CreateParams, UpdateParams, DeleteParams>,
-    ) =>
-    (state: State): BoundStateHandler<State, CreateParams, UpdateParams, DeleteParams> => ({
-        create: (...args: CreateParams) => handler.create(state, ...args),
-        update: (...args: UpdateParams) => handler.update(state, ...args),
-        remove: (...args: DeleteParams) => handler.remove(state, ...args),
-        merge: (incoming: State) => handler.merge(state, incoming),
+    <S, C, U, D>(handler: StateHandler<S, C, U, D>) =>
+    (state: S): BoundStateHandler<S, C, U, D> => ({
+        create: (dto: C) => handler.create(state, dto),
+        update: (dto: U) => handler.update(state, dto),
+        remove: (dto: D) => handler.remove(state, dto),
+        merge: (incoming: S) => handler.merge(state, incoming),
         getState: () => state,
     });
 
-export const buildTransitionState = <State>(state: State, transitions: TransitionAction[]): TransitionState<State> => {
-    const transitionState = { state } as TransitionState<State>;
+export const buildTransitionState = <S>(state: S, transitions: TransitionAction[]): TransitionState<S> => {
+    const transitionState = { state } as TransitionState<S>;
 
     /* make transitions non-enumerable to avoid consumers
      * from unintentionally accessing them when iterating */
     Object.defineProperties(transitionState, {
-        transitions: { value: transitions, enumerable: false, writable: true },
+        transitions: {
+            value: transitions,
+            enumerable: false,
+            writable: true,
+        },
     });
 
     return transitionState;
 };
 
 export const transitionStateFactory =
-    <State>(prev: TransitionState<State>) =>
-    (state: State, transitions: TransitionAction[]): TransitionState<State> => {
+    <S>(prev: TransitionState<S>) =>
+    (state: S, transitions: TransitionAction[]): TransitionState<S> => {
         if (state === prev.state && transitions === prev.transitions) return prev;
         return buildTransitionState(state, transitions);
     };

@@ -158,19 +158,19 @@ describe('crudPrepare', () => {
             const item: Item = { id: 'i1', name: 'test', revision: 0 };
             const result = crud.create(item);
 
-            expect(result.payload).toEqual({ item });
+            expect(result.payload).toEqual(item);
             expect(result.transitionId).toBe('i1');
         });
 
-        test('update returns payload with id and partial item and transitionId', () => {
-            const result = crud.update('i1', { name: 'updated' });
+        test('update returns payload with dto and transitionId', () => {
+            const result = crud.update({ id: 'i1', name: 'updated' });
 
-            expect(result.payload).toEqual({ id: 'i1', item: { name: 'updated' } });
+            expect(result.payload).toEqual({ id: 'i1', name: 'updated' });
             expect(result.transitionId).toBe('i1');
         });
 
-        test('remove returns payload with id and transitionId', () => {
-            const result = crud.remove('i1');
+        test('remove returns payload with dto and transitionId', () => {
+            const result = crud.remove({ id: 'i1' });
 
             expect(result.payload).toEqual({ id: 'i1' });
             expect(result.transitionId).toBe('i1');
@@ -181,14 +181,14 @@ describe('crudPrepare', () => {
             const item: Item = { id: 'i1', name: 'test', revision: 0 };
             const result = actions.stage(item);
 
-            expect(result.payload).toEqual({ item });
+            expect(result.payload).toEqual(item);
             expect(result.meta[META_KEY].id).toBe('i1');
             expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
         });
 
         test('composes with createTransitions using REVERTIBLE mode', () => {
             const actions = createTransitions('items::del', TransitionMode.REVERTIBLE)(crud.remove);
-            const result = actions.stage('i1');
+            const result = actions.stage({ id: 'i1' });
 
             expect(result.payload).toEqual({ id: 'i1' });
             expect(result.meta[META_KEY].id).toBe('i1');
@@ -212,21 +212,21 @@ describe('crudPrepare', () => {
             const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test' };
             const result = crud.create(item);
 
-            expect(result.payload).toEqual({ item });
+            expect(result.payload).toEqual(item);
             expect(result.transitionId).toBe('g1/i1');
         });
 
-        test('update returns payload with path and partial item', () => {
-            const result = crud.update(['g1', 'i1'], { value: 'updated' });
+        test('update returns payload with dto', () => {
+            const result = crud.update({ groupId: 'g1', itemId: 'i1', value: 'updated' });
 
-            expect(result.payload).toEqual({ path: ['g1', 'i1'], item: { value: 'updated' } });
+            expect(result.payload).toEqual({ groupId: 'g1', itemId: 'i1', value: 'updated' });
             expect(result.transitionId).toBe('g1/i1');
         });
 
-        test('remove returns payload with path', () => {
-            const result = crud.remove(['g1', 'i1']);
+        test('remove returns payload with dto', () => {
+            const result = crud.remove({ groupId: 'g1', itemId: 'i1' });
 
-            expect(result.payload).toEqual({ path: ['g1', 'i1'] });
+            expect(result.payload).toEqual({ groupId: 'g1', itemId: 'i1' });
             expect(result.transitionId).toBe('g1/i1');
         });
 
@@ -235,7 +235,7 @@ describe('crudPrepare', () => {
             const item: Item = { groupId: 'g1', itemId: 'i1', value: 'test' };
             const result = actions.stage(item);
 
-            expect(result.payload).toEqual({ item });
+            expect(result.payload).toEqual(item);
             expect(result.meta[META_KEY].id).toBe('g1/i1');
             expect(result.meta[META_KEY].operation).toBe(Operation.STAGE);
         });
@@ -246,8 +246,8 @@ describe('crudPrepare', () => {
             const item: Deep = { a: 'x', b: 'y', c: 'z', val: 1 };
 
             expect(deepCrud.create(item).transitionId).toBe('x/y/z');
-            expect(deepCrud.update(['x', 'y', 'z'], { val: 2 }).transitionId).toBe('x/y/z');
-            expect(deepCrud.remove(['x', 'y', 'z']).transitionId).toBe('x/y/z');
+            expect(deepCrud.update({ a: 'x', b: 'y', c: 'z', val: 2 }).transitionId).toBe('x/y/z');
+            expect(deepCrud.remove({ a: 'x', b: 'y', c: 'z' }).transitionId).toBe('x/y/z');
         });
     });
 });

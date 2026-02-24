@@ -1,6 +1,5 @@
 import type { Action, Reducer } from 'redux';
 
-import { warn } from './utils/logger';
 import { bindReducer, resolveReducer, type BoundReducer, type HandlerReducer, type ReducerConfig } from './reducer';
 import { createSelectOptimistic } from './selectors/internal';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state/factory';
@@ -15,6 +14,7 @@ import {
     toCommit,
     type StagedAction,
 } from './transitions';
+import { warn } from './utils/logger';
 import type { Maybe } from './utils/types';
 
 /** Applies a staged transition as a commit via the bound reducer.
@@ -35,7 +35,7 @@ type OptimistronOptions = {
 };
 
 /** Manual mode — full control via a reducer function */
-export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+export function optimistron<S, C, U, D>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,
@@ -44,7 +44,7 @@ export function optimistron<S, C extends unknown[], U extends unknown[], D exten
 ): OptimistronResult<S>;
 
 /** Auto-wire mode — CRUD action map routed via handler's wire method */
-export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[], A>(
+export function optimistron<S, C, U, D, A>(
     namespace: string,
     initialState: S,
     handler: WiredStateHandler<S, C, U, D, A>,
@@ -52,7 +52,7 @@ export function optimistron<S, C extends unknown[], U extends unknown[], D exten
     options?: OptimistronOptions,
 ): OptimistronResult<S>;
 
-export function optimistron<S, C extends unknown[], U extends unknown[], D extends unknown[]>(
+export function optimistron<S, C, U, D>(
     namespace: string,
     initialState: S,
     handler: StateHandler<S, C, U, D>,

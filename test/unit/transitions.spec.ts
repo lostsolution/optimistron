@@ -226,10 +226,10 @@ describe('processTransition retry metadata', () => {
 describe('sanitizeTransition', () => {
     const item = createItem();
 
-    const stage = create.stage(item.id, item);
+    const stage = create.stage(item);
     const commit = toCommit(stage);
-    const noop = edit.stage(item.id, item); /* noops because no matching item to update */
-    const conflict = edit.stage(item.id, { ...item, revision: item.revision - 1 });
+    const noop = edit.stage(item); /* noops because no matching item to update */
+    const conflict = edit.stage({ ...item, revision: item.revision - 1 });
 
     const innerReducer = mock(reducer);
     const bindState = bindStateFactory(indexedState);
