@@ -8,7 +8,6 @@ import {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-    selectRetryCount,
 } from '~selectors/selectors';
 import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
 import { updateTransition } from '~transitions';
@@ -129,23 +128,6 @@ describe('selectors', () => {
 
         test('should handle zero states', () => {
             expect(selectAllFailedTransitions()).toEqual([]);
-        });
-    });
-
-    describe('selectRetryCount', () => {
-        test('should return 0 for non-existent transition', () => {
-            expect(selectRetryCount('unknown')(createIndexedState())).toBe(0);
-        });
-
-        test('should return 0 for transition without retryCount', () => {
-            const state = createIndexedState([stage]);
-            expect(selectRetryCount(item.id)(state)).toBe(0);
-        });
-
-        test('should return retryCount from transition meta', () => {
-            const retried = updateTransition(stage, { retryCount: 3 });
-            const state = createIndexedState([retried]);
-            expect(selectRetryCount(item.id)(state)).toBe(3);
         });
     });
 });

@@ -168,22 +168,6 @@ Implement `StateHandler` for any shape. The contract:
 - **Fail:** stashes the transition (reverts to the trailing fallback)
 - **Use case:** user deletes an entity, server rejects — undo the deletion, restore the entity
 
-### Retry
-
-Retry is always a consumer concern — timing, backoff, and reconnect logic belong in your app. The library provides:
-
-```typescript
-import { retryTransition, selectFailedTransition, selectRetryCount } from '@lostsolution/optimistron';
-
-const failed = selectFailedTransition(id)(state.todos);
-if (failed) {
-  const retries = selectRetryCount(id)(state.todos);
-  if (retries < 3) dispatch(retryTransition(failed)); // strips failure flags, re-stages
-}
-```
-
-When `processTransition` overwrites a failed transition (re-stage or amend after fail), it increments `retryCount` and sets `lastRetry` (timestamp).
-
 ---
 
 ## Async Patterns
@@ -356,10 +340,6 @@ const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
 // transitionId: "projectId-value/id-value"
 ```
 
-### `retryTransition(action)`
-
-Strips `failed` and `conflict` flags from a `StagedAction`, returning a clean action for re-dispatch.
-
 ### Selectors
 
 All transition selectors are curried: `selector(id)(transitionState)`.
@@ -371,7 +351,6 @@ All transition selectors are curried: `selector(id)(transitionState)`.
 | `selectIsConflicting(id)` | `boolean` — transition conflicts with committed state |
 | `selectFailedTransition(id)` | `StagedAction \| undefined` |
 | `selectConflictingTransition(id)` | `StagedAction \| undefined` |
-| `selectRetryCount(id)` | `number` — times re-staged after failure |
 | `selectFailedTransitions` | `(state) => StagedAction[]` — all failed in one slice |
 | `selectAllFailedTransitions` | `(...states) => StagedAction[]` — across slices |
 

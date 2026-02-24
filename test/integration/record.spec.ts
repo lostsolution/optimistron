@@ -97,8 +97,6 @@ describe('optimistron', () => {
 
                         expect(nextAfterRestage.state).toStrictEqual(initial.state);
                         expect(nextAfterRestage.transitions.length).toBe(1);
-                        expect(getTransitionMeta(nextAfterRestage.transitions[0]).retryCount).toBe(1);
-                        expect(getTransitionMeta(nextAfterRestage.transitions[0]).lastRetry).toBeNumber();
                         expect(selectOptimistic(selectState)(nextAfterRestage)).toStrictEqual({ [item.id]: item });
                         expect(selectIsOptimistic(item.id)(nextAfterRestage)).toBe(true);
                         expect(selectIsFailed(item.id)(nextAfterRestage)).toBe(false);
@@ -111,8 +109,6 @@ describe('optimistron', () => {
                         expect(nextAfterAmend.state).toStrictEqual(initial.state);
                         expect(nextAfterAmend.transitions.length).toBe(1);
                         expect(getTransitionMeta(nextAfterAmend.transitions[0]).failed).toBe(true);
-                        expect(getTransitionMeta(nextAfterAmend.transitions[0]).retryCount).toBe(1);
-                        expect(getTransitionMeta(nextAfterAmend.transitions[0]).lastRetry).toBeNumber();
                         expect(selectOptimistic(selectState)(nextAfterAmend)).toStrictEqual({ [item.id]: amendedItem });
                         expect(selectIsOptimistic(item.id)(nextAfterAmend)).toBe(true);
                         expect(selectIsFailed(item.id)(nextAfterAmend)).toBe(true);

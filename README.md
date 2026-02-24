@@ -242,17 +242,6 @@ selectIsFailed(id)(state.todos); // failed?
 selectIsConflicting(id)(state.todos); // stale conflict?
 ```
 
-### Retry
-
-```typescript
-import { retryTransition, selectFailedTransition, selectRetryCount } from '@lostsolution/optimistron';
-
-const failed = selectFailedTransition(id)(state.todos);
-if (failed && selectRetryCount(id)(state.todos) < 3) {
-    dispatch(retryTransition(failed));
-}
-```
-
 ### Aggregate failures
 
 ```typescript

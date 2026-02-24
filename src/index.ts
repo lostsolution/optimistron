@@ -8,12 +8,11 @@ export {
     selectIsConflicting,
     selectIsFailed,
     selectIsOptimistic,
-    selectRetryCount,
 } from './selectors/selectors';
 export { listState } from './state/list';
 export { nestedRecordState, recordState } from './state/record';
 export { singularState } from './state/singular';
-export { isTransition, Operation, OptimisticMergeResult, retryTransition, TransitionMode } from './transitions';
+export { isTransition, Operation, OptimisticMergeResult, TransitionMode } from './transitions';
 
 export type { HandlerReducer, ReducerConfig } from './reducer';
 export type { ActionMatcher, BoundStateHandler, CrudActionMap, StateHandler, TransitionState, VersioningOptions, WiredStateHandler } from './state/types';

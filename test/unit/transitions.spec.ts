@@ -4,16 +4,7 @@ import { bindReducer } from '~reducer';
 import { bindStateFactory } from '~state/factory';
 import { create, createIndexedState, createItem, edit, indexedState, reducer } from '~test/utils';
 import type { StagedAction, TransitionAction } from '~transitions';
-import {
-    TransitionMode,
-    OptimisticMergeResult,
-    getTransitionMeta,
-    processTransition,
-    retryTransition,
-    sanitizeTransitions,
-    toCommit,
-    updateTransition,
-} from '~transitions';
+import { TransitionMode, OptimisticMergeResult, getTransitionMeta, processTransition, sanitizeTransitions, toCommit, updateTransition } from '~transitions';
 
 const TestTransitionID = `${Math.random()}`;
 
@@ -165,61 +156,6 @@ describe('processTransition', () => {
 
             expect(processed).toEqual([stageB]);
         });
-    });
-});
-
-describe('retryTransition', () => {
-    test('should strip failed and conflict flags', () => {
-        const stage = transition.stage(TestTransitionID, 1);
-        const failed = updateTransition(stage, { failed: true, conflict: true });
-        const retried = retryTransition(failed);
-
-        expect(getTransitionMeta(retried).failed).toBeUndefined();
-        expect(getTransitionMeta(retried).conflict).toBeUndefined();
-        expect(getTransitionMeta(retried).id).toBe(TestTransitionID);
-        expect(retried.payload).toEqual(stage.payload);
-    });
-
-    test('should preserve other meta fields', () => {
-        const stage = transition.stage(TestTransitionID, 1);
-        const withRetry = updateTransition(stage, { failed: true, retryCount: 3, lastRetry: 12345 });
-        const retried = retryTransition(withRetry);
-
-        expect(getTransitionMeta(retried).retryCount).toBe(3);
-        expect(getTransitionMeta(retried).lastRetry).toBe(12345);
-    });
-});
-
-describe('processTransition retry metadata', () => {
-    test('should increment retryCount when overwriting a failed transition', () => {
-        const stage = transition.stage(TestTransitionID, 1);
-        const fail = transition.fail(TestTransitionID, new Error());
-        const restage = transition.stage(TestTransitionID, 2);
-
-        const afterFail = applyTransitions(stage, fail);
-        const afterRestage = processTransition(restage, afterFail);
-
-        expect(getTransitionMeta(afterRestage[0]).retryCount).toBe(1);
-        expect(getTransitionMeta(afterRestage[0]).lastRetry).toBeNumber();
-    });
-
-    test('should accumulate retryCount across multiple retries', () => {
-        const stage = transition.stage(TestTransitionID, 1);
-        const fail1 = transition.fail(TestTransitionID, new Error());
-        const restage1 = transition.stage(TestTransitionID, 2);
-        const fail2 = transition.fail(TestTransitionID, new Error());
-        const restage2 = transition.stage(TestTransitionID, 3);
-
-        const result = applyTransitions(stage, fail1, restage1, fail2, restage2);
-        expect(getTransitionMeta(result[0]).retryCount).toBe(2);
-    });
-
-    test('should not add retryCount when overwriting a non-failed transition', () => {
-        const stage1 = transition.stage(TestTransitionID, 1);
-        const stage2 = transition.stage(TestTransitionID, 2);
-
-        const result = applyTransitions(stage1, stage2);
-        expect(getTransitionMeta(result[0]).retryCount).toBeUndefined();
     });
 });
 

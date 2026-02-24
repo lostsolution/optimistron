@@ -42,8 +42,6 @@ export type Transition<T = Operation> = {
     conflict?: boolean;
     failed?: boolean;
     trailing?: StagedAction;
-    retryCount?: number;
-    lastRetry?: number;
 };
 
 /** Extracts the transition meta definitions on an action */
@@ -84,9 +82,6 @@ export const toStaged = <P>(action: TransitionAction<Operation, P>, update: Part
 export const toCommit = <P>(action: TransitionAction<Operation, P>, update: Partial<Transition> = {}): CommittedAction<P> =>
     updateTransition({ ...action, type: toType(action.type, Operation.COMMIT) }, { ...update, operation: Operation.COMMIT });
 
-/** Strips failure/conflict flags from a staged action, making it ready for re-dispatch */
-export const retryTransition = <P>(action: StagedAction<P>): StagedAction<P> => updateTransition(action, { failed: undefined, conflict: undefined });
-
 export const processTransition = (transition: TransitionAction, transitions: StagedAction[]): StagedAction[] => {
     const { operation, id, mode } = getTransitionMeta(transition);
     const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
@@ -110,14 +105,11 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
             const existingMeta = getTransitionMeta(existing);
             const trailing = existing.type === transition.type ? existingMeta.trailing : existing;
 
-            /** When overwriting a failed transition, track retry metadata */
-            const retryMeta: Partial<Transition> = existingMeta.failed ? { retryCount: (existingMeta.retryCount ?? 0) + 1, lastRetry: Date.now() } : {};
-
             /* REVERTIBLE mode stores the previous transition as a trailing transition.
              * This enables reversion to the previous state when stashing. */
             if (mode === TransitionMode.REVERTIBLE) {
-                nextTransitions[matchIdx] = updateTransition(stage, { ...retryMeta, trailing });
-            } else nextTransitions[matchIdx] = updateTransition(stage, retryMeta);
+                nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+            } else nextTransitions[matchIdx] = stage;
 
             return nextTransitions;
         }
