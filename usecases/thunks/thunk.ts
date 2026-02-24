@@ -23,10 +23,10 @@ export const createEpicThunk = (epic: Epic): Thunk => async (dispatch) => {
     }
 };
 
-export const editEpicThunk = (id: string, update: Epic): Thunk => async (dispatch) => {
-    const transitionId = id;
+export const editEpicThunk = (epic: Epic): Thunk => async (dispatch) => {
+    const transitionId = epic.id;
     try {
-        dispatch(editEpic.stage(id, update));
+        dispatch(editEpic.stage(epic));
         await simulateAPIRequest();
         dispatch(editEpic.commit(transitionId));
     } catch (error) {
@@ -37,7 +37,7 @@ export const editEpicThunk = (id: string, update: Epic): Thunk => async (dispatc
 export const deleteEpicThunk = (id: string): Thunk => async (dispatch) => {
     const transitionId = id;
     try {
-        dispatch(deleteEpic.stage(id));
+        dispatch(deleteEpic.stage({ id }));
         await simulateAPIRequest();
         dispatch(deleteEpic.commit(transitionId));
     } catch {
@@ -70,7 +70,7 @@ export const createProjectTodoThunk = (todo: ProjectTodo): Thunk => async (dispa
 export const editProjectTodoThunk = (todo: ProjectTodo): Thunk => async (dispatch) => {
     const transitionId = `${todo.projectId}/${todo.id}`;
     try {
-        dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+        dispatch(editProjectTodo.stage(todo));
         await simulateAPIRequest();
         dispatch(editProjectTodo.commit(transitionId));
     } catch (error) {
@@ -81,7 +81,7 @@ export const editProjectTodoThunk = (todo: ProjectTodo): Thunk => async (dispatc
 export const deleteProjectTodoThunk = (todo: ProjectTodo): Thunk => async (dispatch) => {
     const transitionId = `${todo.projectId}/${todo.id}`;
     try {
-        dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+        dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
         await simulateAPIRequest();
         dispatch(deleteProjectTodo.commit(transitionId));
     } catch {
@@ -104,7 +104,7 @@ export const logActivityThunk = (entry: ActivityEntry): Thunk => async (dispatch
 export const editActivityThunk = (entry: ActivityEntry): Thunk => async (dispatch) => {
     const transitionId = entry.id;
     try {
-        dispatch(editActivity.stage(entry.id, entry));
+        dispatch(editActivity.stage(entry));
         await simulateAPIRequest();
         dispatch(editActivity.commit(transitionId));
     } catch (error) {
@@ -115,7 +115,7 @@ export const editActivityThunk = (entry: ActivityEntry): Thunk => async (dispatc
 export const dismissActivityThunk = (entry: ActivityEntry): Thunk => async (dispatch) => {
     const transitionId = entry.id;
     try {
-        dispatch(dismissActivity.stage(entry.id));
+        dispatch(dismissActivity.stage({ id: entry.id }));
         await simulateAPIRequest();
         dispatch(dismissActivity.commit(transitionId));
     } catch {

@@ -31,15 +31,15 @@ export const App: FC = () => {
     const dispatch = useDispatch();
 
     const handleCreateEpic = (epic: Epic) => dispatch(createEpic.stage(epic));
-    const handleEditEpic = (epic: Epic) => dispatch(editEpic.stage(epic.id, epic));
-    const handleDeleteEpic = (epic: Epic) => dispatch(deleteEpic.stage(epic.id));
+    const handleEditEpic = (epic: Epic) => dispatch(editEpic.stage(epic));
+    const handleDeleteEpic = (epic: Epic) => dispatch(deleteEpic.stage({ id: epic.id }));
     const handleUpdateProfile = (update: Partial<Profile>) => dispatch(updateProfile.stage(update));
     const handleCreateProjectTodo = (todo: ProjectTodo) => dispatch(createProjectTodo.stage(todo));
-    const handleEditProjectTodo = (todo: ProjectTodo) => dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
-    const handleDeleteProjectTodo = (todo: ProjectTodo) => dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+    const handleEditProjectTodo = (todo: ProjectTodo) => dispatch(editProjectTodo.stage(todo));
+    const handleDeleteProjectTodo = (todo: ProjectTodo) => dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
     const handleLogActivity = (entry: ActivityEntry) => dispatch(logActivity.stage(entry));
-    const handleEditActivity = (entry: ActivityEntry) => dispatch(editActivity.stage(entry.id, entry));
-    const handleDismissActivity = (entry: ActivityEntry) => dispatch(dismissActivity.stage(entry.id));
+    const handleEditActivity = (entry: ActivityEntry) => dispatch(editActivity.stage(entry));
+    const handleDismissActivity = (entry: ActivityEntry) => dispatch(dismissActivity.stage({ id: entry.id }));
 
     /** Sagas observe stage actions — retry is just a re-dispatch */
     const retryTransition = (action: StagedAction) => dispatch(action);

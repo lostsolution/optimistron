@@ -46,7 +46,7 @@ export const App: FC = () => {
     const handleEditEpic = async (epic: Epic) => {
         const transitionId = epic.id;
         try {
-            dispatch(editEpic.stage(epic.id, epic));
+            dispatch(editEpic.stage(epic));
             await simulateAPIRequest();
             dispatch(editEpic.commit(transitionId));
         } catch (error) {
@@ -57,7 +57,7 @@ export const App: FC = () => {
     const handleDeleteEpic = async (epic: Epic) => {
         const transitionId = epic.id;
         try {
-            dispatch(deleteEpic.stage(epic.id));
+            dispatch(deleteEpic.stage({ id: epic.id }));
             await simulateAPIRequest();
             dispatch(deleteEpic.commit(transitionId));
         } catch (error) {
@@ -90,7 +90,7 @@ export const App: FC = () => {
     const handleEditProjectTodo = async (todo: ProjectTodo) => {
         const transitionId = `${todo.projectId}/${todo.id}`;
         try {
-            dispatch(editProjectTodo.stage(todo.projectId, todo.id, todo));
+            dispatch(editProjectTodo.stage(todo));
             await simulateAPIRequest();
             dispatch(editProjectTodo.commit(transitionId));
         } catch (error) {
@@ -101,7 +101,7 @@ export const App: FC = () => {
     const handleDeleteProjectTodo = async (todo: ProjectTodo) => {
         const transitionId = `${todo.projectId}/${todo.id}`;
         try {
-            dispatch(deleteProjectTodo.stage(todo.projectId, todo.id));
+            dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
             await simulateAPIRequest();
             dispatch(deleteProjectTodo.commit(transitionId));
         } catch (error) {
@@ -124,7 +124,7 @@ export const App: FC = () => {
     const handleEditActivity = async (entry: ActivityEntry) => {
         const transitionId = entry.id;
         try {
-            dispatch(editActivity.stage(entry.id, entry));
+            dispatch(editActivity.stage(entry));
             await simulateAPIRequest();
             dispatch(editActivity.commit(transitionId));
         } catch (error) {
@@ -135,7 +135,7 @@ export const App: FC = () => {
     const handleDismissActivity = async (entry: ActivityEntry) => {
         const transitionId = entry.id;
         try {
-            dispatch(dismissActivity.stage(entry.id));
+            dispatch(dismissActivity.stage({ id: entry.id }));
             await simulateAPIRequest();
             dispatch(dismissActivity.commit(transitionId));
         } catch (error) {
@@ -147,13 +147,13 @@ export const App: FC = () => {
      * CRUD update payloads are `Partial<T>` — cast to full type since
      * failed stage actions always carry the complete entity. */
     const retryTransition = (action: StagedAction) => {
-        if (createEpic.stage.match(action)) return handleCreateEpic(action.payload.item);
-        if (editEpic.stage.match(action)) return handleEditEpic(action.payload.item as Epic);
-        if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload.item);
-        if (createProjectTodo.stage.match(action)) return handleCreateProjectTodo(action.payload.item);
-        if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload.item as ProjectTodo);
-        if (logActivity.stage.match(action)) return handleLogActivity(action.payload.item);
-        if (editActivity.stage.match(action)) return handleEditActivity(action.payload.item as ActivityEntry);
+        if (createEpic.stage.match(action)) return handleCreateEpic(action.payload);
+        if (editEpic.stage.match(action)) return handleEditEpic(action.payload as Epic);
+        if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload);
+        if (createProjectTodo.stage.match(action)) return handleCreateProjectTodo(action.payload);
+        if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload as ProjectTodo);
+        if (logActivity.stage.match(action)) return handleLogActivity(action.payload);
+        if (editActivity.stage.match(action)) return handleEditActivity(action.payload as ActivityEntry);
     };
 
     useAutoRetry(retryTransition);
