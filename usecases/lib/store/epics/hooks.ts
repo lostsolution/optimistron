@@ -18,10 +18,9 @@ export const useEpicState = (epic: Epic) => {
         () => ({
             conflict: state.conflict,
             failed: state.failed,
-            failedAction: state.retry,
             loading: state.optimistic && !state.failed,
             stashed,
         }),
-        [state.optimistic, state.retry, state.failed, state.conflict, stashed],
+        [state.optimistic, state.failed, state.conflict, stashed],
     );
 };

@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectFailedTransition, selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
 import { selectOptimistic } from '~usecases/lib/store/activity/reducer';
 import type { State } from '~usecases/lib/store/store';
 
@@ -14,7 +14,6 @@ export const selectOptimisticActivityState = (id: string) =>
         (activity) => ({
             optimistic: selectIsOptimistic(id)(activity),
             failed: selectIsFailed(id)(activity),
-            retry: selectFailedTransition(id)(activity),
             conflict: selectIsConflicting(id)(activity),
         }),
     );

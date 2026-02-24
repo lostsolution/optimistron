@@ -1,8 +1,6 @@
 import { type FC } from 'react';
 import { useDispatch } from 'react-redux';
 
-import type { StagedAction } from '~transitions';
-
 import { ActivityFeed } from '~usecases/lib/components/activity/ActivityFeed';
 import { ProfileCard } from '~usecases/lib/components/profile/ProfileCard';
 import { ProjectBoard } from '~usecases/lib/components/projects/ProjectBoard';
@@ -23,7 +21,7 @@ const description: UsecaseDescription = {
         <>Component only dispatches <O>stage</O> — that's it. No async, no lifecycle awareness.</>,
         <>Saga watcher observes <O>stage</O> via <code className="text-gray-400 text-[11px]">takeEvery</code> and orchestrates the full lifecycle to <C>commit</C> or <F>fail</F>.</>,
         <>Maximum separation: UI fires intent, saga handles all orchestration — components are pure dispatch.</>,
-        <>Retry is a one-liner: <code className="text-gray-400 text-[11px]">dispatch(action)</code> — the saga picks it up automatically.</>,
+        <>Failed transitions can be edited in-place — a new <O>stage</O> overwrites the failed one, the saga picks it up automatically.</>,
     ],
 };
 
@@ -41,16 +39,14 @@ export const App: FC = () => {
     const handleEditActivity = (entry: ActivityEntry) => dispatch(editActivity.stage(entry));
     const handleDismissActivity = (entry: ActivityEntry) => dispatch(dismissActivity.stage({ id: entry.id }));
 
-    /** Sagas observe stage actions — retry is just a re-dispatch */
-    const retryTransition = (action: StagedAction) => dispatch(action);
-
-    useAutoRetry(retryTransition);
+    /** Sagas watch stage actions — retry is just a re-dispatch */
+    useAutoRetry((action) => dispatch(action));
 
     return (
         <Layout title="Sagas" description={description}>
             <ProfileCard onUpdate={handleUpdateProfile} />
             <div className="grad-h my-1" />
-            <TodoApp onCreateTodo={handleCreateEpic} onEditTodo={handleEditEpic} onDeleteTodo={handleDeleteEpic} onRetry={retryTransition} />
+            <TodoApp onCreateTodo={handleCreateEpic} onEditTodo={handleEditEpic} onDeleteTodo={handleDeleteEpic} />
             <div className="grad-h my-1" />
             <ProjectBoard
                 onCreateTodo={handleCreateProjectTodo}
@@ -62,7 +58,6 @@ export const App: FC = () => {
                 onLogActivity={handleLogActivity}
                 onEditActivity={handleEditActivity}
                 onDismissActivity={handleDismissActivity}
-                onRetry={retryTransition}
             />
             <div className="h-4" />
         </Layout>

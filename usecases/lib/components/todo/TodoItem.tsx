@@ -2,8 +2,6 @@ import { clsx } from 'clsx';
 import { useMemo, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { StagedAction } from '~transitions';
-
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import { useEpicState } from '~usecases/lib/store/epics/hooks';
 import { selectEpic } from '~usecases/lib/store/epics/selectors';
@@ -11,7 +9,6 @@ import type { Epic } from '~usecases/lib/store/types';
 
 type Props = {
     todo: Epic;
-    onRetry: (action: StagedAction) => void;
     onEdit: (todo: Epic) => void;
     onDelete: (todo: Epic) => void;
 };
@@ -27,22 +24,15 @@ const EpicConflict: FC<{ id: string }> = ({ id }) => {
     );
 };
 
-export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
+export const TodoItem: FC<Props> = ({ todo, onEdit, onDelete }) => {
     const id = `todo-${todo.id}`;
-    const { loading, stashed, failed, conflict, failedAction } = useEpicState(todo);
+    const { loading, stashed, failed, conflict } = useEpicState(todo);
     const [editable, setEditable] = useState(false);
     const error = failed || conflict;
 
     const handleMutation = (mutation: Partial<Epic>) => {
         if (loading) return;
-
-        if (failedAction) {
-            /** Re-dispatch the failed stage action with the mutation applied.
-             *  The App-level retryTransition routes it through the correct lifecycle. */
-            const { payload } = failedAction as StagedAction<{ item: Epic }>;
-            const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, ...mutation } } };
-            onRetry(retry);
-        } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
+        onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
 
     const icon = useMemo(() => {
