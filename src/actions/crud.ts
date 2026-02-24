@@ -25,11 +25,14 @@ export function crudPrepare<T extends Record<string, any>>(): <const Keys extend
     keys: Keys,
 ) => {
     create: (item: T) => { payload: { item: T }; transitionId: string };
-    update: (...args: [...PathIds<Keys>, Partial<T>]) => {
+    update: (
+        path: PathIds<Keys>,
+        item: Partial<T>,
+    ) => {
         payload: { path: PathIds<Keys>; item: Partial<T> };
         transitionId: string;
     };
-    remove: (...args: PathIds<Keys>) => { payload: { path: PathIds<Keys> }; transitionId: string };
+    remove: (path: PathIds<Keys>) => { payload: { path: PathIds<Keys> }; transitionId: string };
 };
 
 export function crudPrepare<T extends Record<string, any>>(
@@ -54,14 +57,13 @@ export function crudPrepare<T extends Record<string, any>>(key?: keyof T & strin
             payload: { item },
             transitionId: keys.map((k) => String(item[k])).join('/'),
         }),
-        update: (...args: [...PathIds<Keys>, Partial<T>]) => {
-            const path = args.slice(0, keys.length) as unknown as PathIds<Keys>;
-            const item = args[keys.length] as Partial<T>;
-            return { payload: { path, item }, transitionId: (path as string[]).join('/') };
-        },
-        remove: (...args: PathIds<Keys>) => ({
-            payload: { path: args },
-            transitionId: (args as unknown as string[]).join('/'),
+        update: (path: PathIds<Keys>, item: Partial<T>) => ({
+            payload: { path, item },
+            transitionId: path.join('/'),
+        }),
+        remove: (path: PathIds<Keys>) => ({
+            payload: { path },
+            transitionId: path.join('/'),
         }),
     });
 }
