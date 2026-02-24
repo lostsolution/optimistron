@@ -2,7 +2,7 @@ import type { FC, PropsWithChildren } from 'react';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { TodoItem } from '~usecases/lib/components/todo/TodoItem';
 import { selectOptimisticEpics } from '~usecases/lib/store/epics/selectors';
@@ -13,7 +13,7 @@ type Props = {
     onCreateTodo: (todo: Epic) => void;
     onEditTodo: (todo: Epic) => void;
     onDeleteTodo: (todo: Epic) => void;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: StagedAction) => void;
 };
 
 export const TodoApp: FC<PropsWithChildren<Props>> = ({ onCreateTodo, onDeleteTodo, onEditTodo, onRetry }) => {

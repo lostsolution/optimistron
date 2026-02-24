@@ -28703,7 +28703,7 @@ var updateTransition = (action, update) => ({
 var toStaged = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "stage" /* STAGE */) }, { ...update, operation: "stage" /* STAGE */ });
 var toCommit = (action, update = {}) => updateTransition({ ...action, type: toType(action.type, "commit" /* COMMIT */) }, { ...update, operation: "commit" /* COMMIT */ });
 var processTransition = (transition, transitions) => {
-  const { operation, id, dedupe } = getTransitionMeta(transition);
+  const { operation, id, mode } = getTransitionMeta(transition);
   const matchIdx = transitions.findIndex((entry) => id === getTransitionID(entry));
   const existing = transitions[matchIdx];
   switch (operation) {
@@ -28715,16 +28715,26 @@ var processTransition = (transition, transitions) => {
       if (matchIdx === -1)
         return [...transitions, stage];
       const nextTransitions = [...transitions];
-      const trailing = existing.type === transition.type ? getTransitionMeta(existing).trailing : existing;
-      if (dedupe === 1 /* TRAILING */) {
-        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+      const existingMeta = getTransitionMeta(existing);
+      const trailing = existing.type === transition.type ? existingMeta.trailing : existing;
+      const retryMeta = existingMeta.failed ? { retryCount: (existingMeta.retryCount ?? 0) + 1, lastRetry: Date.now() } : {};
+      if (mode === 2 /* REVERTIBLE */) {
+        nextTransitions[matchIdx] = updateTransition(stage, { ...retryMeta, trailing });
       } else
-        nextTransitions[matchIdx] = stage;
+        nextTransitions[matchIdx] = updateTransition(stage, retryMeta);
       return nextTransitions;
     }
     case "fail" /* FAIL */: {
       if (matchIdx === -1)
         return transitions;
+      const stagedMode = getTransitionMeta(existing).mode;
+      if (stagedMode === 1 /* DISPOSABLE */) {
+        return transitions.filter((entry) => getTransitionID(entry) !== id);
+      }
+      if (stagedMode === 2 /* REVERTIBLE */) {
+        const { trailing } = getTransitionMeta(existing);
+        return [...transitions.slice(0, matchIdx), ...trailing ? [trailing] : [], ...transitions.slice(matchIdx + 1)];
+      }
       return transitions.map((entry) => getTransitionID(entry) === id ? updateTransition(entry, { failed: true }) : entry);
     }
     case "stash" /* STASH */: {
@@ -28786,6 +28796,7 @@ var selectConflictingTransition = (transitionId) => ({ transitions }) => transit
 var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
 var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
 var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
+var selectAllFailedTransitions = (...states) => states.flatMap(selectFailedTransitions);
 
 // src/utils/logger.ts
 var warn = (...args) => {
@@ -28872,8 +28883,8 @@ function optimistron(namespace, initialState, handler, config, options) {
       const next = transitionStateFactory(transitionState);
       try {
         if (isTransitionForNamespace(action, namespace)) {
-          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
           const { operation, id } = getTransitionMeta(action);
+          const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
           if (operation === "commit" /* COMMIT */) {
             const committed = commitTransition(boundReducer, transitionState, transitions, id);
             return next(committed !== undefined ? committed : state, nextTransitions);
@@ -28968,30 +28979,30 @@ var prepareTransition = (action, options) => ({
     [META_KEY]: options
   }
 });
-var resolveTransition = (operation, dedupe) => (prepare) => (...args) => {
+var resolveTransition = (operation, mode) => (prepare) => (...args) => {
   if (operation === "stage" /* STAGE */) {
     const result = prepare(...args);
     if (result && "transitionId" in result) {
       const id = String(result.transitionId);
-      return prepareTransition(result, { id, operation, dedupe });
+      return prepareTransition(result, { id, operation, mode });
     }
   }
   const [transitionId, ...rest] = args;
-  return prepareTransition(prepare(...rest), { id: transitionId, operation, dedupe });
+  return prepareTransition(prepare(...rest), { id: transitionId, operation, mode });
 };
-var createTransition = (type, operation, dedupe = 0 /* OVERWRITE */) => (prepare) => createAction(type, resolveTransition(operation, dedupe)(prepare));
-var createTransitions = (type, dedupe = 0 /* OVERWRITE */) => (options) => {
+var createTransition = (type, operation, mode = 0 /* DEFAULT */) => (prepare) => createAction(type, resolveTransition(operation, mode)(prepare));
+var createTransitions = (type, mode = 0 /* DEFAULT */) => (options) => {
   const noOptions = typeof options === "function";
   const stagePA = noOptions ? options : options.stage;
   const commitPA = noOptions ? emptyPA : options.commit ?? emptyPA;
   const failPA = noOptions ? errorPA : options.fail ?? errorPA;
   const stashPA = noOptions ? emptyPA : options.stash ?? emptyPA;
   return {
-    amend: createTransition(`${type}::amend`, "amend" /* AMEND */, dedupe)(stagePA),
-    stage: createTransition(`${type}::stage`, "stage" /* STAGE */, dedupe)(stagePA),
-    commit: createTransition(`${type}::commit`, "commit" /* COMMIT */, dedupe)(commitPA),
-    fail: createTransition(`${type}::fail`, "fail" /* FAIL */, dedupe)(failPA),
-    stash: createTransition(`${type}::stash`, "stash" /* STASH */, dedupe)(stashPA),
+    amend: createTransition(`${type}::amend`, "amend" /* AMEND */, mode)(stagePA),
+    stage: createTransition(`${type}::stage`, "stage" /* STAGE */, mode)(stagePA),
+    commit: createTransition(`${type}::commit`, "commit" /* COMMIT */, mode)(commitPA),
+    fail: createTransition(`${type}::fail`, "fail" /* FAIL */, mode)(failPA),
+    stash: createTransition(`${type}::stash`, "stash" /* STASH */, mode)(stashPA),
     match: createCommitMatcher(type)
   };
 };
@@ -29024,13 +29035,13 @@ function crudPrepare(key) {
 var crud = crudPrepare("id");
 var logActivity = createTransitions("activity::add")(crud.create);
 var editActivity = createTransitions("activity::edit")(crud.update);
-var dismissActivity = createTransitions("activity::dismiss", 1 /* TRAILING */)(crud.remove);
+var dismissActivity = createTransitions("activity::dismiss", 2 /* REVERTIBLE */)(crud.remove);
 
 // usecases/lib/store/epics/actions.ts
 var crud2 = crudPrepare("id");
 var createEpic = createTransitions("epics::add")(crud2.create);
 var editEpic = createTransitions("epics::edit")(crud2.update);
-var deleteEpic = createTransitions("epics::delete", 1 /* TRAILING */)(crud2.remove);
+var deleteEpic = createTransitions("epics::delete", 2 /* REVERTIBLE */)(crud2.remove);
 var sync = createAction("store::sync");
 
 // usecases/lib/store/activity/reducer.ts
@@ -29601,7 +29612,7 @@ var recordState = ({
 var crud3 = crudPrepare()(["projectId", "id"]);
 var createProjectTodo = createTransitions("projects::add")(crud3.create);
 var editProjectTodo = createTransitions("projects::edit")(crud3.update);
-var deleteProjectTodo = createTransitions("projects::delete", 1 /* TRAILING */)(crud3.remove);
+var deleteProjectTodo = createTransitions("projects::delete", 2 /* REVERTIBLE */)(crud3.remove);
 
 // usecases/lib/store/projects/reducer.ts
 var compare3 = (a) => (b) => {
@@ -29861,12 +29872,7 @@ var selectOptimisticEpicState = (id) => createSelector((state) => state.epics, (
   conflict: selectIsConflicting(id)(epics2)
 }));
 var selectAllTransitions = createSelector((state) => state.epics.transitions, (state) => state.profile.transitions, (state) => state.projects.transitions, (state) => state.activity.transitions, (...lists) => lists.flat());
-var selectAllFailedTransitions = createSelector((state) => state.epics, (state) => state.profile, (state) => state.projects, (state) => state.activity, (epics2, profile2, projects2, activity2) => [
-  ...selectFailedTransitions(epics2),
-  ...selectFailedTransitions(profile2),
-  ...selectFailedTransitions(projects2),
-  ...selectFailedTransitions(activity2)
-]);
+var selectAllFailedTransitions2 = createSelector((state) => state.epics, (state) => state.profile, (state) => state.projects, (state) => state.activity, (epics2, profile2, projects2, activity2) => selectAllFailedTransitions(epics2, profile2, projects2, activity2));
 
 // usecases/lib/components/graph/TransitionHistoryProvider.tsx
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
@@ -30657,7 +30663,7 @@ var useMockApi = () => {
 // usecases/lib/hooks/useAutoRetry.ts
 var useAutoRetry = (retry) => {
   const { online } = useMockApi();
-  const failedTransitions = useSelector(selectAllFailedTransitions);
+  const failedTransitions = useSelector(selectAllFailedTransitions2);
   const retryRef = import_react13.useRef(retry);
   retryRef.current = retry;
   import_react13.useEffect(() => {

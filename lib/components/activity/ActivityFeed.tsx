@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { type FC, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import { useActivityState } from '~usecases/lib/store/activity/hooks';
@@ -22,7 +22,7 @@ type ActivityItemProps = {
     entry: ActivityEntry;
     onEdit: (entry: ActivityEntry) => void;
     onDismiss: (entry: ActivityEntry) => void;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: StagedAction) => void;
 };
 
 const ActivityItem: FC<ActivityItemProps> = ({ entry, onEdit, onDismiss, onRetry }) => {
@@ -35,9 +35,9 @@ const ActivityItem: FC<ActivityItemProps> = ({ entry, onEdit, onDismiss, onRetry
         if (!message || message === entry.message) return;
 
         if (failedAction) {
-            const { payload } = failedAction as any;
+            const { payload } = failedAction as StagedAction<{ item: ActivityEntry }>;
             const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, message } } };
-            onRetry(retry as TransitionAction);
+            onRetry(retry);
         } else {
             onEdit({ ...entry, message, revision: entry.revision + 1 });
         }
@@ -99,7 +99,7 @@ type Props = {
     onLogActivity: (entry: ActivityEntry) => void;
     onEditActivity: (entry: ActivityEntry) => void;
     onDismissActivity: (entry: ActivityEntry) => void;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: StagedAction) => void;
 };
 
 export const ActivityFeed: FC<Props> = ({ onLogActivity, onEditActivity, onDismissActivity, onRetry }) => {

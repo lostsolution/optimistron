@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { useMemo, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { TransitionAction } from '~transitions';
+import type { StagedAction } from '~transitions';
 
 import { CheckMark, Cross, Spinner } from '~usecases/lib/components/todo/Icons';
 import { useEpicState } from '~usecases/lib/store/epics/hooks';
@@ -11,7 +11,7 @@ import type { Epic } from '~usecases/lib/store/types';
 
 type Props = {
     todo: Epic;
-    onRetry: (action: TransitionAction) => void;
+    onRetry: (action: StagedAction) => void;
     onEdit: (todo: Epic) => void;
     onDelete: (todo: Epic) => void;
 };
@@ -39,9 +39,9 @@ export const TodoItem: FC<Props> = ({ todo, onEdit, onRetry, onDelete }) => {
         if (failedAction) {
             /** Re-dispatch the failed stage action with the mutation applied.
              *  The App-level retryTransition routes it through the correct lifecycle. */
-            const { payload } = failedAction as any;
+            const { payload } = failedAction as StagedAction<{ item: Epic }>;
             const retry = { ...failedAction, payload: { ...payload, item: { ...payload.item, ...mutation } } };
-            onRetry(retry as TransitionAction);
+            onRetry(retry);
         } else onEdit({ ...todo, revision: todo.revision + 1, ...mutation });
     };
 
