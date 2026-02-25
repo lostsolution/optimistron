@@ -22,7 +22,7 @@ const compare = (a: Epic) => (b: Epic) => {
 
 const eq = (a: Epic) => (b: Epic) => a.done === b.done && a.value === b.value;
 
-export const { reducer: epics, selectOptimistic } = optimistron(
+const { reducer: epics, selectors } = optimistron(
     'epics',
     initial,
     recordState<Epic>({ key: 'id', compare, eq }),
@@ -44,3 +44,5 @@ export const { reducer: epics, selectOptimistic } = optimistron(
         },
     },
 );
+
+export { epics, selectors as epicsSelectors };

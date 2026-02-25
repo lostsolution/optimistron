@@ -5,7 +5,7 @@ declare global {
     }
 }
 
-export const getMockApiOnline = () => window.__mock_api_online ?? true;
+export const getMockApiOnline = () => window.__mock_api_online ?? false;
 export const setMockApiOnline = (value: boolean) => (window.__mock_api_online = value);
 
 export const getMockApiTimeout = () => window.__mock_api_timeout ?? 500;

@@ -12,6 +12,7 @@ import { createEpic, deleteEpic, editEpic } from '~usecases/lib/store/epics/acti
 import { updateProfile } from '~usecases/lib/store/profile/actions';
 import { createProjectTodo, deleteProjectTodo, editProjectTodo } from '~usecases/lib/store/projects/actions';
 import type { ActivityEntry, Epic, Profile, ProjectTodo } from '~usecases/lib/store/types';
+import { retryAll } from '~usecases/sagas/saga';
 
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
@@ -39,8 +40,8 @@ export const App: FC = () => {
     const handleEditActivity = (entry: ActivityEntry) => dispatch(editActivity.stage(entry));
     const handleDismissActivity = (entry: ActivityEntry) => dispatch(dismissActivity.stage({ id: entry.id }));
 
-    /** Sagas watch stage actions — retry is just a re-dispatch */
-    useAutoRetry((action) => dispatch(action));
+    /** Dispatch a single action — the saga selects & re-dispatches all failed transitions */
+    useAutoRetry(() => dispatch(retryAll()));
 
     return (
         <Layout title="Sagas" description={description}>

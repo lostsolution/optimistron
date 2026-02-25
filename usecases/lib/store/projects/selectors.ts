@@ -1,8 +1,9 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
-import { selectOptimistic } from '~usecases/lib/store/projects/reducer';
+import { projectsSelectors } from '~usecases/lib/store/projects/reducer';
 import type { State } from '~usecases/lib/store/store';
 import type { ProjectTodo } from '~usecases/lib/store/types';
+
+const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } = projectsSelectors;
 
 export const selectOptimisticProjectTodos = (projectId: string) =>
     createSelector(

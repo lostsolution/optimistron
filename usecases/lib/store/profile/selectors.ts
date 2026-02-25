@@ -1,7 +1,8 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
-import { selectOptimistic } from '~usecases/lib/store/profile/reducer';
+import { profileSelectors } from '~usecases/lib/store/profile/reducer';
 import type { State } from '~usecases/lib/store/store';
+
+const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } = profileSelectors;
 
 export const selectOptimisticProfile = createSelector(
     (state: State) => state.profile,

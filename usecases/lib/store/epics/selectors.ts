@@ -1,7 +1,8 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectAllFailedTransitions as selectAllFailed, selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
-import { selectOptimistic } from '~usecases/lib/store/epics/reducer';
+import { epicsSelectors } from '~usecases/lib/store/epics/reducer';
 import type { State } from '~usecases/lib/store/store';
+
+const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } = epicsSelectors;
 
 export const selectEpic = (id: string) =>
     createSelector(
@@ -23,15 +24,6 @@ export const selectOptimisticEpicState = (id: string) =>
             conflict: selectIsConflicting(id)(epics),
         }),
     );
-
-/** All failed transitions across every slice — used by useAutoRetry */
-export const selectAllFailedTransitions = createSelector(
-    (state: State) => state.epics,
-    (state: State) => state.profile,
-    (state: State) => state.projects,
-    (state: State) => state.activity,
-    (epics, profile, projects, activity) => selectAllFailed(epics, profile, projects, activity),
-);
 
 /** Combined transitions from all reducers — feeds the transition graph */
 export const selectAllTransitions = createSelector(

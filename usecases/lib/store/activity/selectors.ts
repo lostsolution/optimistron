@@ -1,7 +1,8 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
-import { selectOptimistic } from '~usecases/lib/store/activity/reducer';
+import { activitySelectors } from '~usecases/lib/store/activity/reducer';
 import type { State } from '~usecases/lib/store/store';
+
+const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflicting } = activitySelectors;
 
 export const selectOptimisticActivity = createSelector(
     (state: State) => state.activity,

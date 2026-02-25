@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
 import type { StagedAction } from '~transitions';
 
@@ -9,11 +9,16 @@ import { ProjectBoard } from '~usecases/lib/components/projects/ProjectBoard';
 import { Layout, type UsecaseDescription } from '~usecases/lib/components/todo/Layout';
 import { TodoApp } from '~usecases/lib/components/todo/TodoApp';
 import { useAutoRetry } from '~usecases/lib/hooks/useAutoRetry';
+import { activitySelectors } from '~usecases/lib/store/activity/reducer';
 import { dismissActivity, editActivity, logActivity } from '~usecases/lib/store/activity/actions';
 import { createEpic, deleteEpic, editEpic } from '~usecases/lib/store/epics/actions';
+import { epicsSelectors } from '~usecases/lib/store/epics/reducer';
+import { profileSelectors } from '~usecases/lib/store/profile/reducer';
 import { updateProfile } from '~usecases/lib/store/profile/actions';
+import { projectsSelectors } from '~usecases/lib/store/projects/reducer';
 import { createProjectTodo, deleteProjectTodo, editProjectTodo } from '~usecases/lib/store/projects/actions';
 import type { ActivityEntry, Epic, Profile, ProjectTodo } from '~usecases/lib/store/types';
+import type { State } from '~usecases/lib/store/store';
 import { generateId, simulateAPIRequest } from '~usecases/lib/utils/mock-api';
 
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
@@ -144,7 +149,9 @@ export const App: FC = () => {
     };
 
     /** Route failed transitions through the correct lifecycle handler on reconnect */
-    useAutoRetry((action: StagedAction) => {
+    const store = useStore<State>();
+
+    const retryAction = (action: StagedAction) => {
         if (createEpic.stage.match(action)) return handleCreateEpic(action.payload);
         if (editEpic.stage.match(action)) return handleEditEpic(action.payload as Epic);
         if (updateProfile.stage.match(action)) return handleUpdateProfile(action.payload);
@@ -152,6 +159,17 @@ export const App: FC = () => {
         if (editProjectTodo.stage.match(action)) return handleEditProjectTodo(action.payload as ProjectTodo);
         if (logActivity.stage.match(action)) return handleLogActivity(action.payload);
         if (editActivity.stage.match(action)) return handleEditActivity(action.payload as ActivityEntry);
+    };
+
+    useAutoRetry(() => {
+        const state = store.getState();
+        const failed = [
+            ...epicsSelectors.selectFailures(state.epics),
+            ...profileSelectors.selectFailures(state.profile),
+            ...projectsSelectors.selectFailures(state.projects),
+            ...activitySelectors.selectFailures(state.activity),
+        ];
+        failed.forEach(retryAction);
     });
 
     return (
