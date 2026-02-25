@@ -181,14 +181,14 @@ const Home: FC = () => (
 
             <div className="text-left text-sm text-gray-400 leading-relaxed space-y-3 mb-8">
                 <p>
-                    This demo is a <span className="text-gray-200">project management app</span> built to showcase Optimistron — each section uses a different
-                    state shape with full optimistic CRUD.
+                    A <span className="text-gray-200">project management app</span> demonstrating Optimistron — each section uses a different
+                    state shape with optimistic CRUD.
                 </p>
                 <p>
-                    <code className="text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded">singularState</code> powers the user profile,{' '}
-                    <code className="text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded">nestedRecordState</code> drives project-grouped tasks,{' '}
-                    <code className="text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded">recordState</code> backs the flat epic list, and{' '}
-                    <code className="text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded">listState</code> powers the activity log.
+                    <code className="text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded">singularState</code> for the user profile,{' '}
+                    <code className="text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded">nestedRecordState</code> for project-grouped tasks,{' '}
+                    <code className="text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded">recordState</code> for the flat epic list, and{' '}
+                    <code className="text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded">listState</code> for the activity log.
                 </p>
             </div>
 

@@ -19,11 +19,11 @@ import { generateId, simulateAPIRequest } from '~usecases/lib/utils/mock-api';
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
 const description: UsecaseDescription = {
-    subtitle: 'Component-level async — full transition lifecycle managed in the component.',
+    subtitle: 'Component-level async — the transition lifecycle is managed directly in the component.',
     howItWorks: [
         <>Component dispatches <O>stage</O>, awaits the API, then <O>amend</O>s / <C>commit</C>s or <F>fail</F>s directly.</>,
-        <>The full lifecycle (<O>stage</O> → API → <O>amend</O> → <C>commit</C> / <F>fail</F>) lives in the handler function — maximum visibility, minimum indirection.</>,
-        <>Optimistic state is computed at the selector level via <code className="text-gray-400 text-[11px]">selectOptimistic</code> — no state copies, no checkpoints.</>,
+        <>The full lifecycle (<O>stage</O> → API → <O>amend</O> → <C>commit</C> / <F>fail</F>) lives in the handler function.</>,
+        <>Optimistic state is computed at the selector level via <code className="text-gray-400 text-[11px]">selectOptimistic</code>.</>,
         <>Failed transitions can be edited in-place — a new <O>stage</O> overwrites the failed one, restarting the lifecycle.</>,
     ],
 };

@@ -30657,7 +30657,7 @@ var useAutoRetry = (retry) => {
 // usecases/basic/App.tsx
 var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
 var description = {
-  subtitle: "Component-level async — full transition lifecycle managed in the component.",
+  subtitle: "Component-level async — the transition lifecycle is managed directly in the component.",
   howItWorks: [
     /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
       children: [
@@ -30698,7 +30698,7 @@ var description = {
         /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(F, {
           children: "fail"
         }, undefined, false, undefined, this),
-        ") lives in the handler function — maximum visibility, minimum indirection."
+        ") lives in the handler function."
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
@@ -30708,7 +30708,7 @@ var description = {
           className: "text-gray-400 text-[11px]",
           children: "selectOptimistic"
         }, undefined, false, undefined, this),
-        " — no state copies, no checkpoints."
+        "."
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(jsx_dev_runtime12.Fragment, {
@@ -32493,7 +32493,7 @@ var import_react16 = __toESM(require_react(), 1);
 // usecases/sagas/App.tsx
 var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
 var description2 = {
-  subtitle: "Redux sagas — the most decoupled approach.",
+  subtitle: "Redux sagas — lifecycle orchestration decoupled from components.",
   howItWorks: [
     /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
@@ -32501,7 +32501,7 @@ var description2 = {
         /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
           children: "stage"
         }, undefined, false, undefined, this),
-        " — that's it. No async, no lifecycle awareness."
+        ". No async logic or lifecycle management in the component."
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
@@ -32527,7 +32527,7 @@ var description2 = {
       ]
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
-      children: "Maximum separation: UI fires intent, saga handles all orchestration — components are pure dispatch."
+      children: "UI dispatches intent, saga handles orchestration — components only call dispatch."
     }, undefined, false, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
       children: [
@@ -32904,10 +32904,10 @@ var dismissActivityThunk = (entry) => async (dispatch) => {
 // usecases/thunks/App.tsx
 var jsx_dev_runtime17 = __toESM(require_jsx_dev_runtime(), 1);
 var description3 = {
-  subtitle: "Redux thunks — same lifecycle, cleaner components.",
+  subtitle: "Redux thunks — lifecycle logic moved from components into thunks.",
   howItWorks: [
     /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
-      children: "Component dispatches a thunk — no transition management in the component at all."
+      children: "Component dispatches a thunk. No transition management in the component."
     }, undefined, false, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
       children: [
@@ -32932,7 +32932,7 @@ var description3 = {
     }, undefined, true, undefined, this),
     /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(jsx_dev_runtime17.Fragment, {
       children: [
-        "Same optimistic behavior as Basic — components only call ",
+        "Components only call ",
         /* @__PURE__ */ jsx_dev_runtime17.jsxDEV("code", {
           className: "text-gray-400 text-[11px]",
           children: "dispatch(thunk(item))"
@@ -33564,12 +33564,12 @@ var Home = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
           children: [
             /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
               children: [
-                "This demo is a ",
+                "A ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("span", {
                   className: "text-gray-200",
                   children: "project management app"
                 }, undefined, false, undefined, this),
-                " built to showcase Optimistron — each section uses a different state shape with full optimistic CRUD."
+                " demonstrating Optimistron — each section uses a different state shape with optimistic CRUD."
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("p", {
@@ -33578,25 +33578,25 @@ var Home = () => /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("div", {
                   className: "text-[10px] text-fuchsia-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "singularState"
                 }, undefined, false, undefined, this),
-                " powers the user profile,",
+                " for the user profile,",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-amber-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "nestedRecordState"
                 }, undefined, false, undefined, this),
-                " drives project-grouped tasks,",
+                " for project-grouped tasks,",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-cyan-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "recordState"
                 }, undefined, false, undefined, this),
-                " backs the flat epic list, and",
+                " for the flat epic list, and",
                 " ",
                 /* @__PURE__ */ jsx_dev_runtime19.jsxDEV("code", {
                   className: "text-[10px] text-green-400 bg-surface-3 px-1 py-0.5 rounded",
                   children: "listState"
                 }, undefined, false, undefined, this),
-                " powers the activity log."
+                " for the activity log."
               ]
             }, undefined, true, undefined, this)
           ]
