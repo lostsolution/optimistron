@@ -76,7 +76,7 @@ const editTodo = createTransitions('todos::edit')(crud.update); // DEFAULT mode
 const deleteTodo = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
 
 // 4. Create the optimistic reducer
-const { reducer: todos, selectOptimistic } = optimistron(
+const { reducer: todos, selectors } = optimistron(
     'todos',
     {} as Record<string, Todo>,
     recordState<Todo>({
@@ -93,7 +93,7 @@ const store = configureStore({ reducer: { todos } });
 // 6. Select optimistic state (memoize with createSelector)
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
-    selectOptimistic((todos) => Object.values(todos.state)),
+    selectors.selectOptimistic((todos) => Object.values(todos.state)),
 );
 
 // 7. Dispatch transitions
@@ -222,30 +222,45 @@ Declared per action type — controls what happens on re-stage and failure:
 
 ## Selectors
 
+All selectors are returned from `optimistron()` on the `selectors` object — there are no standalone selector exports.
+
 ### Optimistic state
 
 ```typescript
+const { selectors } = optimistron('todos', initial, handler, config);
+
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
-    selectOptimistic((todos) => Object.values(todos.state)),
+    selectors.selectOptimistic((todos) => Object.values(todos.state)),
 );
 ```
 
 ### Per-entity status
 
 ```typescript
-import { selectIsOptimistic, selectIsFailed, selectIsConflicting } from '@lostsolution/optimistron';
+const { selectors } = optimistron('todos', initial, handler, config);
 
-selectIsOptimistic(id)(state.todos); // pending?
-selectIsFailed(id)(state.todos); // failed?
-selectIsConflicting(id)(state.todos); // stale conflict?
+selectors.selectIsOptimistic(id)(state.todos); // pending?
+selectors.selectIsFailed(id)(state.todos); // failed?
+selectors.selectIsConflicting(id)(state.todos); // stale conflict?
+selectors.selectFailures(state.todos); // all failed transitions in this slice
+selectors.selectFailure(id)(state.todos); // failed transition for a specific entity
+selectors.selectConflict(id)(state.todos); // conflicting transition for a specific entity
 ```
 
-### Aggregate failures
+### Aggregate failures across slices
+
+Cross-slice aggregation is a consumer concern. Compose per-slice selectors:
 
 ```typescript
-import { selectAllFailedTransitions } from '@lostsolution/optimistron';
-selectAllFailedTransitions(state.todos, state.projects, state.activity);
+const selectAllFailed = createSelector(
+    (state: RootState) => state.todos,
+    (state: RootState) => state.projects,
+    (todos, projects) => [
+        ...todosSelectors.selectFailures(todos),
+        ...projectsSelectors.selectFailures(projects),
+    ],
+);
 ```
 
 ---

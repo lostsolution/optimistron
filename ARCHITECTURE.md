@@ -237,7 +237,7 @@ function* createTodoSaga(action: ReturnType<typeof createTodo.stage>) {
 ```
 src/
 ├── index.ts              # Public API surface (barrel export)
-├── optimistron.ts        # Factory: wraps reducers, returns { reducer, selectOptimistic }
+├── optimistron.ts        # Factory: wraps reducers, returns { reducer, selectors }
 ├── transitions.ts        # Transition operations, processTransition, sanitizeTransitions
 ├── reducer.ts            # resolveReducer, bindReducer
 ├── constants.ts          # META_KEY
@@ -249,8 +249,7 @@ src/
 │   └── types.ts          # PreparePayload, PrepareError, ActionMeta, ItemPath, UpdateDTO, DeleteDTO
 │
 ├── selectors/
-│   ├── internal.ts       # createSelectOptimistic (returned from optimistron, not exported)
-│   └── selectors.ts      # selectIsFailed, selectIsOptimistic, selectIsConflicting, etc.
+│   └── internal.ts       # All selectors (returned from optimistron via selectors object, not exported)
 │
 ├── state/
 │   ├── types.ts          # TransitionState, StateHandler, WiredStateHandler, BoundStateHandler
@@ -269,7 +268,7 @@ Key implementation details:
 
 - **`TransitionState<T>`** wraps user state with a non-enumerable `transitions` list (via `Object.defineProperties` — hidden from serializers and spreads)
 - **`transitionStateFactory`** returns the previous state object when both `state` and `transitions` are referentially equal (preserves memoization)
-- **`selectOptimistic`** is closed over the bound reducer — no global state needed
+- **`selectors`** are returned as a grouped object from `optimistron()` — no standalone exports, each slice is self-contained
 - **Action types** use `namespace::operation` format, matching uses `startsWith`
 
 ---
@@ -290,7 +289,7 @@ These are non-negotiable — the library design depends on them:
 
 ### `optimistron(namespace, initialState, handler, config, options?)`
 
-Creates an optimistic reducer wrapper. Returns `{ reducer, selectOptimistic }`.
+Creates an optimistic reducer wrapper. Returns `{ reducer, selectors }`.
 
 | Param | Type | Description |
 |-------|------|-------------|
@@ -300,14 +299,20 @@ Creates an optimistic reducer wrapper. Returns `{ reducer, selectOptimistic }`.
 | `config` | `ReducerConfig` | CRUD action map or reducer function |
 | `options.sanitizeAction` | `(action) => action` | Optional action transform before sanitization |
 
-### `selectOptimistic(selector)`
+### `selectors`
 
-Returned from `optimistron()`. Replays pending transitions before applying the selector. Always wrap with `createSelector`:
+Returned from `optimistron()` as a grouped object. No selectors are exported from the library — they are all bound to the slice's `TransitionState<S>`.
+
+#### `selectors.selectOptimistic(selector)`
+
+Replays pending transitions before applying the selector. Always wrap with `createSelector`:
 
 ```typescript
+const { selectors } = optimistron('todos', initial, handler, config);
+
 const selectTodos = createSelector(
   (state: RootState) => state.todos,
-  selectOptimistic((todos) => Object.values(todos.state)),
+  selectors.selectOptimistic((todos) => Object.values(todos.state)),
 );
 ```
 
@@ -340,19 +345,18 @@ const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
 // transitionId: "projectId-value/id-value"
 ```
 
-### Selectors
+#### Per-entity selectors
 
-All transition selectors are curried: `selector(id)(transitionState)`.
+All returned on `selectors`, curried: `selectors.selector(id)(transitionState)`.
 
 | Selector | Returns |
 |----------|---------|
 | `selectIsOptimistic(id)` | `boolean` — transition is pending |
 | `selectIsFailed(id)` | `boolean` — transition has failed |
 | `selectIsConflicting(id)` | `boolean` — transition conflicts with committed state |
-| `selectFailedTransition(id)` | `StagedAction \| undefined` |
-| `selectConflictingTransition(id)` | `StagedAction \| undefined` |
-| `selectFailedTransitions` | `(state) => StagedAction[]` — all failed in one slice |
-| `selectAllFailedTransitions` | `(...states) => StagedAction[]` — across slices |
+| `selectFailure(id)` | `StagedAction \| undefined` — failed transition for entity |
+| `selectConflict(id)` | `StagedAction \| undefined` — conflicting transition for entity |
+| `selectFailures` | `(state) => StagedAction[]` — all failed transitions in this slice |
 
 ### Enums
 
