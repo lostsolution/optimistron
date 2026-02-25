@@ -9,12 +9,12 @@ type Item = { groupId: string; itemId: string; value: string; revision: number }
 
 const handler = nestedRecordState<Item>()({
     keys: ['groupId', 'itemId'],
-    compare: (a) => (b) => {
+    compare: (a, b) => {
         if (a.revision > b.revision) return 1;
         if (a.revision === b.revision) return 0;
         return -1;
     },
-    eq: (a) => (b) => a.value === b.value,
+    eq: (a, b) => a.value === b.value,
 });
 
 describe('nestedRecordState', () => {

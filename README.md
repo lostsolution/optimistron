@@ -81,8 +81,8 @@ const { reducer: todos, selectors } = optimistron(
     {} as Record<string, Todo>,
     recordState<Todo>({
         key: 'id',
-        compare: (a) => (b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
-        eq: (a) => (b) => a.done === b.done && a.value === b.value,
+        compare: (a, b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+        eq: (a, b) => a.done === b.done && a.value === b.value,
     }),
     { create: createTodo, update: editTodo, remove: deleteTodo },
 );
@@ -117,8 +117,8 @@ dispatch(createTodo.fail(todo.id, error)); // server rejected — flagged as fai
 Entities need a **monotonically increasing version** — `revision`, `updatedAt`, a sequence number. This is how sanitization tells "newer" from "stale":
 
 ```typescript
-compare: (a) => (b) => 0 | 1 | -1; // version ordering (curried)
-eq: (a) => (b) => boolean; // content equality at same version (curried)
+compare: (a, b) => 0 | 1 | -1; // version ordering
+eq: (a, b) => boolean; // content equality at same version
 ```
 
 Without versioning, conflict detection degrades to content equality only.

@@ -29,12 +29,12 @@ export const selectState = ({ committed }: TransitionState<TestIndexedState>) =>
 
 export const indexedState = recordState<TestItem>({
     key: 'id',
-    compare: (a: TestItem) => (b: TestItem) => {
+    compare: (a: TestItem, b: TestItem) => {
         if (a.revision > b.revision) return 1;
         if (a.revision === b.revision) return 0;
         return -1;
     },
-    eq: (a: TestItem) => (b: TestItem) => a.id === b.id && a.value === b.value,
+    eq: (a: TestItem, b: TestItem) => a.id === b.id && a.value === b.value,
 });
 
 export const reducer: HandlerReducer<TestIndexedState, TestItem, Partial<TestItem>, Partial<TestItem>> = (handler, action): TestIndexedState => {

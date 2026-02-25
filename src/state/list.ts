@@ -13,68 +13,70 @@ export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
  * - `compare` determines if an incoming item is newer/conflicting
  * - `eq` checks deep equality beyond versioning
  */
-export const listState = <T extends Record<string, any>>({
-    key,
-    compare,
-    eq,
-}: ListStateOptions<T>): WiredStateHandler<T[], T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => ({
-    create: (state: T[], item: T) => {
-        if (state.some((entry) => entry[key] === item[key])) return state;
-        return [...state, item];
-    },
+export const listState = <T extends Record<string, any>>(
+    options: ListStateOptions<T>,
+): WiredStateHandler<T[], T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => {
+    const { key, compare, eq } = options;
 
-    update: (state: T[], dto: Partial<T>) => {
-        const itemId = String(dto[key]);
-        const idx = state.findIndex((entry) => entry[key] === itemId);
-        if (idx === -1) return state;
+    return {
+        create: (state: T[], item: T) => {
+            if (state.some((entry) => entry[key] === item[key])) return state;
+            return [...state, item];
+        },
 
-        const next = [...state];
-        next[idx] = { ...state[idx], ...dto };
-        return next;
-    },
+        update: (state: T[], dto: Partial<T>) => {
+            const itemId = String(dto[key]);
+            const idx = state.findIndex((entry) => entry[key] === itemId);
+            if (idx === -1) return state;
 
-    remove: (state: T[], dto: Partial<T>) => {
-        const itemId = String(dto[key]);
-        const idx = state.findIndex((entry) => entry[key] === itemId);
-        if (idx === -1) return state;
-        return state.filter((_, i) => i !== idx);
-    },
+            const next = [...state];
+            next[idx] = { ...state[idx], ...dto };
+            return next;
+        },
 
-    wire: (bound, action, actions) => {
-        if (actions.create?.match(action)) return bound.create(action.payload);
-        if (actions.update?.match(action)) return bound.update(action.payload);
-        if (actions.remove?.match(action)) return bound.remove(action.payload);
-        return undefined;
-    },
+        remove: (state: T[], dto: Partial<T>) => {
+            const itemId = String(dto[key]);
+            const idx = state.findIndex((entry) => entry[key] === itemId);
+            if (idx === -1) return state;
+            return state.filter((_, i) => i !== idx);
+        },
 
-    merge: (existing: T[], incoming: T[]) => {
-        if (existing === incoming) throw OptimisticMergeResult.SKIP;
+        wire: (bound, action, actions) => {
+            if (actions.create?.match(action)) return bound.create(action.payload);
+            if (actions.update?.match(action)) return bound.update(action.payload);
+            if (actions.remove?.match(action)) return bound.remove(action.payload);
+            return undefined;
+        },
 
-        const existingMap = new Map<string, T>();
-        for (const item of existing) existingMap.set(item[key], item);
+        merge: (existing: T[], incoming: T[]) => {
+            if (existing === incoming) throw OptimisticMergeResult.SKIP;
 
-        let matched = 0;
+            const existingMap = new Map<string, T>();
+            for (const item of existing) existingMap.set(item[key], item);
 
-        for (const item of incoming) {
-            const prev = existingMap.get(item[key]);
+            let matched = 0;
 
-            if (!prev) continue;
-            matched++;
+            for (const item of incoming) {
+                const prev = existingMap.get(item[key]);
 
-            if (prev === item) continue;
+                if (!prev) continue;
+                matched++;
 
-            const check = compare(item)(prev);
-            if (check === -1) throw OptimisticMergeResult.CONFLICT;
-            if (check === 0) {
-                if (!eq(item)(prev)) throw OptimisticMergeResult.CONFLICT;
-                continue;
+                if (prev === item) continue;
+
+                const check = compare(item, prev);
+                if (check === -1) throw OptimisticMergeResult.CONFLICT;
+                if (check === 0) {
+                    if (!eq(item, prev)) throw OptimisticMergeResult.CONFLICT;
+                    continue;
+                }
+
+                return incoming;
             }
 
+            /** All matched items were equal — check for additions or deletions via count */
+            if (matched === incoming.length && matched === existingMap.size) throw OptimisticMergeResult.SKIP;
             return incoming;
-        }
-
-        /** All matched items were equal — check for additions or deletions via count */
-        if (matched === incoming.length && matched === existingMap.size) throw OptimisticMergeResult.SKIP;
-        return incoming;
-    },
-});
+        },
+    };
+};
