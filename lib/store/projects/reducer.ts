@@ -31,7 +31,7 @@ const initial = (() => {
     return state;
 })();
 
-export const { reducer: projects, selectOptimistic } = optimistron(
+const { reducer: projects, selectors } = optimistron(
     'projects',
     initial,
     nestedRecordState<ProjectTodo>()({ keys: ['projectId', 'id'], compare, eq }),
@@ -59,3 +59,5 @@ export const { reducer: projects, selectOptimistic } = optimistron(
         },
     },
 );
+
+export { projects, selectors as projectsSelectors };

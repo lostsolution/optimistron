@@ -15,7 +15,7 @@ const eq = (a: Profile) => (b: Profile) => a.displayName === b.displayName && a.
 
 const initial: Profile = { displayName: 'Andy ZEN', avatarUrl: 'https://i.pravatar.cc/80?u=andy', revision: 0 };
 
-export const { reducer: profile, selectOptimistic } = optimistron(
+const { reducer: profile, selectors } = optimistron(
     'profile',
     initial,
     singularState<Profile>({ compare, eq }),
@@ -32,3 +32,5 @@ export const { reducer: profile, selectOptimistic } = optimistron(
         },
     },
 );
+
+export { profile, selectors as profileSelectors };

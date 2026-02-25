@@ -13,7 +13,7 @@ const compare = (a: ActivityEntry) => (b: ActivityEntry) => {
 
 const eq = (a: ActivityEntry) => (b: ActivityEntry) => a.message === b.message && a.category === b.category;
 
-export const { reducer: activity, selectOptimistic } = optimistron(
+const { reducer: activity, selectors } = optimistron(
     'activity',
     [] as ActivityEntry[],
     listState<ActivityEntry>({ key: 'id', compare, eq }),
@@ -30,3 +30,5 @@ export const { reducer: activity, selectOptimistic } = optimistron(
         },
     },
 );
+
+export { activity, selectors as activitySelectors };

@@ -28677,6 +28677,32 @@ var removeListener = Object.assign(createAction(`${alm}/remove`), {
 });
 var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
 
+// src/reducer.ts
+var resolveReducer = (handler, config) => {
+  if (typeof config === "function")
+    return config;
+  if (!("wire" in handler) || typeof handler.wire !== "function") {
+    throw new Error("optimistron: handler does not support auto-wiring (missing wire method)");
+  }
+  const { wire } = handler;
+  const { create, update, remove, reducer: fallback } = config;
+  return (bound, action) => {
+    const result = wire(bound, action, { create, update, remove });
+    if (result !== undefined)
+      return result;
+    if (fallback)
+      return fallback(bound, action);
+    return bound.getState();
+  };
+};
+var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
+
+// src/utils/logger.ts
+var warn = (...args) => {
+  if (true)
+    console.warn(...args);
+};
+
 // src/constants.ts
 var META_KEY = "__OPTIMISTRON_META__";
 
@@ -28714,13 +28740,14 @@ var processTransition = (transition, transitions) => {
       const stage = toStaged(transition, operation === "amend" /* AMEND */ ? getTransitionMeta(existing) : {});
       if (matchIdx === -1)
         return [...transitions, stage];
+      const replaced = operation === "stage" /* STAGE */ ? updateTransition(stage, { failed: false, conflict: false }) : stage;
       const nextTransitions = [...transitions];
       const existingMeta = getTransitionMeta(existing);
       const trailing = existing.type === transition.type ? existingMeta.trailing : existing;
       if (mode === 2 /* REVERTIBLE */) {
-        nextTransitions[matchIdx] = updateTransition(stage, { trailing });
+        nextTransitions[matchIdx] = updateTransition(replaced, { trailing });
       } else
-        nextTransitions[matchIdx] = stage;
+        nextTransitions[matchIdx] = replaced;
       return nextTransitions;
     }
     case "fail" /* FAIL */: {
@@ -28782,47 +28809,6 @@ var sanitizeTransitions = (boundReducer, bindState) => (state) => {
   return sanitized.mutated ? sanitized.transitions : state.transitions;
 };
 
-// src/selectors/selectors.ts
-var selectFailedTransitions = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
-var selectFailedTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
-  const { id, failed } = getTransitionMeta(action);
-  return id === transitionId && failed;
-});
-var selectConflictingTransition = (transitionId) => ({ transitions }) => transitions.find((action) => {
-  const { id, conflict } = getTransitionMeta(action);
-  return id === transitionId && conflict;
-});
-var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
-var selectIsFailed = (transitionId) => (state) => selectFailedTransition(transitionId)(state) !== undefined;
-var selectIsConflicting = (transitionId) => (state) => selectConflictingTransition(transitionId)(state) !== undefined;
-var selectAllFailedTransitions = (...states) => states.flatMap(selectFailedTransitions);
-
-// src/reducer.ts
-var resolveReducer = (handler, config) => {
-  if (typeof config === "function")
-    return config;
-  if (!("wire" in handler) || typeof handler.wire !== "function") {
-    throw new Error("optimistron: handler does not support auto-wiring (missing wire method)");
-  }
-  const { wire } = handler;
-  const { create, update, remove, reducer: fallback } = config;
-  return (bound, action) => {
-    const result = wire(bound, action, { create, update, remove });
-    if (result !== undefined)
-      return result;
-    if (fallback)
-      return fallback(bound, action);
-    return bound.getState();
-  };
-};
-var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
-
-// src/utils/logger.ts
-var warn = (...args) => {
-  if (true)
-    console.warn(...args);
-};
-
 // src/selectors/internal.ts
 var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) => {
   if (!state.transitions.length)
@@ -28838,6 +28824,18 @@ var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) 
     return selector(state);
   }
 };
+var selectFailures = ({ transitions }) => transitions.filter((action) => getTransitionMeta(action).failed);
+var selectFailure = (transitionId) => ({ transitions }) => transitions.find((action) => {
+  const { id, failed } = getTransitionMeta(action);
+  return id === transitionId && failed;
+});
+var selectConflict = (transitionId) => ({ transitions }) => transitions.find((action) => {
+  const { id, conflict } = getTransitionMeta(action);
+  return id === transitionId && conflict;
+});
+var selectIsOptimistic = (transitionId) => ({ transitions }) => transitions.some((action) => getTransitionMeta(action).id === transitionId);
+var selectIsFailed = (transitionId) => (state) => selectFailure(transitionId)(state) !== undefined;
+var selectIsConflicting = (transitionId) => (state) => selectConflict(transitionId)(state) !== undefined;
 
 // src/state/factory.ts
 var bindStateFactory = (handler) => (state) => ({
@@ -28904,7 +28902,18 @@ function optimistron(namespace, initialState, handler, config, options) {
     nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
     return nextTransitionState;
   };
-  return { reducer: optimisticReducer, selectOptimistic };
+  return {
+    reducer: optimisticReducer,
+    selectors: {
+      selectOptimistic,
+      selectFailures,
+      selectFailure,
+      selectConflict,
+      selectIsOptimistic,
+      selectIsFailed,
+      selectIsConflicting
+    }
+  };
 }
 
 // src/state/list.ts
@@ -29057,7 +29066,7 @@ var compare = (a) => (b) => {
   return -1;
 };
 var eq = (a) => (b) => a.message === b.message && a.category === b.category;
-var { reducer: activity, selectOptimistic } = optimistron("activity", [], listState({ key: "id", compare, eq }), {
+var { reducer: activity, selectors } = optimistron("activity", [], listState({ key: "id", compare, eq }), {
   create: logActivity,
   update: editActivity,
   remove: dismissActivity,
@@ -29070,11 +29079,12 @@ var { reducer: activity, selectOptimistic } = optimistron("activity", [], listSt
 });
 
 // usecases/lib/store/activity/selectors.ts
+var { selectOptimistic, selectIsOptimistic: selectIsOptimistic2, selectIsFailed: selectIsFailed2, selectIsConflicting: selectIsConflicting2 } = selectors;
 var selectOptimisticActivity = createSelector((state) => state.activity, selectOptimistic((activity2) => [...activity2.state].sort((a, b) => b.timestamp - a.timestamp)));
 var selectOptimisticActivityState = (id) => createSelector((state) => state.activity, (activity2) => ({
-  optimistic: selectIsOptimistic(id)(activity2),
-  failed: selectIsFailed(id)(activity2),
-  conflict: selectIsConflicting(id)(activity2)
+  optimistic: selectIsOptimistic2(id)(activity2),
+  failed: selectIsFailed2(id)(activity2),
+  conflict: selectIsConflicting2(id)(activity2)
 }));
 
 // usecases/lib/store/activity/hooks.ts
@@ -29088,7 +29098,7 @@ var useActivityState = (entry) => {
 };
 
 // usecases/lib/utils/mock-api.ts
-var getMockApiOnline = () => window.__mock_api_online ?? true;
+var getMockApiOnline = () => window.__mock_api_online ?? false;
 var setMockApiOnline = (value) => window.__mock_api_online = value;
 var getMockApiTimeout = () => window.__mock_api_timeout ?? 500;
 var setMockApiTimeout = (value) => window.__mock_api_timeout = value;
@@ -29293,7 +29303,7 @@ var compare2 = (a) => (b) => {
 };
 var eq2 = (a) => (b) => a.displayName === b.displayName && a.avatarUrl === b.avatarUrl;
 var initial = { displayName: "Andy ZEN", avatarUrl: "https://i.pravatar.cc/80?u=andy", revision: 0 };
-var { reducer: profile, selectOptimistic: selectOptimistic2 } = optimistron("profile", initial, singularState({ compare: compare2, eq: eq2 }), {
+var { reducer: profile, selectors: selectors2 } = optimistron("profile", initial, singularState({ compare: compare2, eq: eq2 }), {
   update: updateProfile,
   remove: clearProfile,
   reducer: ({ getState }, action) => {
@@ -29306,11 +29316,12 @@ var { reducer: profile, selectOptimistic: selectOptimistic2 } = optimistron("pro
 });
 
 // usecases/lib/store/profile/selectors.ts
+var { selectOptimistic: selectOptimistic2, selectIsOptimistic: selectIsOptimistic3, selectIsFailed: selectIsFailed3, selectIsConflicting: selectIsConflicting3 } = selectors2;
 var selectOptimisticProfile = createSelector((state) => state.profile, selectOptimistic2((profile2) => profile2.state));
 var selectOptimisticProfileState = createSelector((state) => state.profile, (profile2) => ({
-  optimistic: selectIsOptimistic("profile")(profile2),
-  failed: selectIsFailed("profile")(profile2),
-  conflict: selectIsConflicting("profile")(profile2)
+  optimistic: selectIsOptimistic3("profile")(profile2),
+  failed: selectIsFailed3("profile")(profile2),
+  conflict: selectIsConflicting3("profile")(profile2)
 }));
 
 // usecases/lib/store/profile/hooks.ts
@@ -29627,7 +29638,7 @@ var initial2 = (() => {
   }
   return state;
 })();
-var { reducer: projects, selectOptimistic: selectOptimistic3 } = optimistron("projects", initial2, nestedRecordState()({ keys: ["projectId", "id"], compare: compare3, eq: eq3 }), {
+var { reducer: projects, selectors: selectors3 } = optimistron("projects", initial2, nestedRecordState()({ keys: ["projectId", "id"], compare: compare3, eq: eq3 }), {
   create: createProjectTodo,
   update: editProjectTodo,
   remove: deleteProjectTodo,
@@ -29647,6 +29658,7 @@ var { reducer: projects, selectOptimistic: selectOptimistic3 } = optimistron("pr
 });
 
 // usecases/lib/store/projects/selectors.ts
+var { selectOptimistic: selectOptimistic3, selectIsOptimistic: selectIsOptimistic4, selectIsFailed: selectIsFailed4, selectIsConflicting: selectIsConflicting4 } = selectors3;
 var selectOptimisticProjectTodos = (projectId) => createSelector((state) => state.projects, selectOptimistic3((projects2) => {
   const group = projects2.state[projectId];
   return group ? Object.values(group).sort((a, b) => b.createdAt - a.createdAt) : [];
@@ -29654,9 +29666,9 @@ var selectOptimisticProjectTodos = (projectId) => createSelector((state) => stat
 var selectOptimisticProjectTodoState = (projectId, todoId) => {
   const transitionId = `${projectId}/${todoId}`;
   return createSelector((state) => state.projects, (projects2) => ({
-    optimistic: selectIsOptimistic(transitionId)(projects2),
-    failed: selectIsFailed(transitionId)(projects2),
-    conflict: selectIsConflicting(transitionId)(projects2)
+    optimistic: selectIsOptimistic4(transitionId)(projects2),
+    failed: selectIsFailed4(transitionId)(projects2),
+    conflict: selectIsConflicting4(transitionId)(projects2)
   }));
 };
 
@@ -29834,7 +29846,7 @@ var compare4 = (a) => (b) => {
   return -1;
 };
 var eq4 = (a) => (b) => a.done === b.done && a.value === b.value;
-var { reducer: epics, selectOptimistic: selectOptimistic4 } = optimistron("epics", initial3, recordState({ key: "id", compare: compare4, eq: eq4 }), {
+var { reducer: epics, selectors: selectors4 } = optimistron("epics", initial3, recordState({ key: "id", compare: compare4, eq: eq4 }), {
   create: createEpic,
   update: editEpic,
   remove: deleteEpic,
@@ -29850,14 +29862,14 @@ var { reducer: epics, selectOptimistic: selectOptimistic4 } = optimistron("epics
 });
 
 // usecases/lib/store/epics/selectors.ts
+var { selectOptimistic: selectOptimistic4, selectIsOptimistic: selectIsOptimistic5, selectIsFailed: selectIsFailed5, selectIsConflicting: selectIsConflicting5 } = selectors4;
 var selectEpic = (id) => createSelector((state) => state.epics, ({ state }) => state[id]);
 var selectOptimisticEpics = createSelector((state) => state.epics, selectOptimistic4((epics2) => Object.values(epics2.state).sort((a, b) => b.createdAt - a.createdAt)));
 var selectOptimisticEpicState = (id) => createSelector((state) => state.epics, (epics2) => ({
-  optimistic: selectIsOptimistic(id)(epics2),
-  failed: selectIsFailed(id)(epics2),
-  conflict: selectIsConflicting(id)(epics2)
+  optimistic: selectIsOptimistic5(id)(epics2),
+  failed: selectIsFailed5(id)(epics2),
+  conflict: selectIsConflicting5(id)(epics2)
 }));
-var selectAllFailedTransitions2 = createSelector((state) => state.epics, (state) => state.profile, (state) => state.projects, (state) => state.activity, (epics2, profile2, projects2, activity2) => selectAllFailedTransitions(epics2, profile2, projects2, activity2));
 var selectAllTransitions = createSelector((state) => state.epics.transitions, (state) => state.profile.transitions, (state) => state.projects.transitions, (state) => state.activity.transitions, (...lists) => lists.flat());
 
 // usecases/lib/components/graph/TransitionHistoryProvider.tsx
@@ -30640,18 +30652,16 @@ var useMockApi = () => {
 };
 
 // usecases/lib/hooks/useAutoRetry.ts
-var useAutoRetry = (retry) => {
+var useAutoRetry = (onReconnect) => {
   const { online } = useMockApi();
-  const failedTransitions = useSelector(selectAllFailedTransitions2);
-  const retryRef = import_react13.useRef(retry);
-  retryRef.current = retry;
   const wasOnline = import_react13.useRef(online);
+  const onReconnectRef = import_react13.useRef(onReconnect);
+  onReconnectRef.current = onReconnect;
   import_react13.useEffect(() => {
-    if (online && !wasOnline.current) {
-      failedTransitions.forEach((a) => retryRef.current(a));
-    }
+    if (online && !wasOnline.current)
+      onReconnectRef.current();
     wasOnline.current = online;
-  }, [online, failedTransitions]);
+  }, [online]);
 };
 
 // usecases/basic/App.tsx
@@ -30826,7 +30836,8 @@ var App = () => {
       dispatch(dismissActivity.stash(transitionId));
     }
   };
-  useAutoRetry((action) => {
+  const store = useStore();
+  const retryAction = (action) => {
     if (createEpic.stage.match(action))
       return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
@@ -30841,6 +30852,16 @@ var App = () => {
       return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
       return handleEditActivity(action.payload);
+  };
+  useAutoRetry(() => {
+    const state = store.getState();
+    const failed = [
+      ...selectors4.selectFailures(state.epics),
+      ...selectors2.selectFailures(state.profile),
+      ...selectors3.selectFailures(state.projects),
+      ...selectors.selectFailures(state.activity)
+    ];
+    failed.forEach(retryAction);
   });
   return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV(Layout, {
     title: "Basic",
@@ -31103,6 +31124,25 @@ var multicast = function multicast2(ch) {
 var effect = function effect2(eff) {
   return eff && eff[IO];
 };
+
+// node_modules/@redux-saga/delay-p/dist/redux-saga-delay-p.development.esm.js
+var MAX_SIGNED_INT = 2147483647;
+function delayP(ms, val) {
+  if (val === undefined) {
+    val = true;
+  }
+  if (ms > MAX_SIGNED_INT) {
+    throw new Error("delay only supports a maximum value of " + MAX_SIGNED_INT + "ms");
+  }
+  var timeoutId;
+  var promise3 = new Promise(function(resolve) {
+    timeoutId = setTimeout(resolve, Math.min(MAX_SIGNED_INT, ms), val);
+  });
+  promise3[CANCEL] = function() {
+    clearTimeout(timeoutId);
+  };
+  return promise3;
+}
 
 // node_modules/@redux-saga/core/dist/io-e3db6b7a.development.esm.js
 var konst = function konst2(v) {
@@ -31498,6 +31538,20 @@ function getFnCallDescriptor(fnDescriptor, args) {
     args
   };
 }
+var isNotDelayEffect = function isNotDelayEffect2(fn) {
+  return fn !== delay;
+};
+function call(fnDescriptor) {
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1;_key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+  {
+    var arg0 = typeof args[0] === "number" ? args[0] : "ms";
+    check(fnDescriptor, isNotDelayEffect, "instead of writing `yield call(delay, " + arg0 + ")` where delay is an effect from `redux-saga/effects` you should write `yield delay(" + arg0 + ")`");
+    validateFnDescriptor("call", fnDescriptor);
+  }
+  return makeEffect(CALL, getFnCallDescriptor(fnDescriptor, args));
+}
 function fork(fnDescriptor) {
   {
     validateFnDescriptor("fork", fnDescriptor);
@@ -31510,6 +31564,23 @@ function fork(fnDescriptor) {
   }
   return makeEffect(FORK, getFnCallDescriptor(fnDescriptor, args));
 }
+function select(selector) {
+  if (selector === undefined) {
+    selector = identity;
+  }
+  for (var _len5 = arguments.length, args = new Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1;_key5 < _len5; _key5++) {
+    args[_key5 - 1] = arguments[_key5];
+  }
+  if (arguments.length) {
+    check(arguments[0], notUndef, "select(selector, [...]): argument selector is undefined");
+    check(selector, func, "select(selector, [...]): argument " + selector + " is not a function");
+  }
+  return makeEffect(SELECT, {
+    selector,
+    args
+  });
+}
+var delay = /* @__PURE__ */ call.bind(null, delayP);
 // node_modules/@redux-saga/deferred/dist/redux-saga-deferred.esm.js
 function deferred() {
   var def = {};
@@ -32489,107 +32560,6 @@ function sagaMiddlewareFactory(_temp) {
 }
 // usecases/sagas/index.tsx
 var import_react16 = __toESM(require_react(), 1);
-
-// usecases/sagas/App.tsx
-var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
-var description2 = {
-  subtitle: "Redux sagas — lifecycle orchestration decoupled from components.",
-  howItWorks: [
-    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
-      children: [
-        "Component only dispatches ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
-          children: "stage"
-        }, undefined, false, undefined, this),
-        ". No async logic or lifecycle management in the component."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
-      children: [
-        "Saga watcher observes ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
-          children: "stage"
-        }, undefined, false, undefined, this),
-        " via ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
-          className: "text-gray-400 text-[11px]",
-          children: "takeEvery"
-        }, undefined, false, undefined, this),
-        " and orchestrates the full lifecycle to ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(C, {
-          children: "commit"
-        }, undefined, false, undefined, this),
-        " or ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(F, {
-          children: "fail"
-        }, undefined, false, undefined, this),
-        "."
-      ]
-    }, undefined, true, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
-      children: "UI dispatches intent, saga handles orchestration — components only call dispatch."
-    }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
-      children: [
-        "Failed transitions can be edited in-place — a new ",
-        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
-          children: "stage"
-        }, undefined, false, undefined, this),
-        " overwrites the failed one, the saga picks it up automatically."
-      ]
-    }, undefined, true, undefined, this)
-  ]
-};
-var App2 = () => {
-  const dispatch = useDispatch();
-  const handleCreateEpic = (epic) => dispatch(createEpic.stage(epic));
-  const handleEditEpic = (epic) => dispatch(editEpic.stage(epic));
-  const handleDeleteEpic = (epic) => dispatch(deleteEpic.stage({ id: epic.id }));
-  const handleUpdateProfile = (update) => dispatch(updateProfile.stage(update));
-  const handleCreateProjectTodo = (todo) => dispatch(createProjectTodo.stage(todo));
-  const handleEditProjectTodo = (todo) => dispatch(editProjectTodo.stage(todo));
-  const handleDeleteProjectTodo = (todo) => dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
-  const handleLogActivity = (entry) => dispatch(logActivity.stage(entry));
-  const handleEditActivity = (entry) => dispatch(editActivity.stage(entry));
-  const handleDismissActivity = (entry) => dispatch(dismissActivity.stage({ id: entry.id }));
-  useAutoRetry((action) => dispatch(action));
-  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Layout, {
-    title: "Sagas",
-    description: description2,
-    children: [
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProfileCard, {
-        onUpdate: handleUpdateProfile
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "grad-h my-1"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TodoApp, {
-        onCreateTodo: handleCreateEpic,
-        onEditTodo: handleEditEpic,
-        onDeleteTodo: handleDeleteEpic
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "grad-h my-1"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProjectBoard, {
-        onCreateTodo: handleCreateProjectTodo,
-        onEditTodo: handleEditProjectTodo,
-        onDeleteTodo: handleDeleteProjectTodo
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "grad-h my-1"
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ActivityFeed, {
-        onLogActivity: handleLogActivity,
-        onEditActivity: handleEditActivity,
-        onDismissActivity: handleDismissActivity
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
-        className: "h-4"
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
-};
 // node_modules/@redux-saga/core/effects/dist/redux-saga-core-effects.development.esm.js
 var done = function done2(value) {
   return {
@@ -32666,6 +32636,40 @@ function takeEvery$1(patternOrChannel, worker) {
     }
   }, "q1", "takeEvery(" + safeName(patternOrChannel) + ", " + worker.name + ")");
 }
+function takeLeading$1(patternOrChannel, worker) {
+  for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2;_key < _len; _key++) {
+    args[_key - 2] = arguments[_key];
+  }
+  var yTake = {
+    done: false,
+    value: take(patternOrChannel)
+  };
+  var yCall = function yCall2(ac) {
+    return {
+      done: false,
+      value: call.apply(undefined, [worker].concat(args, [ac]))
+    };
+  };
+  var action;
+  var setAction = function setAction2(ac) {
+    return action = ac;
+  };
+  return fsmIterator({
+    q1: function q1() {
+      return {
+        nextState: "q2",
+        effect: yTake,
+        stateUpdater: setAction
+      };
+    },
+    q2: function q2() {
+      return {
+        nextState: "q1",
+        effect: yCall(action)
+      };
+    }
+  }, "q1", "takeLeading(" + safeName(patternOrChannel) + ", " + worker.name + ")");
+}
 var validateTakeEffect = function validateTakeEffect2(fn, patternOrChannel, worker) {
   check(patternOrChannel, notUndef, fn.name + " requires a pattern or channel");
   check(worker, notUndef, fn.name + " requires a saga parameter");
@@ -32679,8 +32683,34 @@ function takeEvery(patternOrChannel, worker) {
   }
   return fork.apply(undefined, [takeEvery$1, patternOrChannel, worker].concat(args));
 }
+function takeLeading(patternOrChannel, worker) {
+  {
+    validateTakeEffect(takeLeading, patternOrChannel, worker);
+  }
+  for (var _len3 = arguments.length, args = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2;_key3 < _len3; _key3++) {
+    args[_key3 - 2] = arguments[_key3];
+  }
+  return fork.apply(undefined, [takeLeading$1, patternOrChannel, worker].concat(args));
+}
 // usecases/sagas/saga.ts
+var retryAll = createAction("optimistron::retryAll");
+function* retryAllFailed() {
+  const epics2 = yield select((s) => s.epics);
+  const profile2 = yield select((s) => s.profile);
+  const projects2 = yield select((s) => s.projects);
+  const activity2 = yield select((s) => s.activity);
+  const failed = [
+    ...selectors4.selectFailures(epics2),
+    ...selectors2.selectFailures(profile2),
+    ...selectors3.selectFailures(projects2),
+    ...selectors.selectFailures(activity2)
+  ];
+  for (const action of failed) {
+    yield put(action);
+  }
+}
 function* rootSaga() {
+  yield takeLeading(retryAll.match, retryAllFailed);
   yield takeEvery(createEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
@@ -32775,6 +32805,107 @@ function* rootSaga() {
     }
   });
 }
+
+// usecases/sagas/App.tsx
+var jsx_dev_runtime15 = __toESM(require_jsx_dev_runtime(), 1);
+var description2 = {
+  subtitle: "Redux sagas — lifecycle orchestration decoupled from components.",
+  howItWorks: [
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
+      children: [
+        "Component only dispatches ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        ". No async logic or lifecycle management in the component."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
+      children: [
+        "Saga watcher observes ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " via ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("code", {
+          className: "text-gray-400 text-[11px]",
+          children: "takeEvery"
+        }, undefined, false, undefined, this),
+        " and orchestrates the full lifecycle to ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(C, {
+          children: "commit"
+        }, undefined, false, undefined, this),
+        " or ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(F, {
+          children: "fail"
+        }, undefined, false, undefined, this),
+        "."
+      ]
+    }, undefined, true, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
+      children: "UI dispatches intent, saga handles orchestration — components only call dispatch."
+    }, undefined, false, undefined, this),
+    /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(jsx_dev_runtime15.Fragment, {
+      children: [
+        "Failed transitions can be edited in-place — a new ",
+        /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(O, {
+          children: "stage"
+        }, undefined, false, undefined, this),
+        " overwrites the failed one, the saga picks it up automatically."
+      ]
+    }, undefined, true, undefined, this)
+  ]
+};
+var App2 = () => {
+  const dispatch = useDispatch();
+  const handleCreateEpic = (epic) => dispatch(createEpic.stage(epic));
+  const handleEditEpic = (epic) => dispatch(editEpic.stage(epic));
+  const handleDeleteEpic = (epic) => dispatch(deleteEpic.stage({ id: epic.id }));
+  const handleUpdateProfile = (update) => dispatch(updateProfile.stage(update));
+  const handleCreateProjectTodo = (todo) => dispatch(createProjectTodo.stage(todo));
+  const handleEditProjectTodo = (todo) => dispatch(editProjectTodo.stage(todo));
+  const handleDeleteProjectTodo = (todo) => dispatch(deleteProjectTodo.stage({ projectId: todo.projectId, id: todo.id }));
+  const handleLogActivity = (entry) => dispatch(logActivity.stage(entry));
+  const handleEditActivity = (entry) => dispatch(editActivity.stage(entry));
+  const handleDismissActivity = (entry) => dispatch(dismissActivity.stage({ id: entry.id }));
+  useAutoRetry(() => dispatch(retryAll()));
+  return /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(Layout, {
+    title: "Sagas",
+    description: description2,
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProfileCard, {
+        onUpdate: handleUpdateProfile
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(TodoApp, {
+        onCreateTodo: handleCreateEpic,
+        onEditTodo: handleEditEpic,
+        onDeleteTodo: handleDeleteEpic
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ProjectBoard, {
+        onCreateTodo: handleCreateProjectTodo,
+        onEditTodo: handleEditProjectTodo,
+        onDeleteTodo: handleDeleteProjectTodo
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "grad-h my-1"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV(ActivityFeed, {
+        onLogActivity: handleLogActivity,
+        onEditActivity: handleEditActivity,
+        onDismissActivity: handleDismissActivity
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime15.jsxDEV("div", {
+        className: "h-4"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+};
 
 // usecases/sagas/index.tsx
 var jsx_dev_runtime16 = __toESM(require_jsx_dev_runtime(), 1);
@@ -32963,7 +33094,8 @@ var App3 = () => {
   const handleLogActivity = async (entry) => dispatch(logActivityThunk(entry));
   const handleEditActivity = async (entry) => dispatch(editActivityThunk(entry));
   const handleDismissActivity = async (entry) => dispatch(dismissActivityThunk(entry));
-  useAutoRetry((action) => {
+  const store3 = useStore();
+  const retryAction = (action) => {
     if (createEpic.stage.match(action))
       return handleCreateEpic(action.payload);
     if (editEpic.stage.match(action))
@@ -32978,6 +33110,16 @@ var App3 = () => {
       return handleLogActivity(action.payload);
     if (editActivity.stage.match(action))
       return handleEditActivity(action.payload);
+  };
+  useAutoRetry(() => {
+    const state = store3.getState();
+    const failed = [
+      ...selectors4.selectFailures(state.epics),
+      ...selectors2.selectFailures(state.profile),
+      ...selectors3.selectFailures(state.projects),
+      ...selectors.selectFailures(state.activity)
+    ];
+    failed.forEach(retryAction);
   });
   return /* @__PURE__ */ jsx_dev_runtime17.jsxDEV(Layout, {
     title: "Thunks",
