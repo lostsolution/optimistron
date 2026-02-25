@@ -16,11 +16,11 @@ import type { ActivityEntry, Epic, Profile, ProjectTodo } from '~usecases/lib/st
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
 const description: UsecaseDescription = {
-    subtitle: 'Redux sagas — the most decoupled approach.',
+    subtitle: 'Redux sagas — lifecycle orchestration decoupled from components.',
     howItWorks: [
-        <>Component only dispatches <O>stage</O> — that's it. No async, no lifecycle awareness.</>,
+        <>Component only dispatches <O>stage</O>. No async logic or lifecycle management in the component.</>,
         <>Saga watcher observes <O>stage</O> via <code className="text-gray-400 text-[11px]">takeEvery</code> and orchestrates the full lifecycle to <C>commit</C> or <F>fail</F>.</>,
-        <>Maximum separation: UI fires intent, saga handles all orchestration — components are pure dispatch.</>,
+        <>UI dispatches intent, saga handles orchestration — components only call dispatch.</>,
         <>Failed transitions can be edited in-place — a new <O>stage</O> overwrites the failed one, the saga picks it up automatically.</>,
     ],
 };

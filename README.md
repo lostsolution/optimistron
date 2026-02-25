@@ -7,21 +7,20 @@
   <a href="https://redux-toolkit.js.org/"><img src="https://img.shields.io/badge/RTK-%5E2.11.2-764ABC?logo=redux&logoColor=white" alt="Redux Toolkit ^2.11.2"/></a>
 </p>
 
-> Optimistic state management for Redux. No state copies, no checkpoints — optimistic state is derived at the selector level, like `git rebase`.
+> Optimistic state management for Redux. Optimistic state is derived at the selector level by replaying transitions on top of committed state, similar to `git rebase`.
 
 ---
 
 ## Why Optimistron?
 
-Most optimistic-update libraries snapshot your entire state tree for every in-flight operation. Optimistron doesn't. It tracks lightweight **transitions** (stage, amend, commit, fail) alongside your reducer state and replays them at read-time through `selectOptimistic` — right where `reselect` memoization already lives.
+Optimistron tracks lightweight **transitions** (stage, amend, commit, fail) alongside your reducer state and replays them at read-time through `selectOptimistic`. No state snapshots or checkpoints are stored per operation.
 
-Good fit for:
+Optimistron was designed around an **event-driven saga architecture** — components dispatch intent via `stage`, and sagas (or listener middleware) orchestrate the transition lifecycle. It can be used with thunks or direct component dispatches, but the separation between intent and orchestration is where it fits most naturally.
+
+Designed for:
 
 - **Offline-first** — transitions queue up while disconnected, conflicts resolve on reconnect
-- **Async dispatch** — thunks, sagas, listener middleware
-- **Large/normalized state** — no per-operation snapshots
-
-> Already happy with RTK Query's built-in optimistic updates? You probably don't need this.
+- **Large/normalized state** — state is derived, not copied
 
 ---
 
@@ -38,7 +37,7 @@ Think of each `optimistron()` reducer as a **git branch**:
 
 `STAGE`, `AMEND`, `FAIL`, `STASH` never touch reducer state — they only modify the transitions list. The optimistic view updates because `selectOptimistic` re-derives on the next read.
 
-No `isLoading` / `error` / `isOptimistic` flags. A pending transition _is_ loading. A failed one _is_ the error. One source of truth.
+There are no separate `isLoading` / `error` / `isOptimistic` flags — a pending transition represents the loading state, and a failed transition carries the error.
 
 ---
 
@@ -165,7 +164,7 @@ const handler = listState<Todo>({ key: 'id', compare, eq });
 const crud = crudPrepare<Todo>('id');
 ```
 
-You can implement the `StateHandler` interface for any shape — the built-ins are just the common cases.
+Custom shapes can implement the `StateHandler` interface directly.
 
 ---
 
@@ -173,7 +172,7 @@ You can implement the `StateHandler` interface for any shape — the built-ins a
 
 The 4th argument to `optimistron()` supports three modes:
 
-**Auto-wired** — zero boilerplate, handler routes payloads:
+**Auto-wired** — handler routes payloads by CRUD type:
 
 ```typescript
 optimistron('todos', initial, handler, {

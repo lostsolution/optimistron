@@ -31,11 +31,11 @@ import {
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
 const description: UsecaseDescription = {
-    subtitle: 'Redux thunks — same lifecycle, cleaner components.',
+    subtitle: 'Redux thunks — lifecycle logic moved from components into thunks.',
     howItWorks: [
-        <>Component dispatches a thunk — no transition management in the component at all.</>,
+        <>Component dispatches a thunk. No transition management in the component.</>,
         <>Each thunk encapsulates the full lifecycle: <O>stage</O> → API → <O>amend</O> → <C>commit</C> / <F>fail</F>.</>,
-        <>Same optimistic behavior as Basic — components only call <code className="text-gray-400 text-[11px]">dispatch(thunk(item))</code>.</>,
+        <>Components only call <code className="text-gray-400 text-[11px]">dispatch(thunk(item))</code>.</>,
         <>Failed transitions can be edited in-place — a new <O>stage</O> overwrites the failed one, restarting the lifecycle.</>,
     ],
 };
