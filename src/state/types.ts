@@ -11,11 +11,11 @@ export type VersioningOptions<T> = {
      * This allows checking for valid updates or conflicts.
      * Return -1 if `a` is "smaller" than `b`
      * Return 0 if `a` equals `b`
-     * Return 1 if `b` is "greater" than `a`*/
-    compare: (a: T) => (b: T) => 0 | 1 | -1;
+     * Return 1 if `b` is "greater" than `a` */
+    compare: (a: T, b: T) => 0 | 1 | -1;
     /** Equality checker - it can potentially be different
      * than comparing. */
-    eq: (a: T) => (b: T) => boolean;
+    eq: (a: T, b: T) => boolean;
 };
 
 /** Type-narrowing action matcher — `.match()` narrows the action's payload.

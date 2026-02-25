@@ -6,13 +6,13 @@ import { createProjectTodo, deleteProjectTodo, editProjectTodo } from '~usecases
 import type { ProjectTodo } from '~usecases/lib/store/types';
 import { generateId } from '~usecases/lib/utils/mock-api';
 
-const compare = (a: ProjectTodo) => (b: ProjectTodo) => {
-    if (a.revision === b.revision) return 0;
-    if (a.revision > b.revision) return 1;
-    return -1;
+const compare = (a: ProjectTodo, b: ProjectTodo) => {
+    if (a.revision === b.revision) return 0 as const;
+    if (a.revision > b.revision) return 1 as const;
+    return -1 as const;
 };
 
-const eq = (a: ProjectTodo) => (b: ProjectTodo) => a.done === b.done && a.value === b.value;
+const eq = (a: ProjectTodo, b: ProjectTodo) => a.done === b.done && a.value === b.value;
 
 const initial = (() => {
     const createdAt = Date.now();

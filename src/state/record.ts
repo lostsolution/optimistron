@@ -34,11 +34,9 @@ export type PathOf<Keys extends readonly string[]> = { [K in Keys[number]]: stri
  * - `compare` and `eq` operate on leaf items of type `T` */
 export const nestedRecordState =
     <T extends Record<string, any>>() =>
-    <const Keys extends readonly [StringKeys<T>, ...StringKeys<T>[]]>({
-        keys,
-        compare,
-        eq,
-    }: NestedRecordStateOptions<T, Keys>): WiredStateHandler<
+    <const Keys extends readonly [StringKeys<T>, ...StringKeys<T>[]]>(
+        options: NestedRecordStateOptions<T, Keys>,
+    ): WiredStateHandler<
         RecursiveRecordState<Keys, T>,
         T,
         UpdateDTO<T, Keys>,
@@ -46,6 +44,8 @@ export const nestedRecordState =
         CrudActionMap<T, UpdateDTO<T, Keys>, DeleteDTO<T, Keys>>
     > => {
         type State = RecursiveRecordState<Keys, T>;
+
+        const { keys, compare, eq } = options;
 
         /** Extracts path IDs from a DTO using the keys tuple */
         const extractPath = (dto: Record<string, any>): string[] => keys.map((k) => String(dto[k]));
@@ -91,11 +91,11 @@ export const nestedRecordState =
                     }
                 } else {
                     /** Leaf level — use compare/eq */
-                    const check = compare(incomingEntry as T)(existingEntry as T);
+                    const check = compare(incomingEntry as T, existingEntry as T);
 
                     if (check === -1) throw OptimisticMergeResult.CONFLICT;
                     if (check === 0) {
-                        if (eq(incomingEntry as T)(existingEntry as T)) continue;
+                        if (eq(incomingEntry as T, existingEntry as T)) continue;
                         else throw OptimisticMergeResult.CONFLICT;
                     }
 

@@ -13,12 +13,12 @@ import type { MaybeNull } from '~/utils/types';
 type Profile = { id: string; name: string; revision: number };
 
 const handler = singularState<Profile>({
-    compare: (a) => (b) => {
+    compare: (a, b) => {
         if (a.revision > b.revision) return 1;
         if (a.revision === b.revision) return 0;
         return -1;
     },
-    eq: (a) => (b) => a.id === b.id && a.name === b.name,
+    eq: (a, b) => a.id === b.id && a.name === b.name,
 });
 
 const create = createTransitions('profile::create')((item: Profile) => ({ payload: item, transitionId: item.id }));

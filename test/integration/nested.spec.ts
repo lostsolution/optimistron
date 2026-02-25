@@ -16,12 +16,12 @@ type State = RecursiveRecordState<['groupId', 'itemId'], Item>;
 
 const handler = nestedRecordState<Item>()({
     keys: ['groupId', 'itemId'],
-    compare: (a) => (b) => {
+    compare: (a, b) => {
         if (a.revision > b.revision) return 1;
         if (a.revision === b.revision) return 0;
         return -1;
     },
-    eq: (a) => (b) => a.value === b.value,
+    eq: (a, b) => a.value === b.value,
 });
 
 const crud = crudPrepare<Item>()(['groupId', 'itemId']);
