@@ -39,7 +39,7 @@ const reducer: HandlerReducer<State, Item, UpdateDTO<Item, Keys>, DeleteDTO<Item
     return getState();
 };
 
-const selectState = ({ state }: TransitionState<State>) => state;
+const selectState = ({ committed }: TransitionState<State>) => committed;
 
 describe('optimistron', () => {
     const initialState: State = {};
@@ -63,7 +63,7 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage without modifying state', () => {
-                expect(state.state).toStrictEqual({});
+                expect(state.committed).toStrictEqual({});
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual({ g1: { i1: item } });
                 expect(selectIsOptimistic('g1/i1')(state)).toBe(true);
@@ -71,27 +71,27 @@ describe('optimistron', () => {
 
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
-                expect(next.state).toEqual({ g1: { i1: item } });
+                expect(next.committed).toEqual({ g1: { i1: item } });
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectIsOptimistic('g1/i1')(next)).toBe(false);
             });
 
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
-                expect(next.state).toStrictEqual({});
+                expect(next.committed).toStrictEqual({});
                 expect(next.transitions).toStrictEqual([]);
             });
 
             test('fail', () => {
                 const next = optimisticReducer(state, fail);
-                expect(next.state).toStrictEqual({});
+                expect(next.committed).toStrictEqual({});
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                 expect(selectIsFailed('g1/i1')(next)).toBe(true);
             });
 
             test('conflict', () => {
                 const next = [commit, conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
-                expect(next.state).toEqual({ g1: { i1: item } });
+                expect(next.committed).toEqual({ g1: { i1: item } });
                 expect(next.transitions).toStrictEqual([updateTransition(conflict, { conflict: true })]);
                 expect(selectIsConflicting('g1/i1')(next)).toBe(true);
             });
@@ -110,20 +110,20 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage update without modifying state', () => {
-                expect(state.state).toEqual(initial.state);
+                expect(state.committed).toEqual(initial.committed);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual({ g1: { i1: updatedItem } });
             });
 
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
-                expect(next.state).toEqual({ g1: { i1: updatedItem } });
+                expect(next.committed).toEqual({ g1: { i1: updatedItem } });
                 expect(next.transitions).toStrictEqual([]);
             });
 
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
-                expect(next.state).toEqual(initial.state);
+                expect(next.committed).toEqual(initial.committed);
                 expect(next.transitions).toStrictEqual([]);
             });
         });
@@ -139,20 +139,20 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage deletion without modifying state', () => {
-                expect(state.state).toEqual(initial.state);
+                expect(state.committed).toEqual(initial.committed);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual({ g1: {} });
             });
 
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
-                expect(next.state).toEqual({ g1: {} });
+                expect(next.committed).toEqual({ g1: {} });
                 expect(next.transitions).toStrictEqual([]);
             });
 
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
-                expect(next.state).toEqual(initial.state);
+                expect(next.committed).toEqual(initial.committed);
                 expect(next.transitions).toStrictEqual([]);
             });
         });

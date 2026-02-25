@@ -89,7 +89,7 @@ export function optimistron<S, C, U, D>(
 
     const optimisticReducer: Reducer<TransitionState<S>> = (transitionState = initial, action) => {
         const nextTransitionState: TransitionState<S> = (() => {
-            const { state, transitions } = transitionState;
+            const { committed, transitions } = transitionState;
             const next = transitionStateFactory(transitionState);
 
             try {
@@ -98,20 +98,20 @@ export function optimistron<S, C, U, D>(
                     const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
 
                     if (operation === Operation.COMMIT) {
-                        const committed = commitTransition(boundReducer, transitionState, transitions, id);
-                        return next(committed !== undefined ? committed : state, nextTransitions);
+                        const result = commitTransition(boundReducer, transitionState, transitions, id);
+                        return next(result !== undefined ? result : committed, nextTransitions);
                     }
 
                     /* Every other transition actions will not be applied.
                      * If you need to get the optimistic state use the provided
                      * selectors which will apply the optimistic transitions */
-                    return next(state, nextTransitions);
+                    return next(committed, nextTransitions);
                 }
 
                 return next(boundReducer(transitionState, action), transitions);
             } catch (error) {
                 warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
-                return next(state, transitions);
+                return next(committed, transitions);
             }
         })();
 

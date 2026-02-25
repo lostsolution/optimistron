@@ -21,7 +21,7 @@ export const createSelectOptimistic =
         try {
             const optimisticState = state.transitions.reduce(
                 (acc, transition) => {
-                    acc.state = boundReducer(acc, toCommit(transition));
+                    acc.committed = boundReducer(acc, toCommit(transition));
                     return acc;
                 },
                 Object.assign({}, state),

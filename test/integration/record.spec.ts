@@ -31,7 +31,7 @@ describe('optimistron', () => {
 
             describe('stage', () => {
                 test('should stage transition without modifying state', () => {
-                    expect(state.state).toStrictEqual(initial.state);
+                    expect(state.committed).toStrictEqual(initial.committed);
                     expect(state.transitions).toStrictEqual([stage]);
                     expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: item });
                     expect(selectIsOptimistic(item.id)(state)).toBe(true);
@@ -42,7 +42,7 @@ describe('optimistron', () => {
                 test('amend', () => {
                     const next = optimisticReducer(state, amend);
 
-                    expect(next.state).toStrictEqual(initial.state);
+                    expect(next.committed).toStrictEqual(initial.committed);
                     expect(next.transitions).toStrictEqual([toStaged(amend)]);
                     expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: amendedItem });
                     expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -53,7 +53,7 @@ describe('optimistron', () => {
                 test('commit', () => {
                     const next = optimisticReducer(state, commit);
 
-                    expect(next.state).toStrictEqual({ [item.id]: item });
+                    expect(next.committed).toStrictEqual({ [item.id]: item });
                     expect(next.transitions).toStrictEqual([]);
                     expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: item });
                     expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -64,7 +64,7 @@ describe('optimistron', () => {
                 test('stash', () => {
                     const next = optimisticReducer(state, stash);
 
-                    expect(next.state).toStrictEqual({});
+                    expect(next.committed).toStrictEqual({});
                     expect(next.transitions).toStrictEqual([]);
                     expect(selectOptimistic(selectState)(next)).toEqual({});
                     expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -75,7 +75,7 @@ describe('optimistron', () => {
                 test('conflict', () => {
                     const next = [commit, conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
 
-                    expect(next.state).toStrictEqual({ [item.id]: item });
+                    expect(next.committed).toStrictEqual({ [item.id]: item });
                     expect(next.transitions).toStrictEqual([updateTransition(conflict, { conflict: true })]);
                     expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: conflictItem });
                     expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -87,7 +87,7 @@ describe('optimistron', () => {
                     const next = optimisticReducer(state, fail);
 
                     test('should flag transition as failed', () => {
-                        expect(next.state).toStrictEqual(initial.state);
+                        expect(next.committed).toStrictEqual(initial.committed);
                         expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                         expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: item });
                         expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -98,7 +98,7 @@ describe('optimistron', () => {
                     test('re-stage', () => {
                         const nextAfterRestage = optimisticReducer(next, stage);
 
-                        expect(nextAfterRestage.state).toStrictEqual(initial.state);
+                        expect(nextAfterRestage.committed).toStrictEqual(initial.committed);
                         expect(nextAfterRestage.transitions.length).toBe(1);
                         expect(selectOptimistic(selectState)(nextAfterRestage)).toStrictEqual({ [item.id]: item });
                         expect(selectIsOptimistic(item.id)(nextAfterRestage)).toBe(true);
@@ -109,7 +109,7 @@ describe('optimistron', () => {
                     test('amend', () => {
                         const nextAfterAmend = optimisticReducer(next, amend);
 
-                        expect(nextAfterAmend.state).toStrictEqual(initial.state);
+                        expect(nextAfterAmend.committed).toStrictEqual(initial.committed);
                         expect(nextAfterAmend.transitions.length).toBe(1);
                         expect(getTransitionMeta(nextAfterAmend.transitions[0]).failed).toBe(true);
                         expect(selectOptimistic(selectState)(nextAfterAmend)).toStrictEqual({ [item.id]: amendedItem });
@@ -121,7 +121,7 @@ describe('optimistron', () => {
                     test('stash', () => {
                         const nextAfterStash = optimisticReducer(next, stash);
 
-                        expect(nextAfterStash.state).toStrictEqual({});
+                        expect(nextAfterStash.committed).toStrictEqual({});
                         expect(nextAfterStash.transitions).toStrictEqual([]);
                         expect(selectOptimistic(selectState)(nextAfterStash)).toEqual({});
                         expect(selectIsOptimistic(item.id)(nextAfterStash)).toBe(false);
@@ -132,7 +132,7 @@ describe('optimistron', () => {
                     test('commit', () => {
                         const nextAfterCommit = optimisticReducer(state, commit);
 
-                        expect(nextAfterCommit.state).toStrictEqual({ [item.id]: item });
+                        expect(nextAfterCommit.committed).toStrictEqual({ [item.id]: item });
                         expect(nextAfterCommit.transitions).toStrictEqual([]);
                         expect(selectOptimistic(selectState)(nextAfterCommit)).toEqual({ [item.id]: item });
                         expect(selectIsOptimistic(item.id)(nextAfterCommit)).toBe(false);
@@ -149,7 +149,7 @@ describe('optimistron', () => {
         const initial = buildTransitionState(<TestIndexedState>{}, []);
         const state = optimisticReducer(initial, throwAction);
 
-        expect(state.state).toStrictEqual(initial.state);
+        expect(state.committed).toStrictEqual(initial.committed);
         expect(state.transitions).toStrictEqual([]);
         expect(warn).toHaveBeenCalledTimes(1);
         warn.mockRestore();
@@ -168,7 +168,7 @@ describe('optimistron', () => {
 
         describe('stage', () => {
             test('should stage transition without modifying state', () => {
-                expect(state.state).toStrictEqual(initial.state);
+                expect(state.committed).toStrictEqual(initial.committed);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual({});
                 expect(selectIsOptimistic(item.id)(state)).toBe(true);
@@ -179,7 +179,7 @@ describe('optimistron', () => {
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
 
-                expect(next.state).toStrictEqual({});
+                expect(next.committed).toStrictEqual({});
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual({});
                 expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -190,7 +190,7 @@ describe('optimistron', () => {
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
 
-                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.committed).toStrictEqual({ [item.id]: item });
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: item });
                 expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -201,7 +201,7 @@ describe('optimistron', () => {
             test('fail', () => {
                 const next = optimisticReducer(state, fail);
 
-                expect(next.state).toStrictEqual(initial.state);
+                expect(next.committed).toStrictEqual(initial.committed);
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual({});
                 expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -215,7 +215,7 @@ describe('optimistron', () => {
                  * delete replays as a noop (item gone) and gets discarded. */
                 const next = optimisticReducer(state, sync({}));
 
-                expect(next.state).toStrictEqual({});
+                expect(next.committed).toStrictEqual({});
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual({});
                 expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -241,7 +241,7 @@ describe('optimistron', () => {
 
         describe('stage', () => {
             test('should stage transition without modifying state', () => {
-                expect(state.state).toStrictEqual(initial.state);
+                expect(state.committed).toStrictEqual(initial.committed);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: updatedItem });
                 expect(selectIsOptimistic(item.id)(state)).toBe(true);
@@ -252,7 +252,7 @@ describe('optimistron', () => {
             test('amend', () => {
                 const next = optimisticReducer(state, amend);
 
-                expect(next.state).toStrictEqual(initial.state);
+                expect(next.committed).toStrictEqual(initial.committed);
                 expect(next.transitions).toStrictEqual([toStaged(amend)]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: amendedItem });
                 expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -263,7 +263,7 @@ describe('optimistron', () => {
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
 
-                expect(next.state).toStrictEqual({ [item.id]: updatedItem });
+                expect(next.committed).toStrictEqual({ [item.id]: updatedItem });
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: updatedItem });
                 expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -274,7 +274,7 @@ describe('optimistron', () => {
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
 
-                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.committed).toStrictEqual({ [item.id]: item });
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: item });
                 expect(selectIsOptimistic(item.id)(next)).toBe(false);
@@ -285,7 +285,7 @@ describe('optimistron', () => {
             test('fail', () => {
                 const next = optimisticReducer(state, fail);
 
-                expect(next.state).toStrictEqual(initial.state);
+                expect(next.committed).toStrictEqual(initial.committed);
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: updatedItem });
                 expect(selectIsOptimistic(item.id)(next)).toBe(true);
@@ -296,7 +296,7 @@ describe('optimistron', () => {
             test('conflict', () => {
                 const next = [conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
 
-                expect(next.state).toStrictEqual({ [item.id]: item });
+                expect(next.committed).toStrictEqual({ [item.id]: item });
                 expect(next.transitions).toStrictEqual([updateTransition(conflict, { failed: false, conflict: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: conflictItem });
                 expect(selectIsOptimistic(item.id)(next)).toBe(true);

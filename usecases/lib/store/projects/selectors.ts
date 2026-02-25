@@ -9,7 +9,7 @@ export const selectOptimisticProjectTodos = (projectId: string) =>
     createSelector(
         (state: State) => state.projects,
         selectOptimistic((projects): ProjectTodo[] => {
-            const group = projects.state[projectId];
+            const group = projects.committed[projectId];
             return group ? Object.values(group).sort((a, b) => b.createdAt - a.createdAt) : [];
         }),
     );

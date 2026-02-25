@@ -25,7 +25,7 @@ export const remove = createTransitions('test::remove')((dto: Pick<TestItem, 'id
 export const sync = (items: TestIndexedState) => ({ type: 'sync', payload: { items } });
 export const throwAction = { type: 'throw ' };
 
-export const selectState = ({ state }: TransitionState<TestIndexedState>) => state;
+export const selectState = ({ committed }: TransitionState<TestIndexedState>) => committed;
 
 export const indexedState = recordState<TestItem>({
     key: 'id',
@@ -48,6 +48,6 @@ export const reducer: HandlerReducer<TestIndexedState, TestItem, Partial<TestIte
 };
 
 export const createIndexedState = (transitions: StagedAction[] = []): TransitionState<TestIndexedState> => ({
-    state: {},
+    committed: {},
     transitions,
 });

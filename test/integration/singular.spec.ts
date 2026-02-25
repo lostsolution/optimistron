@@ -34,7 +34,7 @@ const reducer: HandlerReducer<MaybeNull<Profile>, Profile, Partial<Profile>, voi
     return getState();
 };
 
-const selectState = ({ state }: TransitionState<MaybeNull<Profile>>) => state;
+const selectState = ({ committed }: TransitionState<MaybeNull<Profile>>) => committed;
 
 describe('optimistron', () => {
     const {
@@ -59,7 +59,7 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage without modifying state', () => {
-                expect(state.state).toBeNull();
+                expect(state.committed).toBeNull();
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual(item);
                 expect(selectIsOptimistic('1')(state)).toBe(true);
@@ -70,7 +70,7 @@ describe('optimistron', () => {
             test('amend', () => {
                 const next = optimisticReducer(state, amend);
 
-                expect(next.state).toBeNull();
+                expect(next.committed).toBeNull();
                 expect(next.transitions).toStrictEqual([toStaged(amend)]);
                 expect(selectOptimistic(selectState)(next)).toEqual(amendedItem);
             });
@@ -78,7 +78,7 @@ describe('optimistron', () => {
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
 
-                expect(next.state).toEqual(item);
+                expect(next.committed).toEqual(item);
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual(item);
                 expect(selectIsOptimistic('1')(next)).toBe(false);
@@ -87,7 +87,7 @@ describe('optimistron', () => {
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
 
-                expect(next.state).toBeNull();
+                expect(next.committed).toBeNull();
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toBeNull();
             });
@@ -95,7 +95,7 @@ describe('optimistron', () => {
             test('conflict', () => {
                 const next = [commit, conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
 
-                expect(next.state).toEqual(item);
+                expect(next.committed).toEqual(item);
                 expect(next.transitions).toStrictEqual([updateTransition(conflict, { conflict: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual(conflictItem);
                 expect(selectIsConflicting('1')(next)).toBe(true);
@@ -104,7 +104,7 @@ describe('optimistron', () => {
             test('fail', () => {
                 const next = optimisticReducer(state, fail);
 
-                expect(next.state).toBeNull();
+                expect(next.committed).toBeNull();
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual(item);
                 expect(selectIsFailed('1')(next)).toBe(true);
@@ -122,7 +122,7 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage deletion without modifying state', () => {
-                expect(state.state).toEqual(item);
+                expect(state.committed).toEqual(item);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toBeNull();
                 expect(selectIsOptimistic('profile')(state)).toBe(true);
@@ -131,7 +131,7 @@ describe('optimistron', () => {
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
 
-                expect(next.state).toBeNull();
+                expect(next.committed).toBeNull();
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toBeNull();
             });
@@ -139,7 +139,7 @@ describe('optimistron', () => {
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
 
-                expect(next.state).toEqual(item);
+                expect(next.committed).toEqual(item);
                 expect(next.transitions).toStrictEqual([]);
                 expect(selectOptimistic(selectState)(next)).toEqual(item);
             });
@@ -147,7 +147,7 @@ describe('optimistron', () => {
             test('noop: delete already null', () => {
                 const next = optimisticReducer(state, sync(null));
 
-                expect(next.state).toBeNull();
+                expect(next.committed).toBeNull();
                 expect(next.transitions).toStrictEqual([]);
             });
         });
@@ -166,7 +166,7 @@ describe('optimistron', () => {
             const state = optimisticReducer(initial, stage);
 
             test('stage: should stage update without modifying state', () => {
-                expect(state.state).toEqual(item);
+                expect(state.committed).toEqual(item);
                 expect(state.transitions).toStrictEqual([stage]);
                 expect(selectOptimistic(selectState)(state)).toEqual(updatedItem);
                 expect(selectIsOptimistic('profile')(state)).toBe(true);
@@ -175,21 +175,21 @@ describe('optimistron', () => {
             test('commit', () => {
                 const next = optimisticReducer(state, commit);
 
-                expect(next.state).toEqual(updatedItem);
+                expect(next.committed).toEqual(updatedItem);
                 expect(next.transitions).toStrictEqual([]);
             });
 
             test('stash', () => {
                 const next = optimisticReducer(state, stash);
 
-                expect(next.state).toEqual(item);
+                expect(next.committed).toEqual(item);
                 expect(next.transitions).toStrictEqual([]);
             });
 
             test('fail', () => {
                 const next = optimisticReducer(state, fail);
 
-                expect(next.state).toEqual(item);
+                expect(next.committed).toEqual(item);
                 expect(next.transitions).toStrictEqual([updateTransition(stage, { failed: true })]);
                 expect(selectIsFailed('profile')(next)).toBe(true);
             });

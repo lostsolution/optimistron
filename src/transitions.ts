@@ -191,7 +191,7 @@ export const sanitizeTransitions =
                     else {
                         /* if the action did have an effect on state without throwing any
                          * merge errors then it is considered valid */
-                        acc.transitionState.state = bindState(acc.transitionState.state).merge(nextState);
+                        acc.transitionState.committed = bindState(acc.transitionState.committed).merge(nextState);
                         acc.transitions.push(action);
                     }
                 } catch (mergeError: unknown) {

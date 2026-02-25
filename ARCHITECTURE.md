@@ -267,7 +267,7 @@ src/
 Key implementation details:
 
 - **`TransitionState<T>`** wraps user state with a non-enumerable `transitions` list (via `Object.defineProperties` — hidden from serializers and spreads)
-- **`transitionStateFactory`** returns the previous state object when both `state` and `transitions` are referentially equal (preserves memoization)
+- **`transitionStateFactory`** returns the previous state object when both `committed` and `transitions` are referentially equal (preserves memoization)
 - **`selectors`** are returned as a grouped object from `optimistron()` — no standalone exports, each slice is self-contained
 - **Action types** use `namespace::operation` format, matching uses `startsWith`
 
@@ -312,7 +312,7 @@ const { selectors } = optimistron('todos', initial, handler, config);
 
 const selectTodos = createSelector(
   (state: RootState) => state.todos,
-  selectors.selectOptimistic((todos) => Object.values(todos.state)),
+  selectors.selectOptimistic((todos) => Object.values(todos.committed)),
 );
 ```
 
