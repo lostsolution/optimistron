@@ -1,19 +1,16 @@
 /**
- * Internal selector factory — not part of the public API.
+ * Internal selectors — not part of the public API.
  *
- * `createSelectOptimistic` is closed over the `boundReducer` from `optimistron()`.
- * It's not useful as a standalone export since consumers need the factory-produced
- * instance. The `optimistron()` factory calls this and returns the result as
- * `selectOptimistic`.
- */
+ * Consumers access these via the `optimistron()` result object. */
 
 import { warn } from '~utils/logger';
 import type { BoundReducer } from '~/reducer';
 import type { TransitionState } from '~/state/types';
-import { toCommit } from '~/transitions';
+import type { StagedAction } from '~/transitions';
+import { getTransitionMeta, toCommit } from '~/transitions';
+import type { Maybe } from '~/utils/types';
 
-/** Creates a `selectOptimistic` selector closed over the bound reducer.
- * Used internally by `optimistron()` — not part of the public API. */
+/** Creates a `selectOptimistic` selector closed over the bound reducer. */
 export const createSelectOptimistic =
     <State>(boundReducer: BoundReducer<State>, namespace: string) =>
     <Slice>(selector: (state: TransitionState<State>) => Slice) =>
@@ -36,3 +33,43 @@ export const createSelectOptimistic =
             return selector(state);
         }
     };
+
+/** Returns all failed transitions from the transitions list */
+export const selectFailures = <State>({ transitions }: TransitionState<State>): StagedAction[] =>
+    transitions.filter((action) => getTransitionMeta(action).failed);
+
+/** Returns a specific failed transition by ID, or `undefined` if not found */
+export const selectFailure =
+    (transitionId: string) =>
+    <State>({ transitions }: TransitionState<State>): Maybe<StagedAction> =>
+        transitions.find((action) => {
+            const { id, failed } = getTransitionMeta(action);
+            return id === transitionId && failed;
+        });
+
+/** Returns a specific conflicting transition by ID, or `undefined` if not found */
+export const selectConflict =
+    (transitionId: string) =>
+    <State>({ transitions }: TransitionState<State>): Maybe<StagedAction> =>
+        transitions.find((action) => {
+            const { id, conflict } = getTransitionMeta(action);
+            return id === transitionId && conflict;
+        });
+
+/** Returns `true` if there is a pending transition for the given ID */
+export const selectIsOptimistic =
+    (transitionId: string) =>
+    <State>({ transitions }: TransitionState<State>): boolean =>
+        transitions.some((action) => getTransitionMeta(action).id === transitionId);
+
+/** Returns `true` if the transition with the given ID has failed */
+export const selectIsFailed =
+    (transitionId: string) =>
+    <State>(state: TransitionState<State>): boolean =>
+        selectFailure(transitionId)(state) !== undefined;
+
+/** Returns `true` if the transition with the given ID has conflicted with committed state */
+export const selectIsConflicting =
+    (transitionId: string) =>
+    <State>(state: TransitionState<State>): boolean =>
+        selectConflict(transitionId)(state) !== undefined;

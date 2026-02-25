@@ -1,14 +1,17 @@
 import { describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { optimistron } from '~optimistron';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/internal';
 import { buildTransitionState } from '~state/factory';
 import type { TestIndexedState } from '~test/utils';
 import { create, createItem, edit, indexedState, reducer, remove, selectState, sync, throwAction } from '~test/utils';
 import { getTransitionMeta, toStaged, updateTransition } from '~transitions';
 
 describe('optimistron', () => {
-    const { reducer: optimisticReducer, selectOptimistic } = optimistron('test', {}, indexedState, reducer);
+    const {
+        reducer: optimisticReducer,
+        selectors: { selectOptimistic },
+    } = optimistron('test', {}, indexedState, reducer);
 
     describe('recordState', () => {
         describe('create', () => {
@@ -294,7 +297,7 @@ describe('optimistron', () => {
                 const next = [conflict].reduce((prev, action) => optimisticReducer(prev, action), state);
 
                 expect(next.state).toStrictEqual({ [item.id]: item });
-                expect(next.transitions).toStrictEqual([updateTransition(conflict, { conflict: true })]);
+                expect(next.transitions).toStrictEqual([updateTransition(conflict, { failed: false, conflict: true })]);
                 expect(selectOptimistic(selectState)(next)).toEqual({ [item.id]: conflictItem });
                 expect(selectIsOptimistic(item.id)(next)).toBe(true);
                 expect(selectIsFailed(item.id)(next)).toBe(false);

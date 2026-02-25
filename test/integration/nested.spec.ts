@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { createTransitions, crudPrepare } from '~actions';
 import { optimistron } from '~optimistron';
 import type { HandlerReducer } from '~reducer';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/internal';
 import { buildTransitionState } from '~state/factory';
 import type { TransitionState } from '~state/types';
 import { nestedRecordState } from '~state/record';
@@ -43,7 +43,10 @@ const selectState = ({ state }: TransitionState<State>) => state;
 
 describe('optimistron', () => {
     const initialState: State = {};
-    const { reducer: optimisticReducer, selectOptimistic } = optimistron('nested', initialState, handler, reducer);
+    const {
+        reducer: optimisticReducer,
+        selectors: { selectOptimistic },
+    } = optimistron('nested', initialState, handler, reducer);
 
     describe('nestedRecordState', () => {
         describe('create', () => {

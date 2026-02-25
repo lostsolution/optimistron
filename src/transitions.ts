@@ -100,6 +100,10 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
             /** New transition: append without intermediate copy */
             if (matchIdx === -1) return [...transitions, stage];
 
+            /** Re-staging clears failure/conflict flags from the incoming action.
+             * Amend preserves them — it inherits the existing transition's meta. */
+            const replaced = operation === Operation.STAGE ? updateTransition(stage, { failed: false, conflict: false }) : stage;
+
             /** Existing transition: copy and replace in-place */
             const nextTransitions = [...transitions];
             const existingMeta = getTransitionMeta(existing);
@@ -108,8 +112,8 @@ export const processTransition = (transition: TransitionAction, transitions: Sta
             /* REVERTIBLE mode stores the previous transition as a trailing transition.
              * This enables reversion to the previous state when stashing. */
             if (mode === TransitionMode.REVERTIBLE) {
-                nextTransitions[matchIdx] = updateTransition(stage, { trailing });
-            } else nextTransitions[matchIdx] = stage;
+                nextTransitions[matchIdx] = updateTransition(replaced, { trailing });
+            } else nextTransitions[matchIdx] = replaced;
 
             return nextTransitions;
         }

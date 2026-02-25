@@ -1,7 +1,15 @@
 import type { Action, Reducer } from 'redux';
 
 import { bindReducer, resolveReducer, type BoundReducer, type HandlerReducer, type ReducerConfig } from './reducer';
-import { createSelectOptimistic } from './selectors/internal';
+import {
+    createSelectOptimistic,
+    selectConflict,
+    selectFailure,
+    selectFailures,
+    selectIsConflicting,
+    selectIsFailed,
+    selectIsOptimistic,
+} from './selectors/internal';
 import { bindStateFactory, buildTransitionState, transitionStateFactory } from './state/factory';
 import type { StateHandler, TransitionState, WiredStateHandler } from './state/types';
 import {
@@ -25,9 +33,19 @@ const commitTransition = <S>(boundReducer: BoundReducer<S>, transitionState: Tra
     return boundReducer(transitionState, toCommit(staged));
 };
 
+type OptimistronSelectors<S> = {
+    selectOptimistic: ReturnType<typeof createSelectOptimistic<S>>;
+    selectFailures: (state: TransitionState<S>) => StagedAction[];
+    selectFailure: (transitionId: string) => (state: TransitionState<S>) => Maybe<StagedAction>;
+    selectConflict: (transitionId: string) => (state: TransitionState<S>) => Maybe<StagedAction>;
+    selectIsOptimistic: (transitionId: string) => (state: TransitionState<S>) => boolean;
+    selectIsFailed: (transitionId: string) => (state: TransitionState<S>) => boolean;
+    selectIsConflicting: (transitionId: string) => (state: TransitionState<S>) => boolean;
+};
+
 type OptimistronResult<S> = {
     reducer: Reducer<TransitionState<S>>;
-    selectOptimistic: ReturnType<typeof createSelectOptimistic<S>>;
+    selectors: OptimistronSelectors<S>;
 };
 
 type OptimistronOptions = {
@@ -107,5 +125,16 @@ export function optimistron<S, C, U, D>(
         return nextTransitionState;
     };
 
-    return { reducer: optimisticReducer, selectOptimistic };
+    return {
+        reducer: optimisticReducer,
+        selectors: {
+            selectOptimistic,
+            selectFailures,
+            selectFailure,
+            selectConflict,
+            selectIsOptimistic,
+            selectIsFailed,
+            selectIsConflicting,
+        },
+    };
 }

@@ -8,10 +8,11 @@ import { TransitionMode, getTransitionMeta, toCommit } from '~transitions';
 describe('optimistron', () => {
     const item = createItem();
 
-    test('should return reducer and selectOptimistic', () => {
+    test('should return reducer and selectors', () => {
         const result = optimistron('test', {}, indexedState, reducer);
         expect(result.reducer).toBeFunction();
-        expect(result.selectOptimistic).toBeFunction();
+        expect(result.selectors).toBeObject();
+        expect(result.selectors.selectOptimistic).toBeFunction();
     });
 
     test('should throw if namespace is empty', () => {

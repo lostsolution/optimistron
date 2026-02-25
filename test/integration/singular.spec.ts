@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { createTransitions } from '~actions';
 import { optimistron } from '~optimistron';
 import type { HandlerReducer } from '~reducer';
-import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/selectors';
+import { selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/internal';
 import { buildTransitionState } from '~state/factory';
 import type { TransitionState } from '~state/types';
 import { singularState } from '~state/singular';
@@ -37,7 +37,10 @@ const reducer: HandlerReducer<MaybeNull<Profile>, Profile, Partial<Profile>, voi
 const selectState = ({ state }: TransitionState<MaybeNull<Profile>>) => state;
 
 describe('optimistron', () => {
-    const { reducer: optimisticReducer, selectOptimistic } = optimistron('profile', null, handler, reducer);
+    const {
+        reducer: optimisticReducer,
+        selectors: { selectOptimistic },
+    } = optimistron('profile', null, handler, reducer);
 
     describe('singularState', () => {
         describe('create', () => {

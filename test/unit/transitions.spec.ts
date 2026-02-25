@@ -35,7 +35,7 @@ describe('processTransition', () => {
             const processed = applyTransitions(existing, stage);
 
             expect(processed.length).toEqual(1);
-            expect(processed[0]).toEqual(stage);
+            expect(processed[0]).toEqual(updateTransition(stage, { failed: false, conflict: false }));
         });
 
         test('should keep trailing transition', () => {
@@ -117,6 +117,16 @@ describe('processTransition', () => {
             const processed = applyTransitions(stage, fail);
 
             expect(processed).toEqual([stage]);
+        });
+
+        test('should clear failed flag when re-staging a failed transition', () => {
+            const stage = transition.stage(TestTransitionID, 1);
+            const fail = transition.fail(TestTransitionID, new Error());
+            const processed = applyTransitions(stage, fail, stage);
+
+            expect(processed.length).toEqual(1);
+            expect(getTransitionMeta(processed[0]).failed).toBe(false);
+            expect(getTransitionMeta(processed[0]).conflict).toBe(false);
         });
     });
 

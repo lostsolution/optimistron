@@ -1,14 +1,6 @@
 import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 import { optimistron } from '~optimistron';
-import {
-    selectAllFailedTransitions,
-    selectConflictingTransition,
-    selectFailedTransition,
-    selectFailedTransitions,
-    selectIsConflicting,
-    selectIsFailed,
-    selectIsOptimistic,
-} from '~selectors/selectors';
+import { selectConflict, selectFailure, selectFailures, selectIsConflicting, selectIsFailed, selectIsOptimistic } from '~selectors/internal';
 import { create, createIndexedState, createItem, indexedState, reducer, selectState } from '~test/utils';
 import { updateTransition } from '~transitions';
 
@@ -22,53 +14,52 @@ describe('selectors', () => {
         afterAll(() => warn.mockRestore());
 
         test('should fast-path when no transitions', () => {
-            const { selectOptimistic } = optimistron('test', {}, indexedState, reducer);
+            const { selectors } = optimistron('test', {}, indexedState, reducer);
             const emptyState = createIndexedState();
-            expect(selectOptimistic(() => 1337)(emptyState)).toEqual(1337);
+            expect(selectors.selectOptimistic(() => 1337)(emptyState)).toEqual(1337);
         });
 
         test('should apply transitions as if committed and run selector', () => {
-            const { selectOptimistic } = optimistron('test', {}, indexedState, reducer);
-            expect(selectOptimistic(selectState)(state)).toEqual({ [item.id]: item });
+            const { selectors } = optimistron('test', {}, indexedState, reducer);
+            expect(selectors.selectOptimistic(selectState)(state)).toEqual({ [item.id]: item });
         });
 
         test('should warn and return committed state on replay error', () => {
-            const { selectOptimistic } = optimistron('test', {}, indexedState, () => {
+            const { selectors } = optimistron('test', {}, indexedState, () => {
                 throw new Error('replay error');
             });
 
             const errorState = createIndexedState([stage]);
 
             warn.mockClear();
-            expect(selectOptimistic(selectState)(errorState)).toEqual(errorState.state);
+            expect(selectors.selectOptimistic(selectState)(errorState)).toEqual(errorState.state);
             expect(warn).toHaveBeenCalledTimes(1);
         });
     });
 
-    describe('selectFailedTransitions', () => {
+    describe('selectFailures', () => {
         const failed = updateTransition(stage, { failed: true });
         const state = createIndexedState([stage, failed]);
 
-        test('should return transitions flagged as `failed`', () => expect(selectFailedTransitions(state)).toEqual([failed]));
+        test('should return transitions flagged as `failed`', () => expect(selectFailures(state)).toEqual([failed]));
     });
 
-    describe('selectFailedTransition', () => {
+    describe('selectFailure', () => {
         const failed = updateTransition(stage, { failed: true });
         const state = createIndexedState([failed]);
 
-        test('should return transition flagged as `failed` for `transitionId`', () => expect(selectFailedTransition(item.id)(state)).toEqual(failed));
+        test('should return transition flagged as `failed` for `transitionId`', () => expect(selectFailure(item.id)(state)).toEqual(failed));
 
-        test('should return empty if no failed transitions matching `transitionId`', () => expect(selectFailedTransition('unknown')(state)).toBeUndefined());
+        test('should return empty if no failed transitions matching `transitionId`', () => expect(selectFailure('unknown')(state)).toBeUndefined());
     });
 
-    describe('selectConflictingTransition', () => {
+    describe('selectConflict', () => {
         const conflict = updateTransition(stage, { conflict: true });
         const state = createIndexedState([conflict]);
 
-        test('should return transitions flagged as `conflict` for `transitionId`', () => expect(selectConflictingTransition(item.id)(state)).toEqual(conflict));
+        test('should return transitions flagged as `conflict` for `transitionId`', () => expect(selectConflict(item.id)(state)).toEqual(conflict));
 
-        test('should return empty if no conflicting transitions matching `transitionId`', () =>
-            expect(selectConflictingTransition('unknown')(state)).toBeUndefined());
+        test('should return empty if no conflicting transitions matching `transitionId`', () => expect(selectConflict('unknown')(state)).toBeUndefined());
     });
 
     describe('selectIsOptimistic', () => {
@@ -109,25 +100,6 @@ describe('selectors', () => {
         test('should return `false` if not', () => {
             expect(selectIsConflicting('unknown')(conflictingState)).toEqual(false);
             expect(selectIsConflicting(item.id)(state)).toEqual(false);
-        });
-    });
-
-    describe('selectAllFailedTransitions', () => {
-        const failed = updateTransition(stage, { failed: true });
-        const stateA = createIndexedState([stage, failed]);
-        const stateB = createIndexedState([failed]);
-        const stateC = createIndexedState([stage]);
-
-        test('should aggregate failed transitions from multiple states', () => {
-            expect(selectAllFailedTransitions(stateA, stateB, stateC)).toEqual([failed, failed]);
-        });
-
-        test('should return empty array when no failed transitions', () => {
-            expect(selectAllFailedTransitions(stateC)).toEqual([]);
-        });
-
-        test('should handle zero states', () => {
-            expect(selectAllFailedTransitions()).toEqual([]);
         });
     });
 });
