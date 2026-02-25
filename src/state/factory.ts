@@ -12,7 +12,7 @@ export const bindStateFactory =
     });
 
 export const buildTransitionState = <S>(state: S, transitions: TransitionAction[]): TransitionState<S> => {
-    const transitionState = { state } as TransitionState<S>;
+    const transitionState = { committed: state } as TransitionState<S>;
 
     /* make transitions non-enumerable to avoid consumers
      * from unintentionally accessing them when iterating */
@@ -30,6 +30,6 @@ export const buildTransitionState = <S>(state: S, transitions: TransitionAction[
 export const transitionStateFactory =
     <S>(prev: TransitionState<S>) =>
     (state: S, transitions: TransitionAction[]): TransitionState<S> => {
-        if (state === prev.state && transitions === prev.transitions) return prev;
+        if (state === prev.committed && transitions === prev.transitions) return prev;
         return buildTransitionState(state, transitions);
     };

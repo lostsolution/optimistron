@@ -24,13 +24,13 @@ describe('bindReducer', () => {
         boundReducer(transitionState, action);
 
         expect(innerReducer).toHaveBeenCalledTimes(1);
-        expect(innerReducer.mock.calls[0][0]).toMatchObject(bindState(transitionState.state));
+        expect(innerReducer.mock.calls[0][0]).toMatchObject(bindState(transitionState.committed));
         expect(innerReducer.mock.calls[0][1]).toEqual(action);
     });
 
     describe('bound reducer', () => {
         test('should return the unwrapped next transition state', () => {
-            expect(boundReducer(transitionState, action)).toEqual(transitionState.state);
+            expect(boundReducer(transitionState, action)).toEqual(transitionState.committed);
         });
 
         test('should propagate reducer errors', () => {

@@ -2,7 +2,7 @@ import type { StagedAction } from '~/transitions';
 import type { Maybe } from '~/utils/types';
 
 export type TransitionState<T> = {
-    state: T;
+    committed: T;
     transitions: StagedAction[];
 };
 

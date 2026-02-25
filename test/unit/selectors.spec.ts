@@ -32,7 +32,7 @@ describe('selectors', () => {
             const errorState = createIndexedState([stage]);
 
             warn.mockClear();
-            expect(selectors.selectOptimistic(selectState)(errorState)).toEqual(errorState.state);
+            expect(selectors.selectOptimistic(selectState)(errorState)).toEqual(errorState.committed);
             expect(warn).toHaveBeenCalledTimes(1);
         });
     });
@@ -69,7 +69,7 @@ describe('selectors', () => {
 
         test('should return `false` if not', () => {
             const committedState = createIndexedState();
-            committedState.state = { [item.id]: item };
+            committedState.committed = { [item.id]: item };
 
             expect(selectIsOptimistic(item.id)(createIndexedState())).toEqual(false);
             expect(selectIsOptimistic(item.id)(committedState)).toEqual(false);

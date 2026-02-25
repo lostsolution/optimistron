@@ -43,4 +43,4 @@ export const resolveReducer = <S, C, U, D>(handler: StateHandler<S, C, U, D>, co
 export const bindReducer =
     <S, C, U, D>(reducer: HandlerReducer<S, C, U, D>, bindState: (state: S) => BoundStateHandler<S, C, U, D>): BoundReducer<S> =>
     (transitionState, action) =>
-        reducer(bindState(transitionState.state), action);
+        reducer(bindState(transitionState.committed), action);

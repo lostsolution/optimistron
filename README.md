@@ -93,7 +93,7 @@ const store = configureStore({ reducer: { todos } });
 // 6. Select optimistic state (memoize with createSelector)
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
-    selectors.selectOptimistic((todos) => Object.values(todos.state)),
+    selectors.selectOptimistic((todos) => Object.values(todos.committed)),
 );
 
 // 7. Dispatch transitions
@@ -231,7 +231,7 @@ const { selectors } = optimistron('todos', initial, handler, config);
 
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
-    selectors.selectOptimistic((todos) => Object.values(todos.state)),
+    selectors.selectOptimistic((todos) => Object.values(todos.committed)),
 );
 ```
 

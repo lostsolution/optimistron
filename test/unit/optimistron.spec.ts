@@ -85,7 +85,7 @@ describe('optimistron', () => {
             const afterFail = optimisticReducer(afterStage, fail);
 
             expect(afterFail.transitions).toEqual([]);
-            expect(afterFail.state).toStrictEqual(initial.state);
+            expect(afterFail.committed).toStrictEqual(initial.committed);
         });
     });
 

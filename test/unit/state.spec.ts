@@ -48,7 +48,7 @@ describe('state', () => {
         test('should build transition state with non-enumerable transitions', () => {
             const result = buildTransitionState({}, []);
 
-            expect(result.state).toEqual({});
+            expect(result.committed).toEqual({});
             expect(result.transitions).toEqual([]);
             expect(Object.keys(result)).not.toContain('transitions');
         });
@@ -62,7 +62,7 @@ describe('state', () => {
     describe('transitionStateFactory', () => {
         test('should return reference if nothing changed', () => {
             const state = createIndexedState();
-            const next = transitionStateFactory(state)(state.state, state.transitions);
+            const next = transitionStateFactory(state)(state.committed, state.transitions);
 
             expect(state === next).toBe(true);
         });
@@ -73,7 +73,7 @@ describe('state', () => {
             const next = transitionStateFactory(state)({ [item.id]: item }, state.transitions);
 
             expect(state !== next).toBe(true);
-            expect(next.state).toEqual({ [item.id]: item });
+            expect(next.committed).toEqual({ [item.id]: item });
         });
 
         test('should return updated copy if transitions changed', () => {

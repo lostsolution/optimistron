@@ -229,7 +229,7 @@ describe('sanitizeTransition', () => {
 
     test('should keep transitions which trigger a `CONFLICT` error', () => {
         const initial = createIndexedState([conflict]);
-        initial.state[item.id] = item;
+        initial.committed[item.id] = item;
         const result = sanitizeTransitions(boundReducer, bindState)(initial);
 
         expect(mergeError).toEqual(OptimisticMergeResult.CONFLICT);
