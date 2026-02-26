@@ -6,7 +6,7 @@ const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflictin
 
 export const selectOptimisticActivity = createSelector(
     (state: State) => state.activity,
-    selectOptimistic((activity) => [...activity.state].sort((a, b) => b.timestamp - a.timestamp)),
+    selectOptimistic((activity) => [...activity.committed].sort((a, b) => b.timestamp - a.timestamp)),
 );
 
 export const selectOptimisticActivityState = (id: string) =>

@@ -14,13 +14,13 @@ const initial = (() => {
     return { [e1.id]: e1, [e2.id]: e2, [e3.id]: e3 };
 })();
 
-const compare = (a: Epic) => (b: Epic) => {
-    if (a.revision === b.revision) return 0;
-    if (a.revision > b.revision) return 1;
-    return -1;
+const compare = (a: Epic, b: Epic) => {
+    if (a.revision === b.revision) return 0 as const;
+    if (a.revision > b.revision) return 1 as const;
+    return -1 as const;
 };
 
-const eq = (a: Epic) => (b: Epic) => a.done === b.done && a.value === b.value;
+const eq = (a: Epic, b: Epic) => a.done === b.done && a.value === b.value;
 
 const { reducer: epics, selectors } = optimistron(
     'epics',

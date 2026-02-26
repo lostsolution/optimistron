@@ -6,7 +6,7 @@ const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflictin
 
 export const selectOptimisticProfile = createSelector(
     (state: State) => state.profile,
-    selectOptimistic((profile) => profile.state),
+    selectOptimistic((profile) => profile.committed),
 );
 
 export const selectOptimisticProfileState = createSelector(

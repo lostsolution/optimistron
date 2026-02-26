@@ -5,13 +5,13 @@ import { dismissActivity, editActivity, logActivity } from '~usecases/lib/store/
 import { sync } from '~usecases/lib/store/epics/actions';
 import type { ActivityEntry } from '~usecases/lib/store/types';
 
-const compare = (a: ActivityEntry) => (b: ActivityEntry) => {
-    if (a.revision === b.revision) return 0;
-    if (a.revision > b.revision) return 1;
-    return -1;
+const compare = (a: ActivityEntry, b: ActivityEntry) => {
+    if (a.revision === b.revision) return 0 as const;
+    if (a.revision > b.revision) return 1 as const;
+    return -1 as const;
 };
 
-const eq = (a: ActivityEntry) => (b: ActivityEntry) => a.message === b.message && a.category === b.category;
+const eq = (a: ActivityEntry, b: ActivityEntry) => a.message === b.message && a.category === b.category;
 
 const { reducer: activity, selectors } = optimistron(
     'activity',

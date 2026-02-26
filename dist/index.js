@@ -3,15 +3,29 @@ var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+function __accessProp(key) {
+  return this[key];
+}
+var __toESMCache_node;
+var __toESMCache_esm;
 var __toESM = (mod, isNodeMode, target) => {
+  var canCache = mod != null && typeof mod === "object";
+  if (canCache) {
+    var cache = isNodeMode ? __toESMCache_node ??= new WeakMap : __toESMCache_esm ??= new WeakMap;
+    var cached = cache.get(mod);
+    if (cached)
+      return cached;
+  }
   target = mod != null ? __create(__getProtoOf(mod)) : {};
   const to = isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
   for (let key of __getOwnPropNames(mod))
     if (!__hasOwnProp.call(to, key))
       __defProp(to, key, {
-        get: () => mod[key],
+        get: __accessProp.bind(mod, key),
         enumerable: true
       });
+  if (canCache)
+    cache.set(mod, to);
   return to;
 };
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
@@ -28695,7 +28709,7 @@ var resolveReducer = (handler, config) => {
     return bound.getState();
   };
 };
-var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.state), action);
+var bindReducer = (reducer, bindState) => (transitionState, action) => reducer(bindState(transitionState.committed), action);
 
 // src/utils/logger.ts
 var warn = (...args) => {
@@ -28787,7 +28801,7 @@ var sanitizeTransitions = (boundReducer, bindState) => (state) => {
       if (noop2)
         acc.mutated = true;
       else {
-        acc.transitionState.state = bindState(acc.transitionState.state).merge(nextState);
+        acc.transitionState.committed = bindState(acc.transitionState.committed).merge(nextState);
         acc.transitions.push(action);
       }
     } catch (mergeError) {
@@ -28815,7 +28829,7 @@ var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) 
     return selector(state);
   try {
     const optimisticState = state.transitions.reduce((acc, transition) => {
-      acc.state = boundReducer(acc, toCommit(transition));
+      acc.committed = boundReducer(acc, toCommit(transition));
       return acc;
     }, Object.assign({}, state));
     return selector(optimisticState);
@@ -28846,7 +28860,7 @@ var bindStateFactory = (handler) => (state) => ({
   getState: () => state
 });
 var buildTransitionState = (state, transitions) => {
-  const transitionState = { state };
+  const transitionState = { committed: state };
   Object.defineProperties(transitionState, {
     transitions: {
       value: transitions,
@@ -28857,7 +28871,7 @@ var buildTransitionState = (state, transitions) => {
   return transitionState;
 };
 var transitionStateFactory = (prev) => (state, transitions) => {
-  if (state === prev.state && transitions === prev.transitions)
+  if (state === prev.committed && transitions === prev.transitions)
     return prev;
   return buildTransitionState(state, transitions);
 };
@@ -28880,22 +28894,22 @@ function optimistron(namespace, initialState, handler, config, options) {
   const selectOptimistic = createSelectOptimistic(boundReducer, namespace);
   const optimisticReducer = (transitionState = initial, action) => {
     const nextTransitionState = (() => {
-      const { state, transitions } = transitionState;
+      const { committed, transitions } = transitionState;
       const next = transitionStateFactory(transitionState);
       try {
         if (isTransitionForNamespace(action, namespace)) {
           const { operation, id } = getTransitionMeta(action);
           const nextTransitions = processTransition(options?.sanitizeAction?.(action) ?? action, transitions);
           if (operation === "commit" /* COMMIT */) {
-            const committed = commitTransition(boundReducer, transitionState, transitions, id);
-            return next(committed !== undefined ? committed : state, nextTransitions);
+            const result = commitTransition(boundReducer, transitionState, transitions, id);
+            return next(result !== undefined ? result : committed, nextTransitions);
           }
-          return next(state, nextTransitions);
+          return next(committed, nextTransitions);
         }
         return next(boundReducer(transitionState, action), transitions);
       } catch (error) {
         warn(`optimistron [${namespace}]: error processing action "${action.type}"`, error);
-        return next(state, transitions);
+        return next(committed, transitions);
       }
     })();
     const mutated = nextTransitionState !== transitionState;
@@ -28916,71 +28930,85 @@ function optimistron(namespace, initialState, handler, config, options) {
   };
 }
 
+// src/state/types.ts
+var resolveCompare = (options) => {
+  if ("compare" in options)
+    return options.compare;
+  const { version: version2 } = options;
+  return (a, b) => {
+    const va = version2(a);
+    const vb = version2(b);
+    if (va === vb)
+      return 0;
+    return va > vb ? 1 : -1;
+  };
+};
+
 // src/state/list.ts
-var listState = ({
-  key,
-  compare,
-  eq
-}) => ({
-  create: (state, item) => {
-    if (state.some((entry) => entry[key] === item[key]))
-      return state;
-    return [...state, item];
-  },
-  update: (state, dto) => {
-    const itemId = String(dto[key]);
-    const idx = state.findIndex((entry) => entry[key] === itemId);
-    if (idx === -1)
-      return state;
-    const next = [...state];
-    next[idx] = { ...state[idx], ...dto };
-    return next;
-  },
-  remove: (state, dto) => {
-    const itemId = String(dto[key]);
-    const idx = state.findIndex((entry) => entry[key] === itemId);
-    if (idx === -1)
-      return state;
-    return state.filter((_, i) => i !== idx);
-  },
-  wire: (bound, action, actions) => {
-    if (actions.create?.match(action))
-      return bound.create(action.payload);
-    if (actions.update?.match(action))
-      return bound.update(action.payload);
-    if (actions.remove?.match(action))
-      return bound.remove(action.payload);
-    return;
-  },
-  merge: (existing, incoming) => {
-    if (existing === incoming)
-      throw "SKIP" /* SKIP */;
-    const existingMap = new Map;
-    for (const item of existing)
-      existingMap.set(item[key], item);
-    let matched = 0;
-    for (const item of incoming) {
-      const prev = existingMap.get(item[key]);
-      if (!prev)
-        continue;
-      matched++;
-      if (prev === item)
-        continue;
-      const check = compare(item)(prev);
-      if (check === -1)
-        throw "CONFLICT" /* CONFLICT */;
-      if (check === 0) {
-        if (!eq(item)(prev))
+var listState = (options) => {
+  const { key, eq } = options;
+  const compare = resolveCompare(options);
+  return {
+    create: (state, item) => {
+      if (state.some((entry) => entry[key] === item[key]))
+        return state;
+      return [...state, item];
+    },
+    update: (state, dto) => {
+      const itemId = String(dto[key]);
+      const idx = state.findIndex((entry) => entry[key] === itemId);
+      if (idx === -1)
+        return state;
+      const next = [...state];
+      next[idx] = { ...state[idx], ...dto };
+      return next;
+    },
+    remove: (state, dto) => {
+      const itemId = String(dto[key]);
+      const idx = state.findIndex((entry) => entry[key] === itemId);
+      if (idx === -1)
+        return state;
+      return state.filter((_, i) => i !== idx);
+    },
+    wire: (bound, action, actions) => {
+      if (actions.create?.match(action))
+        return bound.create(action.payload);
+      if (actions.update?.match(action))
+        return bound.update(action.payload);
+      if (actions.remove?.match(action))
+        return bound.remove(action.payload);
+      return;
+    },
+    merge: (existing, incoming) => {
+      if (existing === incoming)
+        throw "SKIP" /* SKIP */;
+      const existingMap = new Map;
+      for (const item of existing)
+        existingMap.set(item[key], item);
+      let matched = 0;
+      for (const item of incoming) {
+        const prev = existingMap.get(item[key]);
+        if (!prev)
+          continue;
+        matched++;
+        if (prev === item)
+          continue;
+        const check = compare(item, prev);
+        if (check === -1)
           throw "CONFLICT" /* CONFLICT */;
-        continue;
+        if (check === 0) {
+          if (!eq(item, prev))
+            throw "CONFLICT" /* CONFLICT */;
+          continue;
+        }
+        return incoming;
       }
+      if (matched === incoming.length && matched === existingMap.size)
+        throw "SKIP" /* SKIP */;
       return incoming;
     }
-    if (matched === incoming.length && matched === existingMap.size)
-      throw "SKIP" /* SKIP */;
-    return incoming;
-  }
-});
+  };
+};
 
 // src/actions/transitions.ts
 var emptyPA = () => ({ payload: {} });
@@ -29058,14 +29086,14 @@ var deleteEpic = createTransitions("epics::delete", 2 /* REVERTIBLE */)(crud2.re
 var sync = createAction("store::sync");
 
 // usecases/lib/store/activity/reducer.ts
-var compare = (a) => (b) => {
+var compare = (a, b) => {
   if (a.revision === b.revision)
     return 0;
   if (a.revision > b.revision)
     return 1;
   return -1;
 };
-var eq = (a) => (b) => a.message === b.message && a.category === b.category;
+var eq = (a, b) => a.message === b.message && a.category === b.category;
 var { reducer: activity, selectors } = optimistron("activity", [], listState({ key: "id", compare, eq }), {
   create: logActivity,
   update: editActivity,
@@ -29080,7 +29108,7 @@ var { reducer: activity, selectors } = optimistron("activity", [], listState({ k
 
 // usecases/lib/store/activity/selectors.ts
 var { selectOptimistic, selectIsOptimistic: selectIsOptimistic2, selectIsFailed: selectIsFailed2, selectIsConflicting: selectIsConflicting2 } = selectors;
-var selectOptimisticActivity = createSelector((state) => state.activity, selectOptimistic((activity2) => [...activity2.state].sort((a, b) => b.timestamp - a.timestamp)));
+var selectOptimisticActivity = createSelector((state) => state.activity, selectOptimistic((activity2) => [...activity2.committed].sort((a, b) => b.timestamp - a.timestamp)));
 var selectOptimisticActivityState = (id) => createSelector((state) => state.activity, (activity2) => ({
   optimistic: selectIsOptimistic2(id)(activity2),
   failed: selectIsFailed2(id)(activity2),
@@ -29253,39 +29281,40 @@ var import_react4 = __toESM(require_react(), 1);
 var import_react3 = __toESM(require_react(), 1);
 
 // src/state/singular.ts
-var singularState = ({
-  compare: compare2,
-  eq: eq2
-}) => ({
-  create: (_, item) => item,
-  update: (state, partial) => state ? { ...state, ...partial } : state,
-  remove: (state) => state !== null ? null : state,
-  wire: (bound, action, actions) => {
-    if (actions.create?.match(action))
-      return bound.create(action.payload);
-    if (actions.update?.match(action))
-      return bound.update(action.payload);
-    if (actions.remove?.match(action))
-      return bound.remove(undefined);
-    return;
-  },
-  merge: (existing, incoming) => {
-    if (existing === incoming)
-      throw "SKIP" /* SKIP */;
-    if (existing === null || incoming === null)
-      return incoming;
-    const check = compare2(incoming)(existing);
-    if (check === -1)
-      throw "CONFLICT" /* CONFLICT */;
-    if (check === 0) {
-      if (eq2(incoming)(existing))
+var singularState = (options) => {
+  const { eq: eq2 } = options;
+  const compare2 = resolveCompare(options);
+  return {
+    create: (_, item) => item,
+    update: (state, partial) => state ? { ...state, ...partial } : state,
+    remove: (state) => state !== null ? null : state,
+    wire: (bound, action, actions) => {
+      if (actions.create?.match(action))
+        return bound.create(action.payload);
+      if (actions.update?.match(action))
+        return bound.update(action.payload);
+      if (actions.remove?.match(action))
+        return bound.remove(undefined);
+      return;
+    },
+    merge: (existing, incoming) => {
+      if (existing === incoming)
         throw "SKIP" /* SKIP */;
-      else
+      if (existing === null || incoming === null)
+        return incoming;
+      const check = compare2(incoming, existing);
+      if (check === -1)
         throw "CONFLICT" /* CONFLICT */;
+      if (check === 0) {
+        if (eq2(incoming, existing))
+          throw "SKIP" /* SKIP */;
+        else
+          throw "CONFLICT" /* CONFLICT */;
+      }
+      return incoming;
     }
-    return incoming;
-  }
-});
+  };
+};
 
 // usecases/lib/store/profile/actions.ts
 var updatePrepare = (item) => ({ payload: item, transitionId: "profile" });
@@ -29294,14 +29323,14 @@ var updateProfile = createTransitions("profile::update")(updatePrepare);
 var clearProfile = createTransitions("profile::clear")(clearPrepare);
 
 // usecases/lib/store/profile/reducer.ts
-var compare2 = (a) => (b) => {
+var compare2 = (a, b) => {
   if (a.revision === b.revision)
     return 0;
   if (a.revision > b.revision)
     return 1;
   return -1;
 };
-var eq2 = (a) => (b) => a.displayName === b.displayName && a.avatarUrl === b.avatarUrl;
+var eq2 = (a, b) => a.displayName === b.displayName && a.avatarUrl === b.avatarUrl;
 var initial = { displayName: "Andy ZEN", avatarUrl: "https://i.pravatar.cc/80?u=andy", revision: 0 };
 var { reducer: profile, selectors: selectors2 } = optimistron("profile", initial, singularState({ compare: compare2, eq: eq2 }), {
   update: updateProfile,
@@ -29317,7 +29346,7 @@ var { reducer: profile, selectors: selectors2 } = optimistron("profile", initial
 
 // usecases/lib/store/profile/selectors.ts
 var { selectOptimistic: selectOptimistic2, selectIsOptimistic: selectIsOptimistic3, selectIsFailed: selectIsFailed3, selectIsConflicting: selectIsConflicting3 } = selectors2;
-var selectOptimisticProfile = createSelector((state) => state.profile, selectOptimistic2((profile2) => profile2.state));
+var selectOptimisticProfile = createSelector((state) => state.profile, selectOptimistic2((profile2) => profile2.committed));
 var selectOptimisticProfileState = createSelector((state) => state.profile, (profile2) => ({
   optimistic: selectIsOptimistic3("profile")(profile2),
   failed: selectIsFailed3("profile")(profile2),
@@ -29509,11 +29538,9 @@ var removeAt = (state, ids) => {
 };
 
 // src/state/record.ts
-var nestedRecordState = () => ({
-  keys,
-  compare: compare3,
-  eq: eq3
-}) => {
+var nestedRecordState = () => (options) => {
+  const { keys, eq: eq3 } = options;
+  const compare3 = resolveCompare(options);
   const extractPath = (dto) => keys.map((k) => String(dto[k]));
   const mergeAtDepth = (existing, incoming, depth) => {
     let merged;
@@ -29546,11 +29573,11 @@ var nestedRecordState = () => ({
           throw e;
         }
       } else {
-        const check = compare3(incomingEntry)(existingEntry);
+        const check = compare3(incomingEntry, existingEntry);
         if (check === -1)
           throw "CONFLICT" /* CONFLICT */;
         if (check === 0) {
-          if (eq3(incomingEntry)(existingEntry))
+          if (eq3(incomingEntry, existingEntry))
             continue;
           else
             throw "CONFLICT" /* CONFLICT */;
@@ -29585,11 +29612,9 @@ var nestedRecordState = () => ({
     }
   };
 };
-var recordState = ({
-  key,
-  compare: compare3,
-  eq: eq3
-}) => {
+var recordState = (options) => {
+  const { key, eq: eq3 } = options;
+  const compare3 = resolveCompare(options);
   const nested = nestedRecordState()({ keys: [key], compare: compare3, eq: eq3 });
   return {
     create: nested.create,
@@ -29615,14 +29640,14 @@ var editProjectTodo = createTransitions("projects::edit")(crud3.update);
 var deleteProjectTodo = createTransitions("projects::delete", 2 /* REVERTIBLE */)(crud3.remove);
 
 // usecases/lib/store/projects/reducer.ts
-var compare3 = (a) => (b) => {
+var compare3 = (a, b) => {
   if (a.revision === b.revision)
     return 0;
   if (a.revision > b.revision)
     return 1;
   return -1;
 };
-var eq3 = (a) => (b) => a.done === b.done && a.value === b.value;
+var eq3 = (a, b) => a.done === b.done && a.value === b.value;
 var initial2 = (() => {
   const createdAt = Date.now();
   const items = [
@@ -29660,7 +29685,7 @@ var { reducer: projects, selectors: selectors3 } = optimistron("projects", initi
 // usecases/lib/store/projects/selectors.ts
 var { selectOptimistic: selectOptimistic3, selectIsOptimistic: selectIsOptimistic4, selectIsFailed: selectIsFailed4, selectIsConflicting: selectIsConflicting4 } = selectors3;
 var selectOptimisticProjectTodos = (projectId) => createSelector((state) => state.projects, selectOptimistic3((projects2) => {
-  const group = projects2.state[projectId];
+  const group = projects2.committed[projectId];
   return group ? Object.values(group).sort((a, b) => b.createdAt - a.createdAt) : [];
 }));
 var selectOptimisticProjectTodoState = (projectId, todoId) => {
@@ -29838,14 +29863,14 @@ var initial3 = (() => {
   const e3 = { id: generateId(), value: "Add a new epic", revision: 2, done: true, createdAt };
   return { [e1.id]: e1, [e2.id]: e2, [e3.id]: e3 };
 })();
-var compare4 = (a) => (b) => {
+var compare4 = (a, b) => {
   if (a.revision === b.revision)
     return 0;
   if (a.revision > b.revision)
     return 1;
   return -1;
 };
-var eq4 = (a) => (b) => a.done === b.done && a.value === b.value;
+var eq4 = (a, b) => a.done === b.done && a.value === b.value;
 var { reducer: epics, selectors: selectors4 } = optimistron("epics", initial3, recordState({ key: "id", compare: compare4, eq: eq4 }), {
   create: createEpic,
   update: editEpic,
@@ -29863,8 +29888,8 @@ var { reducer: epics, selectors: selectors4 } = optimistron("epics", initial3, r
 
 // usecases/lib/store/epics/selectors.ts
 var { selectOptimistic: selectOptimistic4, selectIsOptimistic: selectIsOptimistic5, selectIsFailed: selectIsFailed5, selectIsConflicting: selectIsConflicting5 } = selectors4;
-var selectEpic = (id) => createSelector((state) => state.epics, ({ state }) => state[id]);
-var selectOptimisticEpics = createSelector((state) => state.epics, selectOptimistic4((epics2) => Object.values(epics2.state).sort((a, b) => b.createdAt - a.createdAt)));
+var selectEpic = (id) => createSelector((state) => state.epics, ({ committed }) => committed[id]);
+var selectOptimisticEpics = createSelector((state) => state.epics, selectOptimistic4((epics2) => Object.values(epics2.committed).sort((a, b) => b.createdAt - a.createdAt)));
 var selectOptimisticEpicState = (id) => createSelector((state) => state.epics, (epics2) => ({
   optimistic: selectIsOptimistic5(id)(epics2),
   failed: selectIsFailed5(id)(epics2),

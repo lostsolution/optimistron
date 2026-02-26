@@ -7,12 +7,12 @@ const { selectOptimistic, selectIsOptimistic, selectIsFailed, selectIsConflictin
 export const selectEpic = (id: string) =>
     createSelector(
         (state: State) => state.epics,
-        ({ state }) => state[id],
+        ({ committed }) => committed[id],
     );
 
 export const selectOptimisticEpics = createSelector(
     (state: State) => state.epics,
-    selectOptimistic((epics) => Object.values(epics.state).sort((a, b) => b.createdAt - a.createdAt)),
+    selectOptimistic((epics) => Object.values(epics.committed).sort((a, b) => b.createdAt - a.createdAt)),
 );
 
 export const selectOptimisticEpicState = (id: string) =>
