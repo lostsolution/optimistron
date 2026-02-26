@@ -1,5 +1,6 @@
 export { createCommitMatcher, createTransition, createTransitions, resolveTransition } from './transitions';
 export { crudPrepare } from './crud';
+export { createCrudTransitions } from './crud-transitions';
 export type {
     ActionMeta,
     EmptyPayload,

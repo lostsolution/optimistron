@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { createTransitions, crudPrepare, resolveTransition } from '~actions';
+import { createCrudTransitions, createTransitions, crudPrepare, resolveTransition } from '~actions';
 import { META_KEY } from '~constants';
 import { TransitionMode, Operation } from '~transitions';
 
@@ -248,6 +248,71 @@ describe('crudPrepare', () => {
             expect(deepCrud.create(item).transitionId).toBe('x/y/z');
             expect(deepCrud.update({ a: 'x', b: 'y', c: 'z', val: 2 }).transitionId).toBe('x/y/z');
             expect(deepCrud.remove({ a: 'x', b: 'y', c: 'z' }).transitionId).toBe('x/y/z');
+        });
+    });
+});
+
+describe('createCrudTransitions', () => {
+    type Item = { id: string; name: string; revision: number };
+
+    describe('single-key', () => {
+        const crud = createCrudTransitions<Item>('items', 'id');
+
+        test('create uses DISPOSABLE mode', () => {
+            const item: Item = { id: 'i1', name: 'test', revision: 0 };
+            const result = crud.create.stage(item);
+
+            expect(result.payload).toEqual(item);
+            expect(result.meta[META_KEY].id).toBe('i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.DISPOSABLE);
+        });
+
+        test('update uses DEFAULT mode', () => {
+            const result = crud.update.stage({ id: 'i1', name: 'updated' });
+
+            expect(result.meta[META_KEY].id).toBe('i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.DEFAULT);
+        });
+
+        test('remove uses REVERTIBLE mode', () => {
+            const result = crud.remove.stage({ id: 'i1' });
+
+            expect(result.meta[META_KEY].id).toBe('i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.REVERTIBLE);
+        });
+
+        test('each operation has commit/fail/stash', () => {
+            expect(crud.create.commit('i1').meta[META_KEY].operation).toBe(Operation.COMMIT);
+            expect(crud.update.fail('i1', new Error()).meta[META_KEY].operation).toBe(Operation.FAIL);
+            expect(crud.remove.stash('i1').meta[META_KEY].operation).toBe(Operation.STASH);
+        });
+    });
+
+    describe('multi-key', () => {
+        type Nested = { groupId: string; itemId: string; value: string };
+        const crud = createCrudTransitions<Nested>()('nested', ['groupId', 'itemId']);
+
+        test('create derives transitionId from keys', () => {
+            const item: Nested = { groupId: 'g1', itemId: 'i1', value: 'test' };
+            const result = crud.create.stage(item);
+
+            expect(result.payload).toEqual(item);
+            expect(result.meta[META_KEY].id).toBe('g1/i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.DISPOSABLE);
+        });
+
+        test('update uses DEFAULT mode with joined key', () => {
+            const result = crud.update.stage({ groupId: 'g1', itemId: 'i1', value: 'updated' });
+
+            expect(result.meta[META_KEY].id).toBe('g1/i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.DEFAULT);
+        });
+
+        test('remove uses REVERTIBLE mode with joined key', () => {
+            const result = crud.remove.stage({ groupId: 'g1', itemId: 'i1' });
+
+            expect(result.meta[META_KEY].id).toBe('g1/i1');
+            expect(result.meta[META_KEY].mode).toBe(TransitionMode.REVERTIBLE);
         });
     });
 });

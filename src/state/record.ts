@@ -3,7 +3,7 @@ import { OptimisticMergeResult } from '~/transitions';
 import type { Obj } from '~/utils/path';
 import { getAt, removeAt, setAt } from '~/utils/path';
 import type { Maybe, StringKeys } from '~/utils/types';
-import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
+import { resolveCompare, type CrudActionMap, type VersioningOptions, type WiredStateHandler } from '~state/types';
 
 export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
@@ -45,7 +45,8 @@ export const nestedRecordState =
     > => {
         type State = RecursiveRecordState<Keys, T>;
 
-        const { keys, compare, eq } = options;
+        const { keys, eq } = options;
+        const compare = resolveCompare(options);
 
         /** Extracts path IDs from a DTO using the keys tuple */
         const extractPath = (dto: Record<string, any>): string[] => keys.map((k) => String(dto[k]));
@@ -135,11 +136,11 @@ export const nestedRecordState =
  * This is a depth-1 specialization of `nestedRecordState`.
  * Handler types use `Partial<T>` for update/remove DTOs — narrower types
  * are enforced at dispatch time via `crudPrepare`. */
-export const recordState = <T extends Record<string, any>>({
-    key,
-    compare,
-    eq,
-}: RecordStateOptions<T>): WiredStateHandler<RecordState<T>, T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => {
+export const recordState = <T extends Record<string, any>>(
+    options: RecordStateOptions<T>,
+): WiredStateHandler<RecordState<T>, T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => {
+    const { key, eq } = options;
+    const compare = resolveCompare(options);
     const nested = nestedRecordState<T>()({ keys: [key], compare, eq });
 
     return {

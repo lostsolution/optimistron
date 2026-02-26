@@ -329,9 +329,26 @@ createTransitions('todos::add')({
 });
 ```
 
+### `createCrudTransitions<T>(namespace, key)` / `createCrudTransitions<T>()(namespace, keys)`
+
+High-level helper that composes `crudPrepare` + `createTransitions` with golden-path modes:
+
+```typescript
+// Single-key
+const todo = createCrudTransitions<Todo>('todos', 'id');
+// todo.create → DISPOSABLE (drop on fail)
+// todo.update → DEFAULT (flag on fail)
+// todo.remove → REVERTIBLE (stash on fail)
+
+// Multi-key — curried for key inference
+const item = createCrudTransitions<ProjectTodo>()('projects', ['projectId', 'id']);
+```
+
+Each operation returns a full transition set (`.stage`, `.amend`, `.commit`, `.fail`, `.stash`, `.match`).
+
 ### `crudPrepare<T>(key)` / `crudPrepare<T>()(keys)`
 
-Factory for CRUD prepare functions that couple `transitionId === entityId`:
+Factory for CRUD prepare functions that couple `transitionId === entityId`. Use when you need custom modes or per-operation preparators:
 
 ```typescript
 // Single-key (recordState, listState)

@@ -1,4 +1,4 @@
-export { createTransition, createTransitions, crudPrepare } from './actions';
+export { createCrudTransitions, createTransition, createTransitions, crudPrepare } from './actions';
 export { optimistron } from './optimistron';
 export { listState } from './state/list';
 export { nestedRecordState, recordState } from './state/record';

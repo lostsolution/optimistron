@@ -1,6 +1,6 @@
 import { OptimisticMergeResult } from '~/transitions';
 import type { StringKeys } from '~/utils/types';
-import type { CrudActionMap, VersioningOptions, WiredStateHandler } from '~state/types';
+import { resolveCompare, type CrudActionMap, type VersioningOptions, type WiredStateHandler } from '~state/types';
 
 export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 
@@ -16,7 +16,8 @@ export type ListStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 export const listState = <T extends Record<string, any>>(
     options: ListStateOptions<T>,
 ): WiredStateHandler<T[], T, Partial<T>, Partial<T>, CrudActionMap<T, Partial<T>, Partial<T>>> => {
-    const { key, compare, eq } = options;
+    const { key, eq } = options;
+    const compare = resolveCompare(options);
 
     return {
         create: (state: T[], item: T) => {
