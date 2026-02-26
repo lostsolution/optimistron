@@ -22,9 +22,7 @@ import { createTransitions } from './transitions';
  * const item = createCrudTransitions<Item>()('items', ['groupId', 'itemId']);
  * ```
  */
-export function createCrudTransitions<T extends Record<string, any>>(): <
-    const Keys extends readonly [keyof T & string, ...(keyof T & string)[]],
->(
+export function createCrudTransitions<T extends Record<string, any>>(): <const Keys extends readonly [keyof T & string, ...(keyof T & string)[]]>(
     namespace: string,
     keys: Keys,
 ) => {
@@ -53,6 +51,5 @@ export function createCrudTransitions<T extends Record<string, any>>(namespace?:
         return build(namespace, crudPrepare<T>(key));
     }
 
-    return <const Keys extends readonly [keyof T & string, ...(keyof T & string)[]]>(ns: string, keys: Keys) =>
-        build(ns, crudPrepare<T>()(keys) as any);
+    return <const Keys extends readonly [keyof T & string, ...(keyof T & string)[]]>(ns: string, keys: Keys) => build(ns, crudPrepare<T>()(keys) as any);
 }
