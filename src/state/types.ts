@@ -7,15 +7,35 @@ export type TransitionState<T> = {
 };
 
 export type VersioningOptions<T> = {
-    /** Given two items returns a sorting result.
-     * This allows checking for valid updates or conflicts.
-     * Return -1 if `a` is "smaller" than `b`
-     * Return 0 if `a` equals `b`
-     * Return 1 if `b` is "greater" than `a` */
-    compare: (a: T, b: T) => 0 | 1 | -1;
     /** Equality checker - it can potentially be different
      * than comparing. */
     eq: (a: T, b: T) => boolean;
+} & (
+    | {
+          /** Given two items returns a sorting result.
+           * Return -1 if `a` is "smaller" than `b`
+           * Return 0 if `a` equals `b`
+           * Return 1 if `b` is "greater" than `a` */
+          compare: (a: T, b: T) => 0 | 1 | -1;
+      }
+    | {
+          /** Shorthand — extracts a comparable version from an item.
+           * Generates `compare` automatically via `>` / `===`. */
+          version: (item: T) => number;
+      }
+);
+
+/** Resolves a `VersioningOptions` into a concrete `compare` function.
+ * If `version` shorthand is provided, generates `compare` from it. */
+export const resolveCompare = <T>(options: VersioningOptions<T>): ((a: T, b: T) => 0 | 1 | -1) => {
+    if ('compare' in options) return options.compare;
+    const { version } = options;
+    return (a, b) => {
+        const va = version(a);
+        const vb = version(b);
+        if (va === vb) return 0;
+        return va > vb ? 1 : -1;
+    };
 };
 
 /** Type-narrowing action matcher — `.match()` narrows the action's payload.

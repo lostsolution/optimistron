@@ -62,45 +62,42 @@ npm install @lostsolution/optimistron
 
 ```typescript
 import { configureStore, createSelector } from '@reduxjs/toolkit';
-import { optimistron, createTransitions, crudPrepare, recordState, TransitionMode } from '@lostsolution/optimistron';
+import { optimistron, createCrudTransitions, recordState } from '@lostsolution/optimistron';
 
 // 1. Define your entity
 type Todo = { id: string; value: string; done: boolean; revision: number };
 
-// 2. Create CRUD prepare functions (couples transitionId === entityId)
-const crud = crudPrepare<Todo>('id');
+// 2. Create CRUD transition actions (golden-path modes built in)
+const todo = createCrudTransitions<Todo>('todos', 'id');
 
-// 3. Create transition action creators
-const createTodo = createTransitions('todos::add', TransitionMode.DISPOSABLE)(crud.create);
-const editTodo = createTransitions('todos::edit')(crud.update); // DEFAULT mode
-const deleteTodo = createTransitions('todos::delete', TransitionMode.REVERTIBLE)(crud.remove);
-
-// 4. Create the optimistic reducer
+// 3. Create the optimistic reducer
 const { reducer: todos, selectors } = optimistron(
     'todos',
     {} as Record<string, Todo>,
     recordState<Todo>({
         key: 'id',
-        compare: (a, b) => (a.revision === b.revision ? 0 : a.revision > b.revision ? 1 : -1),
+        version: (t) => t.revision,
         eq: (a, b) => a.done === b.done && a.value === b.value,
     }),
-    { create: createTodo, update: editTodo, remove: deleteTodo },
+    { create: todo.create, update: todo.update, remove: todo.remove },
 );
 
-// 5. Wire up the store
+// 4. Wire up the store
 const store = configureStore({ reducer: { todos } });
 
-// 6. Select optimistic state (memoize with createSelector)
+// 5. Select optimistic state (memoize with createSelector)
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
     selectors.selectOptimistic((todos) => Object.values(todos.committed)),
 );
 
-// 7. Dispatch transitions
-dispatch(createTodo.stage(todo)); // optimistic — shows immediately
-dispatch(createTodo.commit(todo.id)); // server confirmed — becomes committed state
-dispatch(createTodo.fail(todo.id, error)); // server rejected — flagged as failed
+// 6. Dispatch transitions
+dispatch(todo.create.stage(item)); // optimistic — shows immediately
+dispatch(todo.create.commit(item.id)); // server confirmed — becomes committed state
+dispatch(todo.create.fail(item.id, error)); // server rejected — dropped (DISPOSABLE)
 ```
+
+> `createCrudTransitions` composes `crudPrepare` + `createTransitions` with golden-path modes: **DISPOSABLE** create, **DEFAULT** update, **REVERTIBLE** remove. For custom modes or per-operation preparators, use `crudPrepare` + `createTransitions` directly.
 
 ---
 
@@ -117,8 +114,13 @@ dispatch(createTodo.fail(todo.id, error)); // server rejected — flagged as fai
 Entities need a **monotonically increasing version** — `revision`, `updatedAt`, a sequence number. This is how sanitization tells "newer" from "stale":
 
 ```typescript
-compare: (a, b) => 0 | 1 | -1; // version ordering
-eq: (a, b) => boolean; // content equality at same version
+// Shorthand — extracts version, compare is generated automatically
+version: (item) => item.revision,
+eq: (a, b) => boolean,
+
+// Full control — provide your own compare
+compare: (a, b) => 0 | 1 | -1,
+eq: (a, b) => boolean,
 ```
 
 Without versioning, conflict detection degrades to content equality only.
@@ -227,8 +229,6 @@ All selectors are returned from `optimistron()` on the `selectors` object — th
 ### Optimistic state
 
 ```typescript
-const { selectors } = optimistron('todos', initial, handler, config);
-
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
     selectors.selectOptimistic((todos) => Object.values(todos.committed)),
@@ -238,7 +238,6 @@ const selectTodos = createSelector(
 ### Per-entity status
 
 ```typescript
-const { selectors } = optimistron('todos', initial, handler, config);
 
 selectors.selectIsOptimistic(id)(state.todos); // pending?
 selectors.selectIsFailed(id)(state.todos); // failed?

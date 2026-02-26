@@ -1,6 +1,6 @@
 import { OptimisticMergeResult } from '~/transitions';
 import type { MaybeNull } from '~/utils/types';
-import type { CrudActionMap, VersioningOptions, WiredStateHandler } from './types';
+import { resolveCompare, type CrudActionMap, type VersioningOptions, type WiredStateHandler } from './types';
 
 export type SingularStateOptions<T> = VersioningOptions<T>;
 
@@ -12,7 +12,8 @@ export type SingularStateOptions<T> = VersioningOptions<T>;
 export const singularState = <T extends object>(
     options: SingularStateOptions<T>,
 ): WiredStateHandler<MaybeNull<T>, T, Partial<T>, void, CrudActionMap<T, Partial<T>, void>> => {
-    const { compare, eq } = options;
+    const { eq } = options;
+    const compare = resolveCompare(options);
 
     return {
         create: (_: MaybeNull<T>, item: T) => item,

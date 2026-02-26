@@ -1,8 +1,33 @@
 import { describe, expect, test } from 'bun:test';
 
 import { bindStateFactory } from '~state/factory';
+import { recordState } from '~state/record';
 import { createItem, indexedState, matcher, type TestItem } from '~test/utils';
 import { OptimisticMergeResult } from '~transitions';
+
+describe('version shorthand', () => {
+    const handler = recordState<TestItem>({
+        key: 'id',
+        version: (item) => item.revision,
+        eq: (a, b) => a.id === b.id && a.value === b.value,
+    });
+
+    const item = createItem();
+
+    test('should allow valid updates (higher version)', () => {
+        const updated = { ...item, revision: 2, value: 'updated' };
+        expect(handler.merge({ [item.id]: item }, { [item.id]: updated })).toEqual({ [item.id]: updated });
+    });
+
+    test('should detect conflicts (lower version)', () => {
+        const stale = { ...item, revision: -1 };
+        expect(() => handler.merge({ [item.id]: item }, { [item.id]: stale })).toThrow(OptimisticMergeResult.CONFLICT);
+    });
+
+    test('should detect noops (same version, same content)', () => {
+        expect(() => handler.merge({ [item.id]: item }, { [item.id]: item })).toThrow(OptimisticMergeResult.SKIP);
+    });
+});
 
 describe('recordState', () => {
     const item = createItem();
