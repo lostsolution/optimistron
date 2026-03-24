@@ -28913,7 +28913,7 @@ function optimistron(namespace, initialState, handler, config, options) {
       }
     })();
     const mutated = nextTransitionState !== transitionState;
-    nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
+    nextTransitionState.transitions = mutated && nextTransitionState.transitions.length > 0 ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
     return nextTransitionState;
   };
   return {
