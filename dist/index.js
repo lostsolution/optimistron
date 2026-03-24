@@ -28797,7 +28797,7 @@ var sanitizeTransitions = (boundReducer, bindState) => (state) => {
     try {
       const asIfCommitted = toCommit(action);
       const nextState = boundReducer(acc.transitionState, asIfCommitted);
-      const noop2 = nextState === acc.transitionState;
+      const noop2 = nextState === acc.transitionState.committed;
       if (noop2)
         acc.mutated = true;
       else {
