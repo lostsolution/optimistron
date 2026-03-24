@@ -24,7 +24,7 @@ export const createSelectOptimistic =
                     acc.committed = boundReducer(acc, toCommit(transition));
                     return acc;
                 },
-                Object.assign({}, state),
+                { committed: state.committed, transitions: state.transitions } as TransitionState<State>,
             );
 
             return selector(optimisticState);

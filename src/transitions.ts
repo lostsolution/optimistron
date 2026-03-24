@@ -214,7 +214,7 @@ export const sanitizeTransitions =
             {
                 mutated: false,
                 transitions: [],
-                transitionState: Object.assign({}, state),
+                transitionState: { committed: state.committed, transitions: state.transitions } as TransitionState<State>,
             },
         );
 
