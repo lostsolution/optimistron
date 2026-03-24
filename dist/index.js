@@ -28818,7 +28818,7 @@ var sanitizeTransitions = (boundReducer, bindState) => (state) => {
   }, {
     mutated: false,
     transitions: [],
-    transitionState: Object.assign({}, state)
+    transitionState: { committed: state.committed, transitions: state.transitions }
   });
   return sanitized.mutated ? sanitized.transitions : state.transitions;
 };
@@ -28831,7 +28831,7 @@ var createSelectOptimistic = (boundReducer, namespace) => (selector) => (state) 
     const optimisticState = state.transitions.reduce((acc, transition) => {
       acc.committed = boundReducer(acc, toCommit(transition));
       return acc;
-    }, Object.assign({}, state));
+    }, { committed: state.committed, transitions: state.transitions });
     return selector(optimisticState);
   } catch (error) {
     warn(`selectOptimistic: error replaying transitions for "${namespace}"`, error);
