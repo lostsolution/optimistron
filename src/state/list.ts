@@ -56,6 +56,7 @@ export const listState = <T extends Record<string, any>>(
             for (const item of existing) existingMap.set(item[key], item);
 
             let matched = 0;
+            let hasUpdate = false;
 
             for (const item of incoming) {
                 const prev = existingMap.get(item[key]);
@@ -72,11 +73,11 @@ export const listState = <T extends Record<string, any>>(
                     continue;
                 }
 
-                return incoming;
+                hasUpdate = true;
             }
 
             /** All matched items were equal — check for additions or deletions via count */
-            if (matched === incoming.length && matched === existingMap.size) throw OptimisticMergeResult.SKIP;
+            if (!hasUpdate && matched === incoming.length && matched === existingMap.size) throw OptimisticMergeResult.SKIP;
             return incoming;
         },
     };

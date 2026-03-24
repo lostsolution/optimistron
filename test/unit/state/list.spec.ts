@@ -141,6 +141,36 @@ describe('listState', () => {
             const incoming: Item[] = [];
             expect(handler.merge([item], incoming)).toBe(incoming);
         });
+
+        test('should CONFLICT when first item is newer but second has version regression', () => {
+            const a: Item = { id: '1', name: 'A', revision: 0 };
+            const b: Item = { id: '2', name: 'B', revision: 2 };
+            const existing = [a, b];
+            const incoming: Item[] = [
+                { id: '1', name: 'A-updated', revision: 1 },
+                { id: '2', name: 'B-old', revision: 1 },
+            ];
+            expect(() => handler.merge(existing, incoming)).toThrow(OptimisticMergeResult.CONFLICT);
+        });
+
+        test('should return incoming when multiple items are validly newer', () => {
+            const a: Item = { id: '1', name: 'A', revision: 0 };
+            const b: Item = { id: '2', name: 'B', revision: 0 };
+            const existing = [a, b];
+            const incoming: Item[] = [
+                { id: '1', name: 'A-v2', revision: 1 },
+                { id: '2', name: 'B-v2', revision: 1 },
+            ];
+            expect(handler.merge(existing, incoming)).toBe(incoming);
+        });
+
+        test('should not SKIP when valid update exists alongside same-reference items', () => {
+            const a: Item = { id: '1', name: 'A', revision: 0 };
+            const b: Item = { id: '2', name: 'B', revision: 0 };
+            const existing = [a, b];
+            const incoming: Item[] = [a, { id: '2', name: 'B-v2', revision: 1 }];
+            expect(handler.merge(existing, incoming)).toBe(incoming);
+        });
     });
 
     describe('wire', () => {
