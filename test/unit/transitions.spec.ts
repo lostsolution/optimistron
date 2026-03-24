@@ -220,10 +220,9 @@ describe('sanitizeTransition', () => {
         expect(result).toEqual([]);
     });
 
-    test('should discard transitions which trigger a `SKIP` error', () => {
+    test('should short-circuit noop transitions without calling merge', () => {
         const result = sanitizeTransitions(boundReducer, bindState)(createIndexedState([noop]));
-
-        expect(mergeError).toEqual(OptimisticMergeResult.SKIP);
+        expect(mergeSpy).not.toHaveBeenCalled();
         expect(result).toEqual([]);
     });
 

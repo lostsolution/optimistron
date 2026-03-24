@@ -180,7 +180,7 @@ export const sanitizeTransitions =
                      * the use-case - it should be flagged as `conflicting` */
                     const asIfCommitted = toCommit(action);
                     const nextState = boundReducer(acc.transitionState, asIfCommitted);
-                    const noop = nextState === acc.transitionState;
+                    const noop = nextState === acc.transitionState.committed;
 
                     /* if the transition action did not have any effect on the state
                      * then discard it - depending on how you define your reducer this
