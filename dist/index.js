@@ -32740,7 +32740,7 @@ function* rootSaga() {
   yield takeEvery(createEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(createEpic.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(createEpic.commit(transitionId));
     } catch (error) {
@@ -32750,7 +32750,7 @@ function* rootSaga() {
   yield takeEvery(editEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(editEpic.commit(transitionId));
     } catch (error) {
       yield put(editEpic.fail(transitionId, error));
@@ -32759,7 +32759,7 @@ function* rootSaga() {
   yield takeEvery(deleteEpic.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(deleteEpic.commit(transitionId));
     } catch {
       yield put(deleteEpic.stash(transitionId));
@@ -32768,7 +32768,7 @@ function* rootSaga() {
   yield takeEvery(updateProfile.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(updateProfile.commit(transitionId));
     } catch (error) {
       yield put(updateProfile.fail(transitionId, error));
@@ -32777,7 +32777,7 @@ function* rootSaga() {
   yield takeEvery(createProjectTodo.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(createProjectTodo.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(createProjectTodo.commit(transitionId));
     } catch (error) {
@@ -32787,7 +32787,7 @@ function* rootSaga() {
   yield takeEvery(editProjectTodo.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(editProjectTodo.commit(transitionId));
     } catch (error) {
       yield put(editProjectTodo.fail(transitionId, error));
@@ -32796,7 +32796,7 @@ function* rootSaga() {
   yield takeEvery(deleteProjectTodo.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(deleteProjectTodo.commit(transitionId));
     } catch {
       yield put(deleteProjectTodo.stash(transitionId));
@@ -32805,7 +32805,7 @@ function* rootSaga() {
   yield takeEvery(logActivity.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(logActivity.amend(transitionId, { ...action.payload, id: generateId() }));
       yield put(logActivity.commit(transitionId));
     } catch (error) {
@@ -32815,7 +32815,7 @@ function* rootSaga() {
   yield takeEvery(editActivity.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(editActivity.commit(transitionId));
     } catch (error) {
       yield put(editActivity.fail(transitionId, error));
@@ -32824,7 +32824,7 @@ function* rootSaga() {
   yield takeEvery(dismissActivity.stage.match, function* (action) {
     const transitionId = getTransitionMeta(action).id;
     try {
-      yield simulateAPIRequest();
+      yield call(simulateAPIRequest);
       yield put(dismissActivity.commit(transitionId));
     } catch {
       yield put(dismissActivity.stash(transitionId));
