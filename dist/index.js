@@ -28986,6 +28986,7 @@ var listState = (options) => {
       for (const item of existing)
         existingMap.set(item[key], item);
       let matched = 0;
+      let hasUpdate = false;
       for (const item of incoming) {
         const prev = existingMap.get(item[key]);
         if (!prev)
@@ -29001,9 +29002,9 @@ var listState = (options) => {
             throw "CONFLICT" /* CONFLICT */;
           continue;
         }
-        return incoming;
+        hasUpdate = true;
       }
-      if (matched === incoming.length && matched === existingMap.size)
+      if (!hasUpdate && matched === incoming.length && matched === existingMap.size)
         throw "SKIP" /* SKIP */;
       return incoming;
     }
