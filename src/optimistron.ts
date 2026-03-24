@@ -120,7 +120,9 @@ export function optimistron<S, C, U, D>(
          * FIXME: this should be configurable - depending on the state structure,
          * we may have to employ different strategies to check for changes */
         const mutated = nextTransitionState !== transitionState;
-        nextTransitionState.transitions = mutated ? sanitizer(nextTransitionState) : nextTransitionState.transitions;
+        nextTransitionState.transitions = mutated && nextTransitionState.transitions.length > 0
+            ? sanitizer(nextTransitionState)
+            : nextTransitionState.transitions;
 
         return nextTransitionState;
     };
