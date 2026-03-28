@@ -12,11 +12,31 @@
         ".": {
             "types": "./lib/index.d.ts",
             "import": "./lib/index.js"
+        },
+        "./core": {
+            "types": "./lib/core/index.d.ts",
+            "import": "./lib/core/index.js"
+        },
+        "./saga": {
+            "types": "./lib/saga/index.d.ts",
+            "import": "./lib/saga/index.js"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "core": ["lib/core/index.d.ts"],
+            "saga": ["lib/saga/index.d.ts"]
         }
     },
     "peerDependencies": {
         "@reduxjs/toolkit": "^2.11.2",
-        "redux": "^5.0.1"
+        "redux": "^5.0.1",
+        "redux-saga": "^1.4.2"
+    },
+    "peerDependenciesMeta": {
+        "redux-saga": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@types/lodash": "^4.17.23",
