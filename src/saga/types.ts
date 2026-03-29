@@ -15,5 +15,5 @@ export type TransitionActions<P = any> = {
 export type TransitionSagaOptions<P, R = unknown> = {
     /** Transform before commit. Return value is passed to `amend()`.
      *  If omitted, commits directly without amending. */
-    amend?: (payload: P, result: R) => P;
+    amend?: (payload: P, result: Awaited<R>) => P;
 };

@@ -9,6 +9,7 @@
         "paths": {
             "~test/*": ["./test/*"],
             "~usecases/*": ["./usecases/*"],
+            "~saga/*": ["./src/saga/*"],
             "~*": ["./src/core/*"]
         },
         "skipLibCheck": true,
