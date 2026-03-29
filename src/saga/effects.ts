@@ -7,8 +7,11 @@ import type { TransitionActions, TransitionSagaOptions } from './types';
 /** Inner generator that orchestrates a single transition lifecycle.
  * Calls the effect, optionally amends, then commits or fails/stashes
  * based on the `TransitionMode` already declared on the transition meta. */
-export const processTransition =
-    <P, R>(actions: TransitionActions<P>, effect: (payload: P, action: StagedAction<P>) => R, options?: TransitionSagaOptions<P, R>) =>
+export const processTransition = <P, R>(
+    actions: TransitionActions<P>,
+    effect: (payload: P, action: StagedAction<P>) => R,
+    options?: TransitionSagaOptions<P, R>,
+) =>
     function* (action: StagedAction<P>) {
         const { id, mode } = getTransitionMeta(action);
         try {

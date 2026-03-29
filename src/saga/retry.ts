@@ -1,7 +1,7 @@
 import { put, select } from 'redux-saga/effects';
 
-import type { StagedAction } from '../core/transitions';
-import type { TransitionState } from '../core/state/types';
+import type { StagedAction } from '~/transitions';
+import type { TransitionState } from '~/state/types';
 
 type FailureSelector = {
     selectFailures: (state: TransitionState<any>) => StagedAction[];
@@ -17,8 +17,7 @@ type FailureSelector = {
  * );
  * yield takeLeading(retryAll.match, retry);
  * ``` */
-export const retryFailed =
-    <RootState>(selectSlices: (state: RootState) => TransitionState<any>[], selectors: FailureSelector[]) =>
+export const retryFailed = <RootState>(selectSlices: (state: RootState) => TransitionState<any>[], selectors: FailureSelector[]) =>
     function* () {
         const state: RootState = yield select();
         const slices = selectSlices(state);
