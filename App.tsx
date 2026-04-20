@@ -12,7 +12,7 @@ import { createEpic, deleteEpic, editEpic } from '~usecases/lib/store/epics/acti
 import { updateProfile } from '~usecases/lib/store/profile/actions';
 import { createProjectTodo, deleteProjectTodo, editProjectTodo } from '~usecases/lib/store/projects/actions';
 import type { ActivityEntry, Epic, Profile, ProjectTodo } from '~usecases/lib/store/types';
-import { retryAll } from '~usecases/sagas/saga';
+import { retryAll } from '~usecases/saga';
 
 import { C, F, O } from '~usecases/lib/components/todo/CodeTags';
 
