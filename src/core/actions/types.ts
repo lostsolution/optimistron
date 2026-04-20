@@ -1,4 +1,4 @@
-import type { ActionCreatorWithPreparedPayload, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
+import type { Action, ActionCreatorWithPreparedPayload, PayloadAction, PrepareAction } from '@reduxjs/toolkit';
 
 import type { TransitionMeta, TransitionNamespace } from '~/transitions';
 import { type Operation } from '~/transitions';
@@ -37,6 +37,27 @@ export type TransitionPayloadAction<Type extends string, Op extends Operation, P
     ActionMeta<Op, PA>,
     PrepareError<PA>
 >;
+
+/** Structural constraint for the action map returned by `createTransitions`.
+ * Only constrains what the saga effects actually consume: `stage.match` for
+ * the watcher, lifecycle methods for dispatch. Rest params use `any` —
+ * required for contravariant compatibility with RTK's prepared action creators
+ * (a fn accepting `Item` is not assignable to one accepting `unknown`).
+ * Payload type safety flows through `InferPayload`, not here. */
+export type TransitionActions = {
+    stage: { match(action: Action): boolean };
+    amend: (...args: any[]) => Action;
+    commit: (...args: any[]) => Action;
+    fail: (...args: any[]) => Action;
+    stash: (...args: any[]) => Action;
+};
+
+/** Extracts the stage payload type from a `createTransitions` result.
+ * Works via the callable signature on `stage` (which exists on the actual
+ * `ActionCreatorWithPreparedPayload` even though the constraint only
+ * requires `.match`). */
+export type InferPayload<A extends TransitionActions> =
+    A extends { stage: (...args: any[]) => { payload: infer P } } ? P : unknown;
 
 export type { PathMap as PathIds } from '~/utils/types';
 

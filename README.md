@@ -5,47 +5,10 @@
 <p align="center">
   <a href="https://redux.js.org/"><img src="https://img.shields.io/badge/redux-%5E5.0.1-764ABC?logo=redux&logoColor=white" alt="Redux ^5.0.1"/></a>
   <a href="https://redux-toolkit.js.org/"><img src="https://img.shields.io/badge/RTK-%5E2.11.2-764ABC?logo=redux&logoColor=white" alt="Redux Toolkit ^2.11.2"/></a>
+  <a href="https://redux-saga.js.org/"><img src="https://img.shields.io/badge/redux--saga-%5E1.4.2-999999?logo=redux-saga&logoColor=white" alt="Redux Saga ^1.4.2"/></a>
 </p>
 
-> Optimistic state management for Redux. Optimistic state is derived at the selector level by replaying transitions on top of committed state, similar to `git rebase`.
-
----
-
-## Why Optimistron?
-
-Optimistron tracks lightweight **transitions** (stage, amend, commit, fail) alongside your reducer state and replays them at read-time through `selectOptimistic`. No state snapshots or checkpoints are stored per operation.
-
-Optimistron was designed around an **event-driven saga architecture** — components dispatch intent via `stage`, and sagas (or listener middleware) orchestrate the transition lifecycle. It can be used with thunks or direct component dispatches, but the separation between intent and orchestration is where it fits most naturally.
-
-Designed for:
-
-- **Offline-first** — transitions queue up while disconnected, conflicts resolve on reconnect
-- **Large/normalized state** — state is derived, not copied
-
----
-
-## The Mental Model
-
-Think of each `optimistron()` reducer as a **git branch**:
-
-| Git            | Optimistron                                                          |
-| -------------- | -------------------------------------------------------------------- |
-| Branch tip     | **Committed state** — only `COMMIT` advances it                      |
-| Staged commits | **Transitions** — pending changes on top of committed state          |
-| `git rebase`   | **`selectOptimistic`** — replays transitions at read-time            |
-| Merge conflict | **Sanitization** — detects no-ops and conflicts after every mutation |
-
-`STAGE`, `AMEND`, `FAIL`, `STASH` never touch reducer state — they only modify the transitions list. The optimistic view updates because `selectOptimistic` re-derives on the next read.
-
-There are no separate `isLoading` / `error` / `isOptimistic` flags — a pending transition represents the loading state, and a failed transition carries the error.
-
----
-
-## Transition Lifecycle
-
-<p align="center">
-  <img src=".github/lifecycle.svg" alt="Transition Lifecycle" width="850"/>
-</p>
+> Saga-first optimistic state management for Redux. Components dispatch intent, sagas orchestrate the lifecycle, optimistic state is derived at read-time by replaying transitions — like `git rebase`.
 
 ---
 
@@ -53,16 +16,30 @@ There are no separate `isLoading` / `error` / `isOptimistic` flags — a pending
 
 ```bash
 npm install @lostsolution/optimistron
-# ⚠️ not published yet
+# requires: redux ^5, @reduxjs/toolkit ^2, redux-saga ^1
 ```
+
+### Subpath exports
+
+| Import | Includes | Requires saga? |
+|--------|----------|----------------|
+| `@lostsolution/optimistron` | Core + saga effects | Yes |
+| `@lostsolution/optimistron/core` | Core only (reducers, actions, selectors) | No |
+| `@lostsolution/optimistron/saga` | Saga effects only | Yes |
+
+Use `/core` for thunks, listener middleware, or manual orchestration — no saga dependency.
 
 ---
 
 ## Quick Start
 
 ```typescript
-import { configureStore, createSelector } from '@reduxjs/toolkit';
-import { optimistron, createCrudTransitions, recordState } from '@lostsolution/optimistron';
+import { configureStore, createAction, createSelector } from '@reduxjs/toolkit';
+import createSagaMiddleware from 'redux-saga';
+import {
+    optimistron, createCrudTransitions, recordState,
+    watchTransition, retryFailed,
+} from '@lostsolution/optimistron';
 
 // 1. Define your entity
 type Todo = { id: string; value: string; done: boolean; revision: number };
@@ -83,21 +60,100 @@ const { reducer: todos, selectors } = optimistron(
 );
 
 // 4. Wire up the store
-const store = configureStore({ reducer: { todos } });
+const sagaMiddleware = createSagaMiddleware();
+const store = configureStore({
+    reducer: { todos },
+    middleware: (getDefault) => getDefault().concat(sagaMiddleware),
+});
 
-// 5. Select optimistic state (memoize with createSelector)
+// 5. Sagas — one line per transition
+function* rootSaga() {
+    yield watchTransition(todo.create, api.createTodo, {
+        amend: (payload, saved) => ({ ...payload, id: saved.id }),
+    });
+    yield watchTransition(todo.update, api.updateTodo);
+    yield watchTransition(todo.remove, api.deleteTodo);
+    // stash-on-fail is automatic for REVERTIBLE transitions (removes)
+
+    const retryAll = createAction('todos::retryAll');
+    yield retryFailed(retryAll, (state) => selectors.selectFailures(state.todos));
+}
+
+sagaMiddleware.run(rootSaga);
+
+// 6. Select optimistic state
 const selectTodos = createSelector(
     (state: RootState) => state.todos,
     selectors.selectOptimistic((todos) => Object.values(todos.committed)),
 );
 
-// 6. Dispatch transitions
-dispatch(todo.create.stage(item)); // optimistic — shows immediately
-dispatch(todo.create.commit(item.id)); // server confirmed — becomes committed state
-dispatch(todo.create.fail(item.id, error)); // server rejected — dropped (DISPOSABLE)
+// 7. Components only dispatch intent
+dispatch(todo.create.stage(item));   // shows immediately
+dispatch(todo.update.stage(edited)); // saga handles commit/fail
 ```
 
-> `createCrudTransitions` composes `crudPrepare` + `createTransitions` with golden-path modes: **DISPOSABLE** create, **DEFAULT** update, **REVERTIBLE** remove. For custom modes or per-operation preparators, use `crudPrepare` + `createTransitions` directly.
+---
+
+## The Mental Model
+
+Think of each `optimistron()` reducer as a **git branch**:
+
+| Git            | Optimistron                                                          |
+| -------------- | -------------------------------------------------------------------- |
+| Branch tip     | **Committed state** — only `COMMIT` advances it                      |
+| Staged commits | **Transitions** — pending changes on top of committed state          |
+| `git rebase`   | **`selectOptimistic`** — replays transitions at read-time            |
+| Merge conflict | **Sanitization** — detects no-ops and conflicts after every mutation |
+
+`STAGE`, `AMEND`, `FAIL`, `STASH` never touch reducer state — they only modify the transitions list. There are no separate `isLoading` / `error` / `isOptimistic` flags — a pending transition **is** the loading state, and a failed transition carries the error.
+
+---
+
+## Transition Lifecycle
+
+<p align="center">
+  <img src=".github/lifecycle.svg" alt="Transition Lifecycle" width="850"/>
+</p>
+
+---
+
+## Saga Effects
+
+### `watchTransition(actions, effect, options?)`
+
+Returns a `takeEvery` effect. Watches for `stage` actions, calls the effect, then commits or fails based on the `TransitionMode` on the transition meta.
+
+```typescript
+yield watchTransition(todo.create, api.createTodo, {
+    amend: (payload, result) => ({ ...payload, id: result.id }),
+});
+yield watchTransition(todo.update, api.updateTodo);
+yield watchTransition(todo.remove, api.deleteTodo);
+```
+
+- **`effect`** — `(payload, action) => Promise<R>`. Wrapped in `call()` internally.
+- **`options.amend`** — `(payload, result) => P`. Pure transform applied before commit.
+- **fail vs stash** — auto-detected from `TransitionMode` on the transition meta.
+
+### `handleTransition(actions, effect, options?)`
+
+The inner worker generator, exposed for custom watcher patterns:
+
+```typescript
+yield takeLatest(todo.update.stage.match, handleTransition(todo.update, api.updateTodo));
+```
+
+### `retryFailed(trigger, selectFailed)`
+
+Returns a `takeLeading` effect. Re-dispatches all failed transitions when the trigger fires.
+
+```typescript
+const retryAll = createAction('retryAll');
+yield retryFailed(retryAll, (state: RootState) => [
+    ...todosSelectors.selectFailures(state.todos),
+    ...projectsSelectors.selectFailures(state.projects),
+]);
+```
 
 ---
 
@@ -106,107 +162,6 @@ dispatch(todo.create.fail(item.id, error)); // server rejected — dropped (DISP
 1. **One ID, one entity** — each transition ID maps to exactly one entity
 2. **One at a time** — don't stage a new transition while one is already pending for the same ID
 3. **One operation per transition** — a single create, update, or delete
-
----
-
-## Versioning
-
-Entities need a **monotonically increasing version** — `revision`, `updatedAt`, a sequence number. This is how sanitization tells "newer" from "stale":
-
-```typescript
-// Shorthand — extracts version, compare is generated automatically
-version: (item) => item.revision,
-eq: (a, b) => boolean,
-
-// Full control — provide your own compare
-compare: (a, b) => 0 | 1 | -1,
-eq: (a, b) => boolean,
-```
-
-Without versioning, conflict detection degrades to content equality only.
-
----
-
-## State Handlers
-
-Four built-in handlers for common state shapes. Each defines `create`, `update`, `remove`, and `merge`.
-
-### `recordState` — flat key-value map
-
-`Record<string, T>` indexed by a single key. The most common shape.
-
-```typescript
-const handler = recordState<Todo>({ key: 'id', compare, eq });
-const crud = crudPrepare<Todo>('id');
-```
-
-### `nestedRecordState` — nested records
-
-`Record<string, Record<string, ... T>>` for multi-level grouping. Curried to fix `T` and infer the keys tuple. `transitionId` joins path IDs with `/`.
-
-```typescript
-const handler = nestedRecordState<ProjectTodo>()({ keys: ['projectId', 'id'], compare, eq });
-const crud = crudPrepare<ProjectTodo>()(['projectId', 'id']);
-```
-
-### `singularState` — single object
-
-`T | null` for singletons (user profile, settings).
-
-```typescript
-const handler = singularState<Profile>({ compare, eq });
-```
-
-### `listState` — ordered list
-
-`T[]` where insertion order matters.
-
-```typescript
-const handler = listState<Todo>({ key: 'id', compare, eq });
-const crud = crudPrepare<Todo>('id');
-```
-
-Custom shapes can implement the `StateHandler` interface directly.
-
----
-
-## Reducer Configuration
-
-The 4th argument to `optimistron()` supports three modes:
-
-**Auto-wired** — handler routes payloads by CRUD type:
-
-```typescript
-optimistron('todos', initial, handler, {
-    create: createTodo,
-    update: editTodo,
-    remove: deleteTodo,
-});
-```
-
-**Hybrid** — auto-wire + fallback for custom actions:
-
-```typescript
-optimistron('todos', initial, handler, {
-    create: createTodo,
-    update: editTodo,
-    remove: deleteTodo,
-    reducer: ({ getState }, action) => {
-        /* custom logic */
-    },
-});
-```
-
-**Manual** — full control via `BoundStateHandler`:
-
-```typescript
-optimistron('todos', initial, handler, ({ getState, create, update, remove }, action) => {
-    if (createTodo.match(action)) return create(action.payload);
-    if (editTodo.match(action)) return update(action.payload);
-    if (deleteTodo.match(action)) return remove(action.payload);
-    return getState();
-});
-```
 
 ---
 
@@ -222,45 +177,94 @@ Declared per action type — controls what happens on re-stage and failure:
 
 ---
 
+## State Handlers
+
+Four built-in handlers for common state shapes:
+
+| Handler | State shape | Usage |
+|---------|-------------|-------|
+| `recordState<T>` | `Record<string, T>` | Flat key-value map |
+| `nestedRecordState<T>()` | `Record<string, Record<..., T>>` | Multi-level grouping |
+| `singularState<T>` | `T \| null` | Singletons (profile, settings) |
+| `listState<T>` | `T[]` | Ordered list |
+
+Custom shapes can implement the `StateHandler` interface directly.
+
+---
+
 ## Selectors
 
-All selectors are returned from `optimistron()` on the `selectors` object — there are no standalone selector exports.
-
-### Optimistic state
+All selectors are returned from `optimistron()` on the `selectors` object.
 
 ```typescript
-const selectTodos = createSelector(
-    (state: RootState) => state.todos,
-    selectors.selectOptimistic((todos) => Object.values(todos.committed)),
-);
+selectors.selectOptimistic(selector)(state.todos);    // derived optimistic view
+selectors.selectIsOptimistic(id)(state.todos);         // pending?
+selectors.selectIsFailed(id)(state.todos);             // failed?
+selectors.selectIsConflicting(id)(state.todos);        // stale conflict?
+selectors.selectFailures(state.todos);                 // all failed transitions
+selectors.selectFailure(id)(state.todos);              // specific failed transition
+selectors.selectConflict(id)(state.todos);             // specific conflict
 ```
 
-### Per-entity status
+---
+
+## Versioning
+
+Entities need a **monotonically increasing version** — `revision`, `updatedAt`, a sequence number:
 
 ```typescript
-
-selectors.selectIsOptimistic(id)(state.todos); // pending?
-selectors.selectIsFailed(id)(state.todos); // failed?
-selectors.selectIsConflicting(id)(state.todos); // stale conflict?
-selectors.selectFailures(state.todos); // all failed transitions in this slice
-selectors.selectFailure(id)(state.todos); // failed transition for a specific entity
-selectors.selectConflict(id)(state.todos); // conflicting transition for a specific entity
+recordState<Todo>({
+    key: 'id',
+    version: (item) => item.revision,
+    eq: (a, b) => a.done === b.done && a.value === b.value,
+});
 ```
 
-### Aggregate failures across slices
+Without versioning, conflict detection degrades to content equality only.
 
-Cross-slice aggregation is a consumer concern. Compose per-slice selectors:
+---
+
+## Without Sagas
+
+<details>
+<summary><b>Thunks</b></summary>
 
 ```typescript
-const selectAllFailed = createSelector(
-    (state: RootState) => state.todos,
-    (state: RootState) => state.projects,
-    (todos, projects) => [
-        ...todosSelectors.selectFailures(todos),
-        ...projectsSelectors.selectFailures(projects),
-    ],
-);
+import { createCrudTransitions, recordState } from '@lostsolution/optimistron/core';
+
+const createTodoThunk = (todo: Todo): Thunk => async (dispatch) => {
+    dispatch(todoActions.create.stage(todo));
+    try {
+        const saved = await api.create(todo);
+        dispatch(todoActions.create.amend(todo.id, saved));
+        dispatch(todoActions.create.commit(todo.id));
+    } catch (e) {
+        dispatch(todoActions.create.fail(todo.id, e));
+    }
+};
 ```
+
+</details>
+
+<details>
+<summary><b>Component-level async</b></summary>
+
+```typescript
+import { createCrudTransitions, recordState } from '@lostsolution/optimistron/core';
+
+const handleCreate = async (todo: Todo) => {
+    dispatch(todoActions.create.stage(todo));
+    try {
+        const saved = await api.create(todo);
+        dispatch(todoActions.create.amend(todo.id, saved));
+        dispatch(todoActions.create.commit(todo.id));
+    } catch (e) {
+        dispatch(todoActions.create.fail(todo.id, e));
+    }
+};
+```
+
+</details>
 
 ---
 
@@ -271,10 +275,8 @@ bun test            # tests with coverage (threshold 90%)
 bun run build:esm   # build to lib/
 ```
 
-See `usecases/` for working examples with basic async, thunks, and sagas.
+See `usecases/` for working examples with sagas, thunks, and basic async.
 
 ---
 
-## Deep Dive
-
-For internals, design decisions, and the full API reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+For internals and design decisions, see [ARCHITECTURE.md](./ARCHITECTURE.md).

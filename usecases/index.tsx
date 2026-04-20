@@ -2,18 +2,14 @@ import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { NavLink, Route, HashRouter as Router, Routes } from 'react-router-dom';
 
-import BasicUsecase from '~usecases/basic';
 import { MockApiControls } from '~usecases/lib/components/mocks/MockApiControls';
 import { MockApiProvider } from '~usecases/lib/components/mocks/MockApiProvider';
 import { Logo, Stars } from '~usecases/lib/components/todo/Icons';
 import SagasUsecase from '~usecases/sagas';
-import ThunksUsecase from '~usecases/thunks';
 
 import './styles.css';
 
 const usecases = [
-    { key: 'Basic', path: '/basic', component: BasicUsecase, desc: 'Component-level async' },
-    { key: 'Thunks', path: '/thunks', component: ThunksUsecase, desc: 'Thunk orchestration' },
     { key: 'Sagas', path: '/sagas', component: SagasUsecase, desc: 'Saga-driven lifecycle' },
 ];
 
@@ -198,8 +194,7 @@ const Home: FC = () => (
 
             <div className="p-3 rounded-lg bg-surface-3 text-xs text-gray-500 text-left leading-relaxed space-y-2 grad-wrap">
                 <p>
-                    Pick a usecase from the sidebar. Each one implements the <span className="text-gray-300">same store</span> with a different async pattern —
-                    component-level, thunks, or sagas.
+                    Pick a usecase from the sidebar. The demo implements the <span className="text-gray-300">same store</span> with saga-driven lifecycle orchestration.
                 </p>
                 <p>
                     Use the <span className="text-gray-300">Mock API</span> controls to toggle offline mode, adjust latency, and trigger a sync to see how
