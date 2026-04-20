@@ -1,3 +1,3 @@
 export * from './core';
-export { processTransition, watchTransition, retryFailed } from './saga';
-export type { TransitionActions, TransitionSagaOptions } from './saga';
+export { handleTransition, retryFailed, watchTransition } from './saga';
+export type { TransitionSagaOptions } from './saga';

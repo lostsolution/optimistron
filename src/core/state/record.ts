@@ -7,7 +7,6 @@ import { resolveCompare, type CrudActionMap, type VersioningOptions, type WiredS
 
 export type RecordStateOptions<T> = VersioningOptions<T> & { key: StringKeys<T> };
 export type NestedRecordStateOptions<T, Keys extends readonly StringKeys<T>[]> = VersioningOptions<T> & { keys: Keys };
-
 export type RecordState<T> = Record<string, T>;
 
 /** Recursively builds a nested Record type from a keys tuple.

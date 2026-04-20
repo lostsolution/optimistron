@@ -8,7 +8,7 @@ export { getTransitionID, getTransitionMeta, isTransition, Operation, Optimistic
 export type { HandlerReducer, ReducerConfig } from './reducer';
 export type { ActionMatcher, BoundStateHandler, CrudActionMap, StateHandler, TransitionState, VersioningOptions, WiredStateHandler } from './state/types';
 
-export type { DeleteDTO, ItemPath, UpdateDTO } from './actions/types';
+export type { DeleteDTO, InferPayload, ItemPath, TransitionActions, UpdateDTO } from './actions/types';
 export type { ListStateOptions } from './state/list';
 export type { NestedRecordStateOptions, RecordStateOptions } from './state/record';
 export type { SingularStateOptions } from './state/singular';
